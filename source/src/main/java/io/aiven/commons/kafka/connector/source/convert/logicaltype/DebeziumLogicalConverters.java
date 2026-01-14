@@ -21,7 +21,7 @@
  * under the License.
  */
 
-package io.aiven.commons.kafka.source.convert.logicaltype;
+package io.aiven.commons.kafka.connector.source.convert.logicaltype;
 
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
@@ -60,7 +60,7 @@ public class DebeziumLogicalConverters {
 	 *            the configuration to use.
 	 */
 	public static void initialize(final BigQuerySinkConfig config) {
-		LogicalConverterRegistry.registerIfAbsent(Date.SCHEMA_NAME, new DateConverter());
+		io.aiven.commons.kafka.source.convert.logicaltype.LogicalConverterRegistry.registerIfAbsent(Date.SCHEMA_NAME, new DateConverter());
 		LogicalConverterRegistry.registerIfAbsent(MicroTime.SCHEMA_NAME, new MicroTimeConverter());
 		LogicalConverterRegistry.registerIfAbsent(MicroTimestamp.SCHEMA_NAME, new MicroTimestampConverter());
 		LogicalConverterRegistry.registerIfAbsent(Time.SCHEMA_NAME, new TimeConverter());

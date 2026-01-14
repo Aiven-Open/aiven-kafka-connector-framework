@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.source.config;
+package io.aiven.commons.kafka.connector.source.config;
 
 import io.aiven.commons.kafka.config.CommonConfig;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.source;
+package io.aiven.commons.kafka.connector.source;
 
 import static java.util.stream.Collectors.toList;
 

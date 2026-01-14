@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.source.task;
+package io.aiven.commons.kafka.connector.source.task;
 
 import java.util.Optional;
 import java.util.function.Function;

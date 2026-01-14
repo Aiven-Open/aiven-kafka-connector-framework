@@ -21,7 +21,7 @@
  * under the License.
  */
 
-package io.aiven.commons.kafka.source.convert.logicaltype;
+package io.aiven.commons.kafka.connector.source.convert.logicaltype;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

@@ -21,7 +21,7 @@
  * under the License.
  */
 
-package io.aiven.commons.kafka.source.convert;
+package io.aiven.commons.kafka.connector.source.convert;
 
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;

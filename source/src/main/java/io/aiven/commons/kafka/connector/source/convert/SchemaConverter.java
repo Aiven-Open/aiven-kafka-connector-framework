@@ -21,7 +21,7 @@
  * under the License.
  */
 
-package io.aiven.commons.kafka.source.convert;
+package io.aiven.commons.kafka.connector.source.convert;
 
 import org.apache.kafka.connect.data.Schema;
 

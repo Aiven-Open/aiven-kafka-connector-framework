@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.source.transformer;
+package io.aiven.commons.kafka.connector.source.transformer;
 
 import io.aiven.commons.kafka.source.AbstractSourceRecord;
 import io.aiven.commons.kafka.source.NativeSourceData;
