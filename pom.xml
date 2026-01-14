@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2025 Aiven Oy and project contributors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+    SPDX-License-Identifier: Apache-2
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.aiven.commons</groupId>
+    <artifactId>aiven-commons</artifactId>
+    <version>2</version>
+  </parent>
+  <artifactId>aiven-kafka-connector-framework</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>Aiven Kafka Connector Framework</name>
+
+  <description>A collection of utilities and interfaces to simplify the building and homogenization
+    of sink and source connector pairs.</description>
+
+  <url>https://github.com/Aiven-Open/aiven-kafka-connector-framework</url>
+
+  <inceptionYear>2026</inceptionYear>
+
+  <organization>
+    <name>Aiven</name>
+    <url>https://www.aiven.io</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>Apache License 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <!-- please order developers by surname then given name -->
+  <developers>
+    <developer>
+      <id>aindriu-aiven</id>
+      <name>Aindriú Lavelle</name>
+      <email>aindriu.lavelle@aiven.io</email>
+      <organization>Aiven, OY</organization>
+      <organizationUrl>https://aiven.io</organizationUrl>
+      <timezone>Europe/Dublin</timezone>
+    </developer>
+    <developer>
+      <id>claudenw</id>
+      <name>Claude Warren</name>
+      <email>claude.warren@aiven.io</email>
+      <organization>Aiven, OY</organization>
+      <organizationUrl>https://aiven.io</organizationUrl>
+      <timezone>Europe/Dublin</timezone>
+    </developer>
+  </developers>
+
+  <modules>
+    <module>common</module>
+    <module>source</module>
+    <module>sink</module>
+  </modules>
+
+  <scm>
+    <connection>scm:git:git://github.com/Aiven-Open/aiven-kafka-connector-framework.git</connection>
+    <developerConnection>scm:git:git@github.com:Aiven-Open/aiven-kafka-connector-framework.git</developerConnection>
+    <tag>HEAD</tag>
+    <url>https://github.com/Aiven-Open/aiven-kafka-connector-framework</url>
+  </scm>
+
+  <distributionManagement>
+    <site>
+      <id>staging</id>
+      <!--  For the URL to resolve to the default URL as described in the Apache Site Plugin documentation this URL
+            must be invalid. A ticket is open to resolve this issue. See https://github.com/apache/maven-site-plugin/issues/1140
+            -->
+      <url>invalid:url</url>
+    </site>
+  </distributionManagement>
+
+  <properties></properties>
+
+  <dependencyManagement></dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <repositories>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>maven-repo</id>
+      <url>https://repo1.maven.org/maven2/</url>
+      <layout>default</layout>
+    </repository>
+
+    <repository>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
+      <id>central-snapshot</id>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+      <layout>default</layout>
+    </repository>
+
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>maven</id>
+      <url>https://mvnrepository.com</url>
+      <layout>default</layout>
+    </repository>
+
+  </repositories>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.sonatype.central</groupId>
+          <artifactId>central-publishing-maven-plugin</artifactId>
+          <version>0.9.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-pmd-plugin</artifactId>
+          <version>3.27.0</version>
+          <configuration>
+            <minimumTokens>100</minimumTokens>
+            <targetJdk>${java.version}</targetJdk>
+            <analysisCache>true</analysisCache>
+            <excludeRoots>
+              <excludeRoot>target/generated-sources/stubs</excludeRoot>
+            </excludeRoots>
+            <verbose>true</verbose>
+            <linkXRef>false</linkXRef>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>2.43.0</version>
+          <configuration>
+            <java>
+              <eclipse></eclipse>
+              <removeUnusedImports></removeUnusedImports>
+            </java>
+            <pom>
+              <sortPom></sortPom>
+            </pom>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.12.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.3.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.21.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <version>3.9.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.4.2</version>
+          <configuration>
+            <archive>
+              <manifest>
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              </manifest>
+            </archive>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${compiler.plugin.version}</version>
+          <configuration>
+            <source>${java.version}</source>
+            <target>${java.version}</target>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>${assembly.plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${surefire.plugin.version}</version>
+          <configuration>
+            <excludedGroups>integration</excludedGroups>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>${surefire.plugin.version}</version>
+          <executions>
+            <execution>
+              <id>embedded-integration-test</id>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
+              <configuration>
+                <groups>integration</groups>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${checkstyle.plugin.version}</version>
+          <configuration>
+            <configLocation>google_checks.xml</configLocation>
+            <suppressionsLocation>config/checkstyle/suppressions.xml</suppressionsLocation>
+            <violationSeverity>warning</violationSeverity>
+          </configuration>
+          <executions>
+            <execution>
+              <id>validate</id>
+              <goals>
+                <goal>check</goal>
+                <goal>checkstyle</goal>
+              </goals>
+              <phase>validate</phase>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>${exec.plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>3.3.1</version>
+          <executions>
+            <execution>
+              <id>attach-sources</id>
+              <goals>
+                <goal>jar-no-fork</goal>
+              </goals>
+              <phase>verify</phase>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-gpg-plugin</artifactId>
+          <version>3.2.8</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <version>${rat.version}</version>
+        <executions>
+          <execution>
+            <id>Release Audit Check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>test</phase>
+            <configuration>
+              <inputExcludes>
+                <expression>/CODE_OF_CONDUCT.md</expression>
+                <expression>/CONTRIBUTING.md</expression>
+                <expression>/SECURITY.md</expression>
+                <expression>/README.md</expression>
+              </inputExcludes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>PMD check</id>
+            <goals>
+              <goal>check</goal>
+              <goal>cpd-check</goal>
+            </goals>
+            <phase>test</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>Format code</id>
+            <goals>
+              <goal>apply</goal>
+            </goals>
+            <phase>process-sources</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>Generate Javadoc</id>
+            <goals>
+              <goal>javadoc</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <failOnWarnings>true</failOnWarnings>
+            </configuration>
+          </execution>
+          <execution>
+            <id>Aggregate Javadoc</id>
+            <goals>
+              <goal>aggregate</goal>
+            </goals>
+            <phase>pre-site</phase>
+          </execution>
+          <execution>
+            <id>attach-docs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-project-info-reports-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>dependencies</goal>
+              <goal>dependency-convergence</goal>
+              <goal>distribution-management</goal>
+              <goal>issue-management</goal>
+              <goal>plugin-management</goal>
+              <goal>plugins</goal>
+              <goal>team</goal>
+              <goal>scm</goal>
+              <goal>summary</goal>
+            </goals>
+            <phase>prepare-package</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.3.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>3.2.8</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+            <phase>deploy</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>0.9.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <publishingServerId>central</publishingServerId>
+          <deploymentName>${project.groupId} ${project.artifactId} v${project.version}</deploymentName>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <reportSets>
+          <reportSet>
+            <id>aggregate</id>
+            <reports>
+              <report>aggregate</report>
+            </reports>
+            <inherited>false</inherited>
+          </reportSet>
+          <reportSet>
+            <id>default</id>
+            <reports>
+              <report>javadoc</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <reportSets>
+          <reportSet>
+            <!-- by default, id = "default" -->
+            <reports>
+              <!-- select non-aggregate reports -->
+              <report>pmd</report>
+              <report>cpd</report>
+            </reports>
+          </reportSet>
+          <reportSet>
+            <!-- aggregate reportSet, to define in poms having modules -->
+            <id>aggregate</id>
+            <!-- don't run aggregate in child modules -->
+            <reports>
+              <report>aggregate-pmd</report>
+              <report>aggregate-cpd</report>
+            </reports>
+            <inherited>false</inherited>
+          </reportSet>
+        </reportSets>
+      </plugin>
+    </plugins>
+  </reporting>
+
+  <profiles>
+    <profile>
+      <id>ci</id>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-failsafe-plugin</artifactId>
+              <configuration>
+                <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                <parallel>classes</parallel>
+                <useUnlimitedThreads>true</useUnlimitedThreads>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.9.0</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

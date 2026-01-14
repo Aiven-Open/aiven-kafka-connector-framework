@@ -1,0 +1,145 @@
+/*
+ * Copyright 2025 Aiven Oy
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.aiven.commons.kafka.source.task;
+
+import java.util.Optional;
+
+/**
+ * A Context which captures all the details about the source which are required
+ * to successfully send a source record onto Kafka
+ *
+ * @param <K>
+ *            The class of the Native key for the data source
+ */
+public class Context<K extends Comparable<K>> {
+	/** The Kafka topic for this Context. May be {@code null}. */
+	private String topic;
+	/** The Kafka partition for this Context. May be {@code null}. */
+	private Integer partition;
+	/**
+	 * The Kafka offset for this Context. When used as a Context within a larger
+	 * context, this is the number of bytes into the native stream that this context
+	 * starts at. May be {@code null}.
+	 */
+	private Long offset;
+	/** The native storage key for this Context. May be {@code null}. */
+	private K storageKey;
+
+	/**
+	 * Constructor.
+	 * 
+	 * @param storageKey
+	 *            The native key for this context.
+	 */
+	public Context(final K storageKey) {
+		this.storageKey = storageKey;
+	}
+
+	/**
+	 * Creates a defensive copy of the Context
+	 *
+	 * @param anotherContext
+	 *            The Context which needs to be copied
+	 */
+	protected Context(final Context<K> anotherContext) {
+		this.storageKey = anotherContext.storageKey;
+		this.partition = anotherContext.partition;
+		this.topic = anotherContext.topic;
+		this.offset = anotherContext.offset;
+	}
+
+	/**
+	 * Gets the Kafka topic as specified by the context.
+	 * 
+	 * @return an Optional kafka topic.
+	 */
+	public final Optional<String> getTopic() {
+		return Optional.ofNullable(topic);
+	}
+
+	/**
+	 * Sets the Kafka topic for this context.
+	 * 
+	 * @param topic
+	 *            the topic. May be {@code null}.
+	 */
+	public final void setTopic(final String topic) {
+		this.topic = topic;
+	}
+
+	/**
+	 * Gets the Kafka partition as specified by the context.
+	 * 
+	 * @return an Optional kafka partition.
+	 */
+	public final Optional<Integer> getPartition() {
+		return Optional.ofNullable(partition);
+	}
+
+	/**
+	 * Sets the Kafka partition for this context.
+	 * 
+	 * @param partition
+	 *            the partition. May be {@code null}.
+	 */
+	public final void setPartition(final Integer partition) {
+		this.partition = partition;
+	}
+
+	/**
+	 * Get the native key as specified by this context.
+	 * 
+	 * @return the Optional storage key for the native object this context is
+	 *         associated with.
+	 */
+	public final Optional<K> getStorageKey() {
+		return Optional.ofNullable(storageKey);
+	}
+
+	/**
+	 * Sets the native key for this context.
+	 * 
+	 * @param storageKey
+	 *            the native key. May ve {@code null}.
+	 */
+	public final void setStorageKey(final K storageKey) {
+		this.storageKey = storageKey;
+	}
+
+	/**
+	 * Gets the native offset for this context. When used as a Context within a
+	 * larger context, this is the number of bytes into the native stream that this
+	 * context starts at.
+	 * 
+	 * @return an optional native offset for this context.
+	 */
+	public final Optional<Long> getOffset() {
+		return Optional.ofNullable(offset);
+	}
+
+	/**
+	 * Sets the native offset for this context. When used as a Context within a
+	 * larger context, this is the number of bytes into the native stream that this
+	 * context starts at.
+	 * 
+	 * @param offset
+	 *            the optional native offset for this context. May be {@code null}.
+	 */
+	public final void setOffset(final Long offset) {
+		this.offset = offset;
+	}
+}
