@@ -86,8 +86,8 @@ public final class SourceConfigFragment extends ConfigFragment {
 		configDef.define(MAX_POLL_RECORDS, ConfigDef.Type.INT, 500, ConfigDef.Range.atLeast(1),
 				ConfigDef.Importance.MEDIUM, "Max poll records");
 		// KIP-298 Error Handling in Connect
-		configDef.define(ERRORS_TOLERANCE, ConfigDef.Type.STRING, ToleranceType.NONE.name(),
-				ERRORS_TOLERANCE_VALIDATOR, ConfigDef.Importance.MEDIUM,
+		configDef.define(ERRORS_TOLERANCE, ConfigDef.Type.STRING, ToleranceType.NONE.name(), ERRORS_TOLERANCE_VALIDATOR,
+				ConfigDef.Importance.MEDIUM,
 				"Indicates to the connector what level of exceptions are allowed before the connector stops.");
 
 		configDef.define(TARGET_TOPIC, ConfigDef.Type.STRING, null, new ConfigDef.NonEmptyString(),
