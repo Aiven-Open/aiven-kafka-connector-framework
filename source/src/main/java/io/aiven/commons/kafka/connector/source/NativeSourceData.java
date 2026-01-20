@@ -20,8 +20,8 @@ import java.io.InputStream;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import io.aiven.commons.kafka.connect.NativeInfo;
-import io.aiven.commons.kafka.source.task.Context;
+import io.aiven.commons.kafka.connector.common.NativeInfo;
+import io.aiven.commons.kafka.connector.source.task.Context;
 import org.apache.commons.io.function.IOSupplier;
 
 /**

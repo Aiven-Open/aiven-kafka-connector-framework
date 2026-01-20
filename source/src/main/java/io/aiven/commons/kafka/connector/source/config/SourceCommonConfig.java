@@ -18,10 +18,10 @@ package io.aiven.commons.kafka.connector.source.config;
 
 import io.aiven.commons.kafka.config.CommonConfig;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
-import io.aiven.commons.kafka.connect.ErrorsTolerance;
 
-import io.aiven.commons.kafka.source.task.DistributionType;
+import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import org.apache.kafka.common.config.ConfigValue;
+import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
 import java.util.Map;
 
@@ -63,7 +63,7 @@ public class SourceCommonConfig extends CommonConfig {
 	 *
 	 * @return the tolerance for errors.
 	 */
-	public ErrorsTolerance getErrorsTolerance() {
+	public ToleranceType getErrorsTolerance() {
 		return sourceConfigFragment.getErrorsTolerance();
 	}
 
