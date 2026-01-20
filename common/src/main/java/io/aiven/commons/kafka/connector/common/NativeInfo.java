@@ -27,26 +27,26 @@ package io.aiven.commons.kafka.connector.common;
  *            the native key type
  */
 public interface NativeInfo<K, N> {
-    /**
-     * Gets the native item.
-     *
-     * @return The native item.
-     */
-    N getNativeItem();
+	/**
+	 * Gets the native item.
+	 *
+	 * @return The native item.
+	 */
+	N getNativeItem();
 
-    /**
-     * Gets the native key
-     *
-     * @return The Native key.
-     */
-    K getNativeKey();
+	/**
+	 * Gets the native key
+	 *
+	 * @return The Native key.
+	 */
+	K getNativeKey();
 
-    /**
-     * Gets the number of bytes in the input stream extracted from the native
-     * object.
-     *
-     * @return The number of bytes in the input stream extracted from the native
-     *         object.
-     */
-    long getNativeItemSize();
+	/**
+	 * Gets the number of bytes in the input stream extracted from the native
+	 * object.
+	 *
+	 * @return The number of bytes in the input stream extracted from the native
+	 *         object.
+	 */
+	long getNativeItemSize();
 }
