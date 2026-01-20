@@ -315,10 +315,7 @@
             <phase>test</phase>
             <configuration>
               <inputExcludes>
-                <expression>/CODE_OF_CONDUCT.md</expression>
-                <expression>/CONTRIBUTING.md</expression>
-                <expression>/SECURITY.md</expression>
-                <expression>/README.md</expression>
+                <expression>**/*.md</expression>
               </inputExcludes>
             </configuration>
           </execution>

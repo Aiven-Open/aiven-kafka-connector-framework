@@ -23,12 +23,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import io.aiven.commons.kafka.source.config.SourceCommonConfig;
-import io.aiven.commons.kafka.source.config.SourceConfigFragment;
-import io.aiven.commons.kafka.source.task.Context;
-import io.aiven.commons.kafka.source.task.DistributionStrategy;
-import io.aiven.commons.kafka.source.task.DistributionType;
-import io.aiven.commons.kafka.source.transformer.Transformer;
+import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
+import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
+import io.aiven.commons.kafka.connector.source.task.Context;
+import io.aiven.commons.kafka.connector.source.task.DistributionStrategy;
+import io.aiven.commons.kafka.connector.source.task.DistributionType;
+import io.aiven.commons.kafka.connector.source.transformer.Transformer;
 import org.apache.kafka.connect.data.SchemaAndValue;
 
 import io.aiven.commons.collections.RingBuffer;

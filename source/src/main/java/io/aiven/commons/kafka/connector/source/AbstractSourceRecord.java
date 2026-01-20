@@ -21,9 +21,9 @@ import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.source.SourceRecord;
 
-import io.aiven.commons.kafka.connect.NativeInfo;
-import io.aiven.commons.kafka.connect.ErrorsTolerance;
-import io.aiven.commons.kafka.source.task.Context;
+import org.apache.kafka.connect.runtime.errors.ToleranceType;
+import io.aiven.commons.kafka.connector.common.NativeInfo;
+import io.aiven.commons.kafka.connector.source.task.Context;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -242,7 +242,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 * @return A kafka {@link SourceRecord SourceRecord} This can return null if
 	 *         error tolerance is set to 'All'
 	 */
-	final public SourceRecord getSourceRecord(final ErrorsTolerance tolerance, final OffsetManager<O> offsetManager) {
+	final public SourceRecord getSourceRecord(final ToleranceType tolerance, final OffsetManager<O> offsetManager) {
 		Logger logger = LoggerFactory.getLogger(this.getClass());
 		try {
 			if (logger.isDebugEnabled()) {
@@ -254,7 +254,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 					offsetManagerEntry.getProperties(), getTopic(), getPartition(), keyData.schema(), keyData.value(),
 					valueData.schema(), valueData.value());
 		} catch (DataException e) {
-			if (ErrorsTolerance.NONE.equals(tolerance)) {
+			if (ToleranceType.NONE.equals(tolerance)) {
 				throw new ConnectException("Data Exception caught during record to source record transformation", e);
 			} else {
 				logger.warn(

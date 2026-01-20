@@ -16,10 +16,10 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
-import io.aiven.commons.kafka.source.AbstractSourceRecord;
-import io.aiven.commons.kafka.source.NativeSourceData;
-import io.aiven.commons.kafka.source.config.SourceCommonConfig;
-import io.aiven.commons.kafka.source.task.Context;
+import io.aiven.commons.kafka.connector.source.AbstractSourceRecord;
+import io.aiven.commons.kafka.connector.source.NativeSourceData;
+import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
+import io.aiven.commons.kafka.connector.source.task.Context;
 import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.slf4j.Logger;

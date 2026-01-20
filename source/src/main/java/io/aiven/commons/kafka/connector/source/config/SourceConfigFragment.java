@@ -19,15 +19,15 @@ package io.aiven.commons.kafka.connector.source.config;
 import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
 import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
-import io.aiven.commons.kafka.connect.ErrorsTolerance;
-import io.aiven.commons.kafka.source.task.DistributionType;
+import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import org.apache.kafka.common.config.ConfigDef;
+import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 
-import static io.aiven.commons.kafka.source.task.DistributionType.OBJECT_HASH;
+import static io.aiven.commons.kafka.connector.source.task.DistributionType.OBJECT_HASH;
 
 /**
  * Defines properties that are shared across all Source implementations.
@@ -50,7 +50,7 @@ public final class SourceConfigFragment extends ConfigFragment {
 
 	/** The validator for errors tolerance property */
 	static final ConfigDef.Validator ERRORS_TOLERANCE_VALIDATOR = ConfigDef.CaseInsensitiveValidString
-			.in(Arrays.stream(ErrorsTolerance.values()).map(Object::toString).toArray(String[]::new));
+			.in(Arrays.stream(ToleranceType.values()).map(Object::toString).toArray(String[]::new));
 	/**
 	 * Gets a setter for this fragment.
 	 *
@@ -86,7 +86,7 @@ public final class SourceConfigFragment extends ConfigFragment {
 		configDef.define(MAX_POLL_RECORDS, ConfigDef.Type.INT, 500, ConfigDef.Range.atLeast(1),
 				ConfigDef.Importance.MEDIUM, "Max poll records");
 		// KIP-298 Error Handling in Connect
-		configDef.define(ERRORS_TOLERANCE, ConfigDef.Type.STRING, ErrorsTolerance.NONE.name(),
+		configDef.define(ERRORS_TOLERANCE, ConfigDef.Type.STRING, ToleranceType.NONE.name(),
 				ERRORS_TOLERANCE_VALIDATOR, ConfigDef.Importance.MEDIUM,
 				"Indicates to the connector what level of exceptions are allowed before the connector stops.");
 
@@ -126,8 +126,8 @@ public final class SourceConfigFragment extends ConfigFragment {
 	 *
 	 * @return the error tolerance.
 	 */
-	public ErrorsTolerance getErrorsTolerance() {
-		return ErrorsTolerance.forName(getString(ERRORS_TOLERANCE));
+	public ToleranceType getErrorsTolerance() {
+		return ToleranceType.valueOf(getString(ERRORS_TOLERANCE).toUpperCase(Locale.ROOT));
 	}
 
 	/**
@@ -189,7 +189,7 @@ public final class SourceConfigFragment extends ConfigFragment {
 		 *            the error tolerance
 		 * @return this.
 		 */
-		public Setter errorsTolerance(final ErrorsTolerance tolerance) {
+		public Setter errorsTolerance(final ToleranceType tolerance) {
 			return setValue(ERRORS_TOLERANCE, tolerance.name());
 		}
 

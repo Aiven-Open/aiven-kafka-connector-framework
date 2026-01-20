@@ -23,15 +23,9 @@
 
 package io.aiven.commons.kafka.connector.source.convert;
 
-import com.google.cloud.bigquery.InsertAllRequest.RowToInsert;
-import com.google.protobuf.ByteString;
-import com.wepay.kafka.connect.bigquery.api.KafkaSchemaRecordType;
-import com.wepay.kafka.connect.bigquery.config.BigQuerySinkConfig.DecimalHandlingMode;
-import com.wepay.kafka.connect.bigquery.convert.logicaltype.LogicalConverterRegistry;
-import com.wepay.kafka.connect.bigquery.convert.logicaltype.LogicalTypeConverter;
-import com.wepay.kafka.connect.bigquery.exception.ConversionConnectException;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
+import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.sink.SinkRecord;
