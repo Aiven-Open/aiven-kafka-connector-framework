@@ -1,6 +1,9 @@
 <!-- SPDX-License-Identifier: Apache-2 -->
 Aiven Kafka Connector Framework.
 ======================
+
+[![Build and Publish](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/merge.yml/badge.svg)](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/merge.yml)
+
 A collection of utilities and interfaces to simplify the building and homogenization
 of sink and source connector pairs.
 
