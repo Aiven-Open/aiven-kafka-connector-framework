@@ -39,7 +39,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Iterator that processes Native Source Data and creates AbstractSourceRecords.
- * Supports splitting each native record into multiple AbstractSourceRecords.
+ * It supports splitting each native record into multiple AbstractSourceRecords.
+ * NOTE: this is NOT an {@code abstract} class but rather a {@code final} class
+ * that is an iterator over {@link AbstractSourceRecord} instances.
  *
  * @param <N>
  *            the native object type.
