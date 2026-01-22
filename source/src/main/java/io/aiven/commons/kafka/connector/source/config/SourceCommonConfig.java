@@ -114,7 +114,6 @@ public class SourceCommonConfig extends CommonConfig {
 		public SourceCommonConfigDef() {
 			super();
 			SourceConfigFragment.update(this);
-
 		}
 
 		@Override
