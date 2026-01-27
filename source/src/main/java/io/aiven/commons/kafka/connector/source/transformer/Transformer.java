@@ -16,6 +16,7 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.source.AbstractSourceRecord;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -36,10 +37,6 @@ import java.util.stream.StreamSupport;
  * processed by the connector.
  */
 public abstract class Transformer {
-	/**
-	 * Returned if the transformer can not determine the length of the stream.
-	 */
-	public final static long UNKNOWN_STREAM_LENGTH = -1;
 
 	/**
 	 * Constructor.
@@ -74,9 +71,10 @@ public abstract class Transformer {
 	 * @param inputStreamIOSupplier
 	 *            the input stream supplier.
 	 * @param streamLength
-	 *            the length of the input stream, {@link #UNKNOWN_STREAM_LENGTH} may
-	 *            be used to specify a stream with an unknown length, streams of
-	 *            length zero will log an error and return an empty stream
+	 *            the length of the input stream,
+	 *            {@link NativeInfo#UNKNOWN_STREAM_LENGTH} may be used to specify a
+	 *            stream with an unknown length, streams of length zero will log an
+	 *            error and return an empty stream
 	 * @param context
 	 *            the context
 	 * @param sourceConfig
