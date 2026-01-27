@@ -16,6 +16,8 @@
 
 package io.aiven.commons.kafka.connector.source.config;
 
+import io.aiven.commons.kafka.config.ExtendedConfigKey;
+import io.aiven.commons.kafka.config.SinceInfo;
 import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
 import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
@@ -80,27 +82,33 @@ public final class SourceConfigFragment extends ConfigFragment {
 	 *            the configuration to update.
 	 */
 	public static void update(final ConfigDef configDef) {
-		configDef.define(RING_BUFFER_SIZE, ConfigDef.Type.INT, 1000, ConfigDef.Range.atLeast(1),
-				ConfigDef.Importance.MEDIUM, "The number of storage key to store in the ring buffer.");
-
-		configDef.define(MAX_POLL_RECORDS, ConfigDef.Type.INT, 500, ConfigDef.Range.atLeast(1),
-				ConfigDef.Importance.MEDIUM, "Max poll records");
-		// KIP-298 Error Handling in Connect
-		configDef.define(ERRORS_TOLERANCE, ConfigDef.Type.STRING, ToleranceType.NONE.name(), ERRORS_TOLERANCE_VALIDATOR,
-				ConfigDef.Importance.MEDIUM,
-				"Indicates to the connector what level of exceptions are allowed before the connector stops.");
-
-		configDef.define(TARGET_TOPIC, ConfigDef.Type.STRING, null, new ConfigDef.NonEmptyString(),
-				ConfigDef.Importance.MEDIUM, "The name of the topic to write records to.");
-		configDef.define(DISTRIBUTION_TYPE, ConfigDef.Type.STRING, OBJECT_HASH.name(), DISTRIBUTION_TYPE_VALIDATOR,
-				ConfigDef.Importance.MEDIUM,
-				"Based on tasks.max config and the type of strategy selected, objects are processed in distributed"
-						+ " way by Kafka connect workers.");
-
-		// TODO FIX ME this should be updated to add 'since version 3.4.2' when
-		// ExtendedConfigKey is used.
-		configDef.define(NATIVE_START_KEY, ConfigDef.Type.STRING, null, null, ConfigDef.Importance.MEDIUM,
-				"An identifier for the source connector to know which key to start processing from, on a restart it will also begin reading messages from this point as well. Available since 3.4.2");
+		SinceInfo.Builder siBuilder = SinceInfo.builder().groupId("io.aiven.commons")
+				.artifactId("kafka-source-connector-framework");
+		configDef
+				.define(ExtendedConfigKey.builder(RING_BUFFER_SIZE).type(ConfigDef.Type.INT).defaultValue(1000)
+						.validator(ConfigDef.Range.atLeast(1))
+						.documentation("The number of storage key to store in the ring buffer.")
+						.since(siBuilder.version("1.0.0").build()).build())
+				.define(ExtendedConfigKey.builder(MAX_POLL_RECORDS).type(ConfigDef.Type.INT).defaultValue(500)
+						.validator(ConfigDef.Range.atLeast(1)).documentation("Max poll records")
+						.since(siBuilder.version("1.0.0").build()).build())
+				.define(ExtendedConfigKey.builder(ERRORS_TOLERANCE).defaultValue(ToleranceType.NONE.name())
+						.validator(ERRORS_TOLERANCE_VALIDATOR)
+						.documentation(
+								"Indicates to the connector what level of exceptions are allowed before the connector stops.")
+						.since(siBuilder.version("1.0.0").build()).build())
+				.define(ExtendedConfigKey.builder(TARGET_TOPIC).validator(new ConfigDef.NonEmptyString())
+						.documentation("The name of the topic to write records to.")
+						.since(siBuilder.version("1.0.0").build()).build())
+				.define(ExtendedConfigKey.builder(DISTRIBUTION_TYPE).defaultValue(OBJECT_HASH.name())
+						.validator(DISTRIBUTION_TYPE_VALIDATOR)
+						.documentation(
+								"Based on tasks.max config and the type of strategy selected, objects are processed in distributed"
+										+ " way by Kafka connect workers.")
+						.since(siBuilder.version("1.0.0").build()).build())
+				.define(ExtendedConfigKey.builder(NATIVE_START_KEY).documentation(
+						"An identifier for the source connector to know which key to start processing from, on a restart it will also begin reading messages from this point as well")
+						.since(siBuilder.version("1.0.0").build()).build());
 	}
 
 	/**

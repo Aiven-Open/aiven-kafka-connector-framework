@@ -28,6 +28,11 @@ package io.aiven.commons.kafka.connector.common;
  */
 public interface NativeInfo<K, N> {
 	/**
+	 * Value to be returned when the length of the stream is unknown.
+	 */
+	long UNKNOWN_STREAM_LENGTH = -1;
+
+	/**
 	 * Gets the native item.
 	 *
 	 * @return The native item.
@@ -46,7 +51,7 @@ public interface NativeInfo<K, N> {
 	 * object.
 	 *
 	 * @return The number of bytes in the input stream extracted from the native
-	 *         object.
+	 *         object. May be {@link #UNKNOWN_STREAM_LENGTH}
 	 */
 	long getNativeItemSize();
 }

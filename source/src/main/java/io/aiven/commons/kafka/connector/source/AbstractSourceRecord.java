@@ -92,7 +92,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 * object.
 	 *
 	 * @return The number of bytes in the input stream extracted from the native
-	 *         object.
+	 *         object. May be {@link NativeInfo#UNKNOWN_STREAM_LENGTH}
 	 */
 	final public long getNativeItemSize() {
 		return nativeInfo.getNativeItemSize();
