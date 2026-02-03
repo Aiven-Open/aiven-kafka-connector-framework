@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package io.aiven.commons.kafka.connector.source.transformer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.aiven.commons.kafka.connector.source.AbstractSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import org.apache.commons.io.function.IOSupplier;
@@ -32,66 +31,75 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * Transforms an input stream into a number of Jason records.
+ */
 public class JsonTransformer extends InputStreamTransformer {
 
-    private final JsonConverter jsonConverter;
+	private final JsonConverter jsonConverter;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JsonTransformer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(JsonTransformer.class);
 
-    final static ObjectMapper objectMapper = new ObjectMapper();
 
-    JsonTransformer(final SourceCommonConfig config, JsonConverter jsonConverter) {
-        super(config);
-        this.jsonConverter = jsonConverter;
-    }
+	/**
+	 * Constructs the JSON Transformer with the specified config.
+	 * @param config the SourceCommonConfig instance to use.
+	 */
+	public JsonTransformer(final SourceCommonConfig config) {
+		super(config);
+		jsonConverter = new JsonConverter();
+		jsonConverter.configure(Map.of("schemas.enable", "false"), false);
+	}
 
-    @Override
-    public StreamSpliterator createSpliterator(final IOSupplier<InputStream> inputStreamIOSupplier,
-                                               final long streamLength, final Context<?> context) {
-        return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
-            BufferedReader reader;
+	@Override
+	public StreamSpliterator createSpliterator(final IOSupplier<InputStream> inputStreamIOSupplier,
+			final long streamLength, final Context<?> context) {
+		return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
+			BufferedReader reader;
 
-            @Override
-            protected void inputOpened(final InputStream input) {
-                reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
+			@Override
+			protected void inputOpened(final InputStream input) {
+				reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
 
-            }
+			}
 
-            @Override
-            public void doClose() {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                        LOGGER.error("Error closing reader: {}", e.getMessage(), e);
-                    }
-                }
-            }
+			@Override
+			public void doClose() {
+				if (reader != null) {
+					try {
+						reader.close();
+					} catch (IOException e) {
+						LOGGER.error("Error closing reader: {}", e.getMessage(), e);
+					}
+				}
+			}
 
-            @Override
-            public boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
-                String line = null;
-                try {
-                    // remove blank and empty lines.
-                    while (StringUtils.isBlank(line)) {
-                        line = reader.readLine();
-                        if (line == null) {
-                            // end of file
-                            return false;
-                        }
-                    }
-                    line = line.trim();
-                    // toConnectData does not actually use topic in the conversion so its fine if it is null.
-                    action.accept(jsonConverter.toConnectData(context.getTopic().orElse(null),
-                            line.getBytes(StandardCharsets.UTF_8)));
-                    return true;
-                } catch (IOException e) {
-                    LOGGER.error("Error reading input stream: {}", e.getMessage(), e);
-                    return false;
-                }
-            }
-        };
-    }
+			@Override
+			public boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
+				String line = null;
+				try {
+					// remove blank and empty lines.
+					while (StringUtils.isBlank(line)) {
+						line = reader.readLine();
+						if (line == null) {
+							// end of file
+							return false;
+						}
+					}
+					line = line.trim();
+					// toConnectData does not actually use topic in the conversion so its fine if it
+					// is null.
+					action.accept(jsonConverter.toConnectData(context.getTopic().orElse(null),
+							line.getBytes(StandardCharsets.UTF_8)));
+					return true;
+				} catch (IOException e) {
+					LOGGER.error("Error reading input stream: {}", e.getMessage(), e);
+					return false;
+				}
+			}
+		};
+	}
 }

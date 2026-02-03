@@ -16,9 +16,10 @@
 
 package io.aiven.commons.kafka.connector.source.config;
 
-import io.aiven.commons.kafka.config.CommonConfig;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 
+import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfig;
+import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigDef;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import org.apache.kafka.common.config.ConfigValue;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
@@ -28,7 +29,7 @@ import java.util.Map;
 /**
  * The common definitions for source connectors.
  */
-public class SourceCommonConfig extends CommonConfig {
+public class SourceCommonConfig extends ConnectorCommonConfig {
 
 	/**
 	 * The standard source configuration fragment.
@@ -104,9 +105,28 @@ public class SourceCommonConfig extends CommonConfig {
 	}
 
 	/**
+	 * Gets the size of the Transformer buffer if the transformer builds a buffered
+	 * input stream.
+	 * 
+	 * @return the size of the transformer buffer in bytes.
+	 */
+	public int getTransformerBufferSize() {
+		return sourceConfigFragment.getTransformerBufferSize();
+	}
+
+	/**
+	 * Gets the size of the Transformer cache if the transformer supports a cache.
+	 *
+	 * @return the size of the transformer cache in bytes.
+	 */
+	public int getTransformerCacheSize() {
+		return sourceConfigFragment.getTransformerCacheSize();
+	}
+
+	/**
 	 * The common source configuration definition.
 	 */
-	public static class SourceCommonConfigDef extends CommonConfigDef {
+	public static class SourceCommonConfigDef extends ConnectorCommonConfigDef {
 
 		/**
 		 * Constructor.

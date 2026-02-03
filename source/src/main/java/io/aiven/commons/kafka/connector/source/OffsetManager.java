@@ -272,10 +272,11 @@ public final class OffsetManager<E extends OffsetManager.OffsetManagerEntry<E>> 
 	@FunctionalInterface
 	public interface OffsetManagerKey {
 		/**
-		 * Gets the partition map used by Kafka to identify this Offset entry.
-		 * This is analogous to the sourcePartition in the kafka {@link SourceRecord} it represents a single
-		 * input sourcePartition that the record came from (e.g. a filename, table name, or topic-partition).  In
-		 * most cases this should be a map representation of the NativeKey.
+		 * Gets the partition map used by Kafka to identify this Offset entry. This is
+		 * analogous to the sourcePartition in the kafka {@link SourceRecord} it
+		 * represents a single input sourcePartition that the record came from (e.g. a
+		 * filename, table name, or topic-partition). In most cases this should be a map
+		 * representation of the NativeKey.
 		 * <p>
 		 * Kafka stores all numbers as longs and so all keys based off integers should
 		 * be created as longs in the manager key.

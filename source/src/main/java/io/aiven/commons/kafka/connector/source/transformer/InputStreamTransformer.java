@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,23 +33,28 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * Extracts data from the native abstract source record to Key SchemaAndValue object and a stream
- * of SchemaAndValue objects for the values.
+ * Extracts data from the native abstract source record to Key SchemaAndValue
+ * object and a stream of SchemaAndValue objects for the values.
  *
- * This class is used within the AbstractSourceRecordIterator to convert the abstract source record into one or more
- * Kafka source records.
+ * This class is used within the AbstractSourceRecordIterator to convert the
+ * abstract source record into one or more Kafka source records.
  *
- * This implementation of Tansformer assumes  that the SourceRecord supports returning an inputStream.
+ * This implementation of Transformer assumes that the SourceRecord supports
+ * returning an inputStream.
  *
  */
 public abstract class InputStreamTransformer extends Transformer {
 
 	/**
-	 * Constructor.
+	 * Constructs a transformer that processes an input stream rather than a stream
+	 * of objects.
+	 * 
+	 * @param config
+	 *            The SourceCommonsConfig implementation.
 	 */
 	protected InputStreamTransformer(SourceCommonConfig config) {
-        super(config);
-    }
+		super(config);
+	}
 	/**
 	 * Gets a stream of SchemaAndValue records from the input stream.
 	 * 
@@ -62,7 +67,8 @@ public abstract class InputStreamTransformer extends Transformer {
 	 * @return the stream of values for Kafka SourceRecords.
 	 */
 	@Override
-	public <T extends AbstractSourceRecord<?, ?, ?, T>> Stream<SchemaAndValue> generateRecords(final NativeSourceData<?, ?, ?, T> nativeSourceData, final T sourceRecord) {
+	public <T extends AbstractSourceRecord<?, ?, ?, T>> Stream<SchemaAndValue> generateRecords(
+			final NativeSourceData<?, ?, ?, T> nativeSourceData, final T sourceRecord) {
 
 		final StreamSpliterator spliterator = createSpliterator(nativeSourceData.getInputStream(sourceRecord),
 				sourceRecord.getNativeItemSize(), sourceRecord.getContext());
@@ -81,7 +87,7 @@ public abstract class InputStreamTransformer extends Transformer {
 	 *            error and return an empty stream
 	 * @param context
 	 *            the context
-
+	 * 
 	 * @return a StreamSpliterator instance.
 	 */
 	protected abstract StreamSpliterator createSpliterator(IOSupplier<InputStream> inputStreamIOSupplier,

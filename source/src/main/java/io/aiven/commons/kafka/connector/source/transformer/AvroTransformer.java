@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 
 package io.aiven.commons.kafka.connector.source.transformer;
-
 
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.task.Context;
@@ -33,50 +32,60 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.function.Consumer;
 
+/**
+ * Transforms a stream of Avro records into individual kafka messages, one per
+ * record.
+ */
 public class AvroTransformer extends InputStreamTransformer {
 
-    private final AvroData avroData;
+	private final AvroData avroData;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AvroTransformer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(AvroTransformer.class);
 
-    AvroTransformer(final SourceCommonConfig config, final AvroData avroData) {
-        super(config);
-        this.avroData = avroData;
-    }
+	/**
+	 * Constructs the AvroTransformer.
+	 * 
+	 * @param config
+	 *            The configuration for this connector.
+	 */
+	public AvroTransformer(final SourceCommonConfig config) {
+		super(config);
+		this.avroData = new AvroData(config.getTransformerCacheSize());
+	}
 
-    @Override
-    public StreamSpliterator createSpliterator(final IOSupplier<InputStream> inputStreamIOSupplier,
-                                               final long streamLength, final Context<?> context) {
-        return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
-            private DataFileStream<GenericRecord> dataFileStream;
-            private final DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
+	@Override
+	public StreamSpliterator createSpliterator(final IOSupplier<InputStream> inputStreamIOSupplier,
+			final long streamLength, final Context<?> context) {
+		return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
+			private DataFileStream<GenericRecord> dataFileStream;
+			private final DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
 
-            @Override
-            protected void inputOpened(final InputStream input) throws IOException {
-                dataFileStream = new DataFileStream<>(input, datumReader);
-            }
+			@Override
+			protected void inputOpened(final InputStream input) throws IOException {
+				dataFileStream = new DataFileStream<>(input, datumReader);
+			}
 
-            @Override
-            public void doClose() {
-                if (dataFileStream != null) {
-                    try {
-                        dataFileStream.close();
-                    } catch (IOException e) {
-                        LOGGER.error("Error closing reader: {}", e.getMessage(), e);
-                    }
-                }
-            }
+			@Override
+			public void doClose() {
+				if (dataFileStream != null) {
+					try {
+						dataFileStream.close();
+					} catch (IOException e) {
+						LOGGER.error("Error closing reader: {}", e.getMessage(), e);
+					}
+				}
+			}
 
-            @Override
-            protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
-                if (dataFileStream.hasNext()) {
-                    final GenericRecord record = dataFileStream.next();
-                    action.accept(avroData.toConnectData(record.getSchema(), record));
-                    return true;
-                }
-                return false;
-            }
-        };
-    }
+			@Override
+			protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
+				if (dataFileStream.hasNext()) {
+					final GenericRecord record = dataFileStream.next();
+					action.accept(avroData.toConnectData(record.getSchema(), record));
+					return true;
+				}
+				return false;
+			}
+		};
+	}
 
 }

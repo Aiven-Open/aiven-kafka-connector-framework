@@ -16,34 +16,30 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.aiven.commons.kafka.connector.source.AbstractSourceRecord;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
-import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
-import org.apache.kafka.connect.data.SchemaBuilder;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 /**
- * Extracts data from the native abstract source record to Key SchemaAndValue object and a stream
- * of SchemaAndValue objects for the values.
+ * Extracts data from the native abstract source record to Key SchemaAndValue
+ * object and a stream of SchemaAndValue objects for the values.
  *
- * This class is used within the AbstractSourceRecordIterator to convert the abstract source record into one or more
- * Kafka source records.
+ * This class is used within the AbstractSourceRecordIterator to convert the
+ * abstract source record into one or more Kafka source records.
  *
  */
 public abstract class Transformer {
-	 /** The source configuration for the Kafka task. */
+	/** The source configuration for the Kafka task. */
 	protected final SourceCommonConfig config;
 
 	/**
 	 * Constructor.
-	 * @param config The configuration for the source connector.
+	 * 
+	 * @param config
+	 *            The configuration for the source connector.
 	 */
 	protected Transformer(SourceCommonConfig config) {
 		this.config = config;
@@ -55,12 +51,12 @@ public abstract class Transformer {
 	 *            The native source data.
 	 * @param sourceRecord
 	 *            The AbstractSourceRecord being processed.
-
+	 * 
 	 * @param <T>
 	 *            The concrete class of the AbstractSourceRecord.
 	 * @return the stream of values for Kafka SourceRecords.
 	 */
-	public abstract <T extends AbstractSourceRecord<?, ?, ?, T>>  Stream<SchemaAndValue> generateRecords(
+	public abstract <T extends AbstractSourceRecord<?, ?, ?, T>> Stream<SchemaAndValue> generateRecords(
 			final NativeSourceData<?, ?, ?, T> nativeSourceData, final T sourceRecord);
 
 	/**
@@ -68,7 +64,7 @@ public abstract class Transformer {
 	 * 
 	 * @param abstractSourceRecord
 	 *            the Abstract source record to extract the keyData from.
-
+	 * 
 	 * @return a SchemaAndValue for the key.
 	 */
 	public abstract SchemaAndValue generateKeyData(final AbstractSourceRecord<?, ?, ?, ?> abstractSourceRecord);
