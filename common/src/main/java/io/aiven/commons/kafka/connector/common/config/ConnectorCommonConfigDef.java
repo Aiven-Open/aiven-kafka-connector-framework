@@ -18,7 +18,7 @@
  */
 package io.aiven.commons.kafka.connector.common.config;
 
-import io.aiven.commons.kafka.config.CommonConfig;
+import io.aiven.commons.kafka.config.CommonConfigDef;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import org.apache.kafka.common.config.ConfigValue;
 
@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * The configuration definition for the common connector.
  */
-public class ConnectorCommonConfigDef extends CommonConfig.CommonConfigDef {
+public class ConnectorCommonConfigDef extends CommonConfigDef {
 
 	/**
 	 * Constructor.
