@@ -85,7 +85,8 @@ final public class JsonTestDataFixture {
 	}
 
 	/**
-	 * creates and serializes the specified number of records with the specified schema.
+	 * creates and serializes the specified number of records with the specified
+	 * schema.
 	 *
 	 * @param messageId
 	 *            the messageId to start with.

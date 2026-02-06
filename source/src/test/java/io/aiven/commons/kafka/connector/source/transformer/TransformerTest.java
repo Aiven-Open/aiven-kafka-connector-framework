@@ -20,11 +20,13 @@ import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeSourceData;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceRecord;
+import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -144,6 +146,48 @@ public abstract class TransformerTest {
 		entry.setRecordCount(25);
 		sourceRecord.setOffsetManagerEntry(entry);
 
+		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+
+		assertThat(records).isEmpty();
+	}
+
+	@Test
+	void testGetRecordsWithIOException() throws IOException {
+		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
+
+		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
+			@Override
+			public IOSupplier<InputStream> getInputStream(ExampleSourceRecord sourceRecord) {
+				return () -> new InputStream() {
+					@Override
+					public int read() throws IOException {
+						throw new IOException("Test Exception");
+					}
+				};
+			}
+		};
+		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+
+		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+
+		assertThat(records).isEmpty();
+	}
+
+	@Test
+	final void testCustomSpliteratorWithIOExceptionDuringInitialization() throws IOException {
+		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
+		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
+			public IOSupplier<InputStream> getInputStream(ExampleSourceRecord sourceRecord) {
+				return new IOSupplier<InputStream>() {
+					@Override
+					public InputStream get() throws IOException {
+						throw new IOException("Test IOException during initialization");
+					}
+				};
+			}
+		};
+
+		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
 		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
 
 		assertThat(records).isEmpty();
