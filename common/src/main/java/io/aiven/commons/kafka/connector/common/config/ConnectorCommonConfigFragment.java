@@ -147,7 +147,7 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 
 	/**
 	 * Ensure that the various URLs and enablements are set correctly.
-	 * 
+	 *
 	 * @param configMap
 	 *            the change tracking map to process.
 	 */
