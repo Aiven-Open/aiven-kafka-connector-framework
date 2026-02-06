@@ -31,7 +31,7 @@ import java.util.stream.Stream;
  * abstract source record into one or more Kafka source records.
  *
  */
-public abstract class Transformer {
+public abstract class Transformer implements AutoCloseable {
 	/** The source configuration for the Kafka task. */
 	protected final SourceCommonConfig config;
 
@@ -69,4 +69,8 @@ public abstract class Transformer {
 	 */
 	public abstract SchemaAndValue generateKeyData(final AbstractSourceRecord<?, ?, ?, ?> abstractSourceRecord);
 
+	@Override
+	public void close() throws Exception {
+		// do nothing.
+	}
 }
