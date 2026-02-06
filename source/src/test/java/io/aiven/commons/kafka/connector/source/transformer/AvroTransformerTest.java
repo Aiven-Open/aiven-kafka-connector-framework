@@ -28,6 +28,7 @@ import java.util.function.Function;
 
 final class AvroTransformerTest extends TransformerTest {
 
+	@Override
 	protected Transformer setupTransformer() {
 		Map<String, String> props = new HashMap<>();
 		SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
@@ -37,16 +38,18 @@ final class AvroTransformerTest extends TransformerTest {
 		return new AvroTransformer(sourceCommonConfig);
 	}
 
+	@Override
 	protected byte[] generateData(int numberOfRecords) throws IOException {
 		return AvroTestDataFixture.generateAvroData(numberOfRecords);
 	}
 
+	@Override
 	protected String generatedMessagePrefix() {
 		return "Hello, from Avro Test Data Fixture! object ";
 	}
 
+	@Override
 	protected Function<Object, String> messageExtractor() {
 		return sv -> ((Struct) sv).getString("message");
 	}
-
 }
