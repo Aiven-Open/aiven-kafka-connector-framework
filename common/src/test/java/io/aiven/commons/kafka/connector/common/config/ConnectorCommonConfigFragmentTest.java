@@ -88,8 +88,8 @@ public class ConnectorCommonConfigFragmentTest {
 
 	@ParameterizedTest(name = "{index} {0}")
 	@MethodSource("testSchemaRegistryData")
-	void testSchemaRegistry(final String ignore, final Map<String, String> props, String schemaUrl, boolean schemaEnabled,
-			String keyUrl, boolean keyEnabled, String valueUrl, boolean valueEnabled) {
+	void testSchemaRegistry(final String ignore, final Map<String, String> props, String schemaUrl,
+			boolean schemaEnabled, String keyUrl, boolean keyEnabled, String valueUrl, boolean valueEnabled) {
 
 		ConnectorCommonConfig commonConfig = new ConnectorCommonConfig(new ConnectorCommonConfigDef(), props);
 		FragmentDataAccess dataAccess = FragmentDataAccess.from(commonConfig);
