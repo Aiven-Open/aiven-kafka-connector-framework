@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,122 +23,126 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * An implementation of OffsetManagerEntry. This entry has 3 values stored in the map.
+ * An implementation of OffsetManagerEntry. This entry has 3 values stored in
+ * the map.
  */
 public class ExampleOffsetManagerEntry implements OffsetManager.OffsetManagerEntry<ExampleOffsetManagerEntry> {
-    public Map<String, Object> data;
+	public Map<String, Object> data;
 
-    private int recordCount;
+	private int recordCount;
 
-    private static final String KEY = "key";
-    private static final String GROUPING_KEY = "groupingKey";
-    private static final String RECORD_COUNT = "recordCount";
+	private static final String KEY = "key";
+	private static final String GROUPING_KEY = "groupingKey";
+	private static final String RECORD_COUNT = "recordCount";
 
-    /**
-     * Constructor.
-     *
-     * @param nativeKey
-     *            The native Key.
-     *
-     * @param grouping
-     *            An grouping division
-     */
-    public ExampleOffsetManagerEntry(final String nativeKey, final String grouping) {
-        this();
-        data.put(KEY, nativeKey);
-        data.put(GROUPING_KEY, grouping);
-    }
+	/**
+	 * Constructor.
+	 *
+	 * @param nativeKey
+	 *            The native Key.
+	 *
+	 * @param grouping
+	 *            An grouping division
+	 */
+	public ExampleOffsetManagerEntry(final String nativeKey, final String grouping) {
+		this();
+		data.put(KEY, nativeKey);
+		data.put(GROUPING_KEY, grouping);
+	}
 
-    /**
-     * Constructor.
-     */
-    private ExampleOffsetManagerEntry() {
-        data = new HashMap<>();
-    }
+	/**
+	 * Constructor.
+	 */
+	private ExampleOffsetManagerEntry() {
+		data = new HashMap<>();
+	}
 
-    /**
-     * A constructor.
-     *
-     * @param properties
-     *            THe data map to use.
-     */
-    public ExampleOffsetManagerEntry(final Map<String, Object> properties) {
-        this();
-        data.putAll(properties);
-        if (data.containsKey(RECORD_COUNT)) {
-            recordCount = getInt(RECORD_COUNT);
-        }
-    }
+	/**
+	 * A constructor.
+	 *
+	 * @param properties
+	 *            THe data map to use.
+	 */
+	public ExampleOffsetManagerEntry(final Map<String, Object> properties) {
+		this();
+		data.putAll(properties);
+		if (data.containsKey(RECORD_COUNT)) {
+			recordCount = getInt(RECORD_COUNT);
+		}
+	}
 
-    @Override
-    public ExampleOffsetManagerEntry fromProperties(final Map<String, Object> properties) {
-        return new ExampleOffsetManagerEntry(properties);
-    }
+	@Override
+	public ExampleOffsetManagerEntry fromProperties(final Map<String, Object> properties) {
+		return new ExampleOffsetManagerEntry(properties);
+	}
 
-    @Override
-    public Map<String, Object> getProperties() {
-        data.put(RECORD_COUNT, recordCount);
-        return data;
-    }
+	@Override
+	public Map<String, Object> getProperties() {
+		data.put(RECORD_COUNT, recordCount);
+		return data;
+	}
 
-    @Override
-    public Object getProperty(final String key) {
-        return data.get(key);
-    }
+	@Override
+	public Object getProperty(final String key) {
+		return data.get(key);
+	}
 
-    @Override
-    public void setProperty(final String key, final Object value) {
-        data.put(key, value);
-    }
+	@Override
+	public void setProperty(final String key, final Object value) {
+		data.put(key, value);
+	}
 
-    @Override
-    public OffsetManager.OffsetManagerKey getManagerKey() {
-        return () -> Map.of(KEY, data.get(KEY), GROUPING_KEY, data.get(GROUPING_KEY));
-    }
+	@Override
+	public OffsetManager.OffsetManagerKey getManagerKey() {
+		return () -> Map.of(KEY, data.get(KEY), GROUPING_KEY, data.get(GROUPING_KEY));
+	}
 
-    @Override
-    public void incrementRecordCount() {
-        recordCount++;
-    }
+	@Override
+	public void incrementRecordCount() {
+		recordCount++;
+	}
 
-    @Override
-    public long getRecordCount() {
-        return recordCount;
-    }
+	@Override
+	public long getRecordCount() {
+		return recordCount;
+	}
 
-    /**
-     * Not part of the standard OffsetManagerEntry. Used in testing to force the system to skip records.
-     * @param value the record to start on.
-     */
-    public void setRecordCount(int value) {
-        recordCount = value;
-    }
+	/**
+	 * Not part of the standard OffsetManagerEntry. Used in testing to force the
+	 * system to skip records.
+	 * 
+	 * @param value
+	 *            the record to start on.
+	 */
+	public void setRecordCount(int value) {
+		recordCount = value;
+	}
 
-    @Override
-    public boolean equals(final Object other) {
-        if (other instanceof ExampleOffsetManagerEntry) {
-            return this.compareTo((ExampleOffsetManagerEntry) other) == 0;
-        }
-        return false;
-    }
+	@Override
+	public boolean equals(final Object other) {
+		if (other instanceof ExampleOffsetManagerEntry) {
+			return this.compareTo((ExampleOffsetManagerEntry) other) == 0;
+		}
+		return false;
+	}
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(getProperty(KEY), getProperty(GROUPING_KEY));
-    }
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(getProperty(KEY), getProperty(GROUPING_KEY));
+	}
 
-    @Override
-    public int compareTo(final ExampleOffsetManagerEntry other) {
-        if (other == this) { // NOPMD
-            return 0;
-        }
-        int result = ((String) getProperty(KEY)).compareTo((String) other.getProperty(KEY));
-        if (result == 0) {
-            result = ((String) getProperty(GROUPING_KEY)).compareTo((String) other.getProperty(GROUPING_KEY));
-            if (result == 0) {
-                result = Long.compare(getRecordCount(), other.getRecordCount());
-            }
-        }
-        return result;
-    }
+	@Override
+	public int compareTo(final ExampleOffsetManagerEntry other) {
+		if (other == this) { // NOPMD
+			return 0;
+		}
+		int result = ((String) getProperty(KEY)).compareTo((String) other.getProperty(KEY));
+		if (result == 0) {
+			result = ((String) getProperty(GROUPING_KEY)).compareTo((String) other.getProperty(GROUPING_KEY));
+			if (result == 0) {
+				result = Long.compare(getRecordCount(), other.getRecordCount());
+			}
+		}
+		return result;
+	}
 }

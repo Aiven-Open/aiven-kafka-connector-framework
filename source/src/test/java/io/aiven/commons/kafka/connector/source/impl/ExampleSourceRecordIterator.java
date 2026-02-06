@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright 2025 Aiven Oy
 // *
 // * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,74 +14,84 @@
 // * limitations under the License.
 // */
 //
-//package io.aiven.commons.kafka.connector.source.transformer.impl;
+// package io.aiven.commons.kafka.connector.source.transformer.impl;
 //
-//import io.aiven.commons.kafka.connector.source.AbstractSourceRecordIterator;
-//import io.aiven.commons.kafka.connector.source.OffsetManager;
-//import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
-//import io.aiven.commons.kafka.connector.source.transformer.Transformer;
-//import org.apache.commons.io.function.IOSupplier;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
+// import io.aiven.commons.kafka.connector.source.AbstractSourceRecordIterator;
+// import io.aiven.commons.kafka.connector.source.OffsetManager;
+// import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
+// import io.aiven.commons.kafka.connector.source.transformer.Transformer;
+// import org.apache.commons.io.function.IOSupplier;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 //
-//import java.io.ByteArrayInputStream;
-//import java.io.InputStream;
-//import java.util.stream.Stream;
+// import java.io.ByteArrayInputStream;
+// import java.io.InputStream;
+// import java.util.stream.Stream;
 //
-///**
-// * An AbstractSourceRecordIterator implementation for the AbstractSourceRecord implementation.
+/// **
+// * An AbstractSourceRecordIterator implementation for the AbstractSourceRecord
+/// implementation.
 // */
-//final public class ExampleSourceRecordIterator
-//        extends
-//        AbstractSourceRecordIterator<String, ExampleNativeItem, ExampleOffsetManagerEntry, ExampleSourceRecord> {
-//    private final Logger log = LoggerFactory.getLogger(ExampleSourceRecordIterator.class);
+// final public class ExampleSourceRecordIterator
+// extends
+// AbstractSourceRecordIterator<String, ExampleNativeItem,
+/// ExampleOffsetManagerEntry, ExampleSourceRecord> {
+// private final Logger log =
+/// LoggerFactory.getLogger(ExampleSourceRecordIterator.class);
 //
-//    private final ExampleNativeClient nativeClient;
+// private final ExampleNativeClient nativeClient;
 //
-//    public ExampleSourceRecordIterator(final SourceCommonConfig sourceConfig,
-//                                       final OffsetManager<ExampleOffsetManagerEntry> offsetManager, final Transformer transformer,
-//                                       final int bufferSize, final ExampleNativeClient nativeClient) {
-//        super(sourceConfig, offsetManager, transformer, bufferSize);
-//        this.nativeClient = nativeClient;
-//    }
+// public ExampleSourceRecordIterator(final SourceCommonConfig sourceConfig,
+// final OffsetManager<ExampleOffsetManagerEntry> offsetManager, final
+/// Transformer transformer,
+// final int bufferSize, final ExampleNativeClient nativeClient) {
+// super(sourceConfig, offsetManager, transformer, bufferSize);
+// this.nativeClient = nativeClient;
+// }
 //
-//    @Override
-//    protected Logger getLogger() {
-//        return log;
-//    }
+// @Override
+// protected Logger getLogger() {
+// return log;
+// }
 //
-//    @Override
-//    protected Stream<ExampleNativeItem> getNativeItemStream(final String offset) {
-//        return nativeClient.listObjects().stream();
-//    }
+// @Override
+// protected Stream<ExampleNativeItem> getNativeItemStream(final String offset)
+/// {
+// return nativeClient.listObjects().stream();
+// }
 //
-//    @Override
-//    protected IOSupplier<InputStream> getInputStream(final ExampleSourceRecord sourceRecord) {
-//        return () -> new ByteArrayInputStream(sourceRecord.getNativeItem().data.array());
-//    }
+// @Override
+// protected IOSupplier<InputStream> getInputStream(final ExampleSourceRecord
+/// sourceRecord) {
+// return () -> new
+/// ByteArrayInputStream(sourceRecord.getNativeItem().data.array());
+// }
 //
-//    @Override
-//    protected String getNativeKey(final ExampleNativeItem nativeObject) {
-//        return nativeObject.key;
-//    }
+// @Override
+// protected String getNativeKey(final ExampleNativeItem nativeObject) {
+// return nativeObject.key;
+// }
 //
-//    @Override
-//    protected ExampleSourceRecord createSourceRecord(final ExampleNativeItem nativeObject) {
-//        return new ExampleSourceRecord(nativeObject);
-//    }
+// @Override
+// protected ExampleSourceRecord createSourceRecord(final ExampleNativeItem
+/// nativeObject) {
+// return new ExampleSourceRecord(nativeObject);
+// }
 //
-//    @Override
-//    protected ExampleOffsetManagerEntry createOffsetManagerEntry(final ExampleNativeItem nativeObject) {
-//        return new ExampleOffsetManagerEntry(nativeObject.key, "three");
-//    }
+// @Override
+// protected ExampleOffsetManagerEntry createOffsetManagerEntry(final
+/// ExampleNativeItem nativeObject) {
+// return new ExampleOffsetManagerEntry(nativeObject.key, "three");
+// }
 //
-//    @Override
-//    protected OffsetManager.OffsetManagerKey getOffsetManagerKey(final String nativeKey) {
-//        return new ExampleOffsetManagerEntry(nativeKey, "three").getManagerKey();
-//    }
+// @Override
+// protected OffsetManager.OffsetManagerKey getOffsetManagerKey(final String
+/// nativeKey) {
+// return new ExampleOffsetManagerEntry(nativeKey, "three").getManagerKey();
+// }
 //
-//    @Override
-//    protected String parseNativeKey(final String nativeKeyText) {
-//        return nativeKeyText;
-//    }
-//}
+// @Override
+// protected String parseNativeKey(final String nativeKeyText) {
+// return nativeKeyText;
+// }
+// }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,35 +24,35 @@ import java.nio.ByteBuffer;
  * A "native" object for testing.
  */
 public class ExampleNativeItem {
-    // instance vars are package private.
-    final String key;
-    final ByteBuffer data;
+	// instance vars are package private.
+	final String key;
+	final ByteBuffer data;
 
-    /**
-     * Constructor.
-     *
-     * @param key
-     *            the key for this object.
-     * @param data
-     *            the data for this object.
-     */
-    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "stores mutable fields in offset manager to be reviewed before release")
-    public ExampleNativeItem(final String key, final ByteBuffer data) {
-        this.key = key;
-        this.data = data;
-    }
+	/**
+	 * Constructor.
+	 *
+	 * @param key
+	 *            the key for this object.
+	 * @param data
+	 *            the data for this object.
+	 */
+	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "stores mutable fields in offset manager to be reviewed before release")
+	public ExampleNativeItem(final String key, final ByteBuffer data) {
+		this.key = key;
+		this.data = data;
+	}
 
-    /**
-     * Constructor.
-     *
-     * @param key
-     *            the key for this object.
-     * @param data
-     *            the data for this object.
-     */
-    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "stores mutable fields in offset manager to be reviewed before release")
-    public ExampleNativeItem(final String key, final byte[] data) {
-        this.key = key;
-        this.data = ByteBuffer.wrap(data);
-    }
+	/**
+	 * Constructor.
+	 *
+	 * @param key
+	 *            the key for this object.
+	 * @param data
+	 *            the data for this object.
+	 */
+	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "stores mutable fields in offset manager to be reviewed before release")
+	public ExampleNativeItem(final String key, final byte[] data) {
+		this.key = key;
+		this.data = ByteBuffer.wrap(data);
+	}
 }

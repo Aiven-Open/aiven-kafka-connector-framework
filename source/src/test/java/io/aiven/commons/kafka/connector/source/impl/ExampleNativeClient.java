@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,23 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * A "native" client. This client returns lists of native objects and ByteBuffers for specific native keys.
+ * A "native" client. This client returns lists of native objects and
+ * ByteBuffers for specific native keys.
  */
 public interface ExampleNativeClient {
-    /**
-     * Gets a list of native objects.
-     *
-     * @return the list of native objects.
-     */
-    List<ExampleNativeItem> listObjects();
+	/**
+	 * Gets a list of native objects.
+	 *
+	 * @return the list of native objects.
+	 */
+	List<ExampleNativeItem> listObjects();
 
-    /**
-     * Gets the ByteBuffer for a key.
-     *
-     * @param key
-     *            the key to get the byte buffer for.
-     * @return The ByteBuffer for a key, or {@code null} if not set.
-     */
-    ByteBuffer getObjectAsBytes(String key);
+	/**
+	 * Gets the ByteBuffer for a key.
+	 *
+	 * @param key
+	 *            the key to get the byte buffer for.
+	 * @return The ByteBuffer for a key, or {@code null} if not set.
+	 */
+	ByteBuffer getObjectAsBytes(String key);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,50 +26,50 @@ import org.slf4j.LoggerFactory;
  * An AbstractSourceRecord implementation for the NativeObject.
  */
 final public class ExampleSourceRecord
-        extends
-        AbstractSourceRecord<String, ExampleNativeItem, ExampleOffsetManagerEntry, ExampleSourceRecord> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExampleSourceRecord.class);
+		extends
+			AbstractSourceRecord<String, ExampleNativeItem, ExampleOffsetManagerEntry, ExampleSourceRecord> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ExampleSourceRecord.class);
 
-    /**
-     * Constructor.
-     *
-     * @param nativeItem
-     *            The native item
-     */
-    public ExampleSourceRecord(final ExampleNativeItem nativeItem) {
-        super(new NativeInfo<String, ExampleNativeItem>() {
-            @Override
-            public ExampleNativeItem getNativeItem() {
-                return nativeItem;
-            }
+	/**
+	 * Constructor.
+	 *
+	 * @param nativeItem
+	 *            The native item
+	 */
+	public ExampleSourceRecord(final ExampleNativeItem nativeItem) {
+		super(new NativeInfo<String, ExampleNativeItem>() {
+			@Override
+			public ExampleNativeItem getNativeItem() {
+				return nativeItem;
+			}
 
-            @Override
-            public String getNativeKey() {
-                return nativeItem.key;
-            }
+			@Override
+			public String getNativeKey() {
+				return nativeItem.key;
+			}
 
-            @Override
-            public long getNativeItemSize() {
-                return nativeItem.data.capacity();
-            }
-        });
-        setContext(new Context<>(nativeItem.key));
-        setOffsetManagerEntry(new ExampleOffsetManagerEntry(nativeItem.key, "group1"));
-    }
+			@Override
+			public long getNativeItemSize() {
+				return nativeItem.data.capacity();
+			}
+		});
+		setContext(new Context<>(nativeItem.key));
+		setOffsetManagerEntry(new ExampleOffsetManagerEntry(nativeItem.key, "group1"));
+	}
 
-    /**
-     * A copy constructor.
-     *
-     * @param source
-     *            the source record to copy.
-     */
-    public ExampleSourceRecord(final ExampleSourceRecord source) {
-        super(source);
-    }
+	/**
+	 * A copy constructor.
+	 *
+	 * @param source
+	 *            the source record to copy.
+	 */
+	public ExampleSourceRecord(final ExampleSourceRecord source) {
+		super(source);
+	}
 
-    @Override
-    public ExampleSourceRecord duplicate() {
-        return new ExampleSourceRecord(this);
-    }
+	@Override
+	public ExampleSourceRecord duplicate() {
+		return new ExampleSourceRecord(this);
+	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,6 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 final class AvroTransformerTest {
 
 	private AvroTransformer avroTransformer;
@@ -49,13 +48,15 @@ final class AvroTransformerTest {
 		Map<String, String> props = new HashMap<>();
 		SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
 		setter.transformerCache(100);
-		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
+				props);
 		avroTransformer = new AvroTransformer(sourceCommonConfig);
 	}
 
 	@Test
 	void testReadAvroRecordsInvalidData() {
-		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", ByteBuffer.wrap("mock-avro-data".getBytes(StandardCharsets.UTF_8)));
+		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
+				ByteBuffer.wrap("mock-avro-data".getBytes(StandardCharsets.UTF_8)));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
 		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
 
@@ -66,10 +67,10 @@ final class AvroTransformerTest {
 
 	@Test
 	void testReadAvroRecords() throws Exception {
-		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", AvroTestDataFixture.generateAvroData(25));
+		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
+				AvroTestDataFixture.generateAvroData(25));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
 		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
-
 
 		final List<String> expected = new ArrayList<>();
 		for (int i = 0; i < 25; i++) {
@@ -84,10 +85,12 @@ final class AvroTransformerTest {
 
 	@Test
 	void testReadAvroRecordsSkipFew() throws Exception {
-		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", AvroTestDataFixture.generateAvroData(20));
+		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
+				AvroTestDataFixture.generateAvroData(20));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
 		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
-		// skip 5 records -- we have to set the record after the read because the getOffsetManagerEntry() creates a defensive copy
+		// skip 5 records -- we have to set the record after the read because the
+		// getOffsetManagerEntry() creates a defensive copy
 		final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
 		entry.setRecordCount(5);
 		sourceRecord.setOffsetManagerEntry(entry);
@@ -104,10 +107,12 @@ final class AvroTransformerTest {
 
 	@Test
 	void testReadAvroRecordsSkipMoreRecordsThanExist() throws Exception {
-		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", AvroTestDataFixture.generateAvroData(20));
+		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
+				AvroTestDataFixture.generateAvroData(20));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
 		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
-		// skip 25 records -- we have to set the record after the read because the getOffsetManagerEntry() creates a defensive copy
+		// skip 25 records -- we have to set the record after the read because the
+		// getOffsetManagerEntry() creates a defensive copy
 		final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
 		entry.setRecordCount(25);
 		sourceRecord.setOffsetManagerEntry(entry);
