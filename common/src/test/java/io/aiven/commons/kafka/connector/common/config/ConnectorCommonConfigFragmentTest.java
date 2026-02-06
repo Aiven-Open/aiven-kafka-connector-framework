@@ -38,7 +38,7 @@ public class ConnectorCommonConfigFragmentTest {
 
 	@ParameterizedTest(name = "{index} {0}")
 	@MethodSource("testInvalidConfigData")
-	void testInvalidConfig(String name, Map<String, String> props, String[] expectedMessages) {
+	void testInvalidConfig(String ignore, Map<String, String> props, String[] expectedMessages) {
 		assertThatThrownBy(() -> new ConnectorCommonConfig(new ConnectorCommonConfigDef(), props))
 				.isInstanceOf(ConfigException.class).hasMessageContainingAll(expectedMessages);
 	}
@@ -88,9 +88,8 @@ public class ConnectorCommonConfigFragmentTest {
 
 	@ParameterizedTest(name = "{index} {0}")
 	@MethodSource("testSchemaRegistryData")
-	void testSchemaRegistry(final String name, final Map<String, String> props, String schemaUrl, boolean schemaEnabled,
+	void testSchemaRegistry(final String ignore, final Map<String, String> props, String schemaUrl, boolean schemaEnabled,
 			String keyUrl, boolean keyEnabled, String valueUrl, boolean valueEnabled) {
-		final String url = "https://example.com";
 
 		ConnectorCommonConfig commonConfig = new ConnectorCommonConfig(new ConnectorCommonConfigDef(), props);
 		FragmentDataAccess dataAccess = FragmentDataAccess.from(commonConfig);
