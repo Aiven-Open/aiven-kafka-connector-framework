@@ -18,6 +18,7 @@
  */
 package io.aiven.commons.kafka.connector.common.config;
 
+import io.aiven.commons.kafka.config.CommonConfig;
 import io.aiven.commons.kafka.config.ExtendedConfigKey;
 import io.aiven.commons.kafka.config.SinceInfo;
 import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
@@ -35,33 +36,33 @@ import java.util.Map;
  */
 public class ConnectorCommonConfigFragment extends ConfigFragment {
 	/** the schema registry URL */
-	public static final String SCHEMA_REGISTRY_URL = "schema.registry.url";
+	static final String SCHEMA_REGISTRY_URL = "schema.registry.url";
 	/**
 	 * The flag to enable the schema registry. The schema registry enablement flag.
 	 * Defaults to {@code true} if {@link #SCHEMA_REGISTRY_URL} is set.
 	 */
-	public static final String SCHEMA_REGISTRY_ENABLE = "schema.registry.enable";
+	static final String SCHEMA_REGISTRY_ENABLE = "schema.registry.enable";
 	/**
 	 * The value converter registry URL. Defaults to the
 	 * {@link #SCHEMA_REGISTRY_URL}.
 	 */
-	private static final String VALUE_CONVERTER_SCHEMA_REGISTRY_URL = "value.converter.schema.registry.url";
+	static final String VALUE_CONVERTER_SCHEMA_REGISTRY_URL = "value.converter.schema.registry.url";
 	/**
 	 * The flag to enable the value converter schema registry. Defaults to
 	 * {@link #SCHEMA_REGISTRY_ENABLE} if
 	 * {@link #VALUE_CONVERTER_SCHEMA_REGISTRY_URL} is set.
 	 */
-	private static final String VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE = "value.converter.schema.registry.enable";
+	static final String VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE = "value.converter.schema.registry.enable";
 	/**
 	 * The key converter registry URL. Defaults to the {@link #SCHEMA_REGISTRY_URL}.
 	 */
-	private static final String KEY_CONVERTER_SCHEMA_REGISTRY_URL = "key.converter.schema.registry.url";
+	static final String KEY_CONVERTER_SCHEMA_REGISTRY_URL = "key.converter.schema.registry.url";
 	/**
 	 * The flag to enable the key converter schema registry. Defaults to
 	 * {@link #SCHEMA_REGISTRY_ENABLE} if {@link #KEY_CONVERTER_SCHEMA_REGISTRY_URL}
 	 * is set.
 	 */
-	private static final String KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE = "key.converter.schema.registry.enable";
+	static final String KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE = "key.converter.schema.registry.enable";
 
 	/**
 	 * Creates a Setter for this fragment.
@@ -144,6 +145,58 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 		return configDef;
 	}
 
+	/**
+	 * Ensure that the various URLs and enablements are set correctly.
+	 *
+	 * @param configMap
+	 *            the change tracking map to process.
+	 */
+	public static void postProcess(CommonConfig.ChangeTrackingMap configMap) {
+
+		if (configMap.get(SCHEMA_REGISTRY_URL) != null) {
+			if (configMap.get(SCHEMA_REGISTRY_ENABLE) == null) {
+				configMap.override(SCHEMA_REGISTRY_ENABLE, true);
+			}
+
+			if (configMap.get(VALUE_CONVERTER_SCHEMA_REGISTRY_URL) == null) {
+				configMap.override(VALUE_CONVERTER_SCHEMA_REGISTRY_URL, configMap.get(SCHEMA_REGISTRY_URL));
+				if (configMap.get(VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE) == null) {
+					configMap.override(VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE, configMap.get(SCHEMA_REGISTRY_ENABLE));
+				}
+			} else {
+				if (configMap.get(VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE) == null) {
+					configMap.override(VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE, true);
+				}
+			}
+
+			if (configMap.get(KEY_CONVERTER_SCHEMA_REGISTRY_URL) == null) {
+				configMap.override(KEY_CONVERTER_SCHEMA_REGISTRY_URL, configMap.get(SCHEMA_REGISTRY_URL));
+				if (configMap.get(KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE) == null) {
+					configMap.override(KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE, configMap.get(SCHEMA_REGISTRY_ENABLE));
+				}
+			} else {
+				if (configMap.get(KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE) == null) {
+					configMap.override(KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE, true);
+				}
+			}
+
+		} else {
+			if (configMap.get(SCHEMA_REGISTRY_ENABLE) == null) {
+				configMap.override(SCHEMA_REGISTRY_ENABLE, false);
+			}
+			// set the value enable default if needed
+			if (configMap.get(VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE) == null) {
+				configMap.override(VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE,
+						configMap.get(VALUE_CONVERTER_SCHEMA_REGISTRY_URL) != null);
+			}
+
+			if (configMap.get(KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE) == null) {
+				configMap.override(KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE,
+						configMap.get(KEY_CONVERTER_SCHEMA_REGISTRY_URL) != null);
+			}
+		}
+	}
+
 	@Override
 	public void validate(Map<String, ConfigValue> configMap) {
 
@@ -156,46 +209,27 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 		final ConfigValue keyEnable = configMap.get(KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE);
 
 		/* Schema Processing */
-		if (schemaEnable.value() != null && schemaEnable.value() == Boolean.TRUE && schemaReg.value() == null) {
+		if (schemaEnable.value() == Boolean.TRUE && schemaReg.value() == null) {
 			registerIssue(configMap, SCHEMA_REGISTRY_ENABLE, schemaEnable.value(),
-					String.format("%s may not be 'true' if %s is unset.", SCHEMA_REGISTRY_ENABLE, SCHEMA_REGISTRY_URL));
+					String.format("%s may not be 'true' if %s is unset", SCHEMA_REGISTRY_ENABLE, SCHEMA_REGISTRY_URL));
 		}
-		// set actual value for schema flag
-		boolean schemaE = schemaEnable.value() == null ? schemaReg.value() != null : (Boolean) schemaEnable.value();
-		schemaEnable.value(schemaE);
 
 		/* Value converter schema processing */
-		// set the valueReg default if needed.
-		if (valueReg.value() == null) {
-			valueReg.value(schemaReg.value());
-		}
 		if (valueEnable.value() != null && valueEnable.value() == Boolean.TRUE && valueReg.value() == null) {
 			registerIssue(configMap, VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE, valueEnable.value(),
-					String.format("%s may not be 'true' if both %s and %s are unset.",
+					String.format("%s may not be 'true' if both %s and %s are unset",
 							VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE, VALUE_CONVERTER_SCHEMA_REGISTRY_URL,
 							SCHEMA_REGISTRY_URL));
 		}
-		// set the value enable default if needed
-		if (valueEnable.value() == null) {
-			valueEnable.value(schemaE);
-		}
 
 		/* Key converter schema processing */
-		// set the keyReg default if needed.
-		if (keyReg.value() == null) {
-			keyReg.value(schemaReg.value());
-		}
 		if (keyEnable.value() != null && keyEnable.value() == Boolean.TRUE && keyReg.value() == null) {
 			registerIssue(configMap, KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE, keyEnable.value(),
-					String.format("%s may not be 'true' if both %s and %s are unset.",
-							VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE, KEY_CONVERTER_SCHEMA_REGISTRY_URL,
+					String.format("%s may not be 'true' if both %s and %s are unset",
+							KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE, KEY_CONVERTER_SCHEMA_REGISTRY_URL,
 							SCHEMA_REGISTRY_URL));
 		}
-		// set the value enable default if needed
-		if (keyEnable.value() == null) {
-			keyEnable.value(schemaE);
-			super.validate(configMap);
-		}
+		super.validate(configMap);
 	}
 
 	/**

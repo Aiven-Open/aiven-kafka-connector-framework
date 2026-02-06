@@ -43,6 +43,12 @@ public class ConnectorCommonConfig extends CommonConfig {
 		connectorConfigFragment = new ConnectorCommonConfigFragment(dataAccess);
 	}
 
+	@Override
+	protected void fragmentPostProcess(ChangeTrackingMap map) {
+		super.fragmentPostProcess(map);
+		ConnectorCommonConfigFragment.postProcess(map);
+	}
+
 	/**
 	 * Gets the schema registry URL. May return {@code null} if not set.
 	 * 
