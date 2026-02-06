@@ -191,10 +191,9 @@ public final class AbstractSourceRecordIterator<K extends Comparable<K>, N, O ex
 	 * @return a stream of T created from the input stream of the native item.
 	 */
 	private Stream<T> convert(final T sourceRecord) {
-		sourceRecord
-				.setKeyData(transformer.getKeyData(sourceRecord.getNativeKey(), sourceRecord.getTopic(), sourceConfig));
+		sourceRecord.setKeyData(transformer.generateKeyData(sourceRecord));
 		lastSeenNativeKey = sourceRecord.getNativeKey();
-		return transformer.getRecords(nativeSourceData, sourceRecord, sourceConfig).map(new Mapper<>(sourceRecord));
+		return transformer.generateRecords(nativeSourceData, sourceRecord).map(new Mapper<>(sourceRecord));
 	}
 
 	/**

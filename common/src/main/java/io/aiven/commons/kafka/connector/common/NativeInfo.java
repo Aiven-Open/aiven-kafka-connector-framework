@@ -1,5 +1,5 @@
 /*
-         Copyright 2025 Aiven Oy and project contributors
+         Copyright 2026 Aiven Oy and project contributors
 
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -19,14 +19,19 @@
 package io.aiven.commons.kafka.connector.common;
 
 /**
- * Information about the Native object.
+ * Information about the Native object. The NativeInfo ties a Native key to a
+ * Native object. In many cases the storage provides a key directly to the
+ * native object and this implementation can simply call that. In other cases
+ * the key and object are separate and the implementation will tie them
+ * together. In the streaming data case there is no key to return to so the key
+ * will be constructed when the object is available.
  *
+ * @param <K>
+ *            The native key type.
  * @param <N>
  *            The native object type.
- * @param <K>
- *            the native key type
  */
-public interface NativeInfo<K, N> {
+public interface NativeInfo<K extends Comparable<K>, N> {
 	/**
 	 * Value to be returned when the length of the stream is unknown.
 	 */

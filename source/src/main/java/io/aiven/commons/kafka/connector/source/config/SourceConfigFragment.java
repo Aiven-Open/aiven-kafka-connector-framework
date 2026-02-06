@@ -16,11 +16,13 @@
 
 package io.aiven.commons.kafka.connector.source.config;
 
+import io.aiven.commons.collections.Scale;
 import io.aiven.commons.kafka.config.ExtendedConfigKey;
 import io.aiven.commons.kafka.config.SinceInfo;
 import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
 import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
+import io.aiven.commons.kafka.config.validator.ScaleValidator;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
@@ -29,36 +31,29 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 
-import static io.aiven.commons.kafka.connector.source.task.DistributionType.OBJECT_HASH;
-
 /**
  * Defines properties that are shared across all Source implementations.
  */
 public final class SourceConfigFragment extends ConfigFragment {
 
-	static final String MAX_POLL_RECORDS = "max.poll.records";
-	static final String TARGET_TOPIC = "topic";
-	static final String ERRORS_TOLERANCE = "errors.tolerance";
-	static final String DISTRIBUTION_TYPE = "distribution.type";
+	private static final String MAX_POLL_RECORDS = "max.poll.records";
+	private static final String TARGET_TOPIC = "topic";
+	private static final String ERRORS_TOLERANCE = "errors.tolerance";
+	private static final String DISTRIBUTION_TYPE = "distribution.type";
 
 	/** The name of the ring buffer size property */
-	static final String RING_BUFFER_SIZE = "ring.buffer.size";
-	/** The name of the native start key property */
+	private static final String RING_BUFFER_SIZE = "ring.buffer.size";
+	/** The name of the native start key property. Visible for us in logging */
 	public static final String NATIVE_START_KEY = "native.start.key";
+	private static final String TRANSFORMER_BUFFER = "transformer.buffer";
+	private static final String TRANSFORMER_CACHE = "transformer.cache.size";
 
-	/** The validator for distribution type property */
-	static final ConfigDef.Validator DISTRIBUTION_TYPE_VALIDATOR = ConfigDef.CaseInsensitiveValidString
-			.in(Arrays.stream(DistributionType.values()).map(Object::toString).toArray(String[]::new));
-
-	/** The validator for errors tolerance property */
-	static final ConfigDef.Validator ERRORS_TOLERANCE_VALIDATOR = ConfigDef.CaseInsensitiveValidString
-			.in(Arrays.stream(ToleranceType.values()).map(Object::toString).toArray(String[]::new));
 	/**
-	 * Gets a setter for this fragment.
+	 * Creates a Setter for this fragment.
 	 *
 	 * @param data
 	 *            the data map to modify.
-	 * @return the Setter.
+	 * @return the Setter
 	 */
 	public static Setter setter(final Map<String, String> data) {
 		return new Setter(data);
@@ -93,22 +88,35 @@ public final class SourceConfigFragment extends ConfigFragment {
 						.validator(ConfigDef.Range.atLeast(1)).documentation("Max poll records")
 						.since(siBuilder.version("1.0.0").build()).build())
 				.define(ExtendedConfigKey.builder(ERRORS_TOLERANCE).defaultValue(ToleranceType.NONE.name())
-						.validator(ERRORS_TOLERANCE_VALIDATOR)
+						.validator(ConfigDef.CaseInsensitiveValidString.in(
+								Arrays.stream(ToleranceType.values()).map(ToleranceType::name).toArray(String[]::new)))
 						.documentation(
 								"Indicates to the connector what level of exceptions are allowed before the connector stops.")
 						.since(siBuilder.version("1.0.0").build()).build())
 				.define(ExtendedConfigKey.builder(TARGET_TOPIC).validator(new ConfigDef.NonEmptyString())
 						.documentation("The name of the topic to write records to.")
 						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(DISTRIBUTION_TYPE).defaultValue(OBJECT_HASH.name())
-						.validator(DISTRIBUTION_TYPE_VALIDATOR)
+				.define(ExtendedConfigKey.builder(DISTRIBUTION_TYPE).defaultValue(DistributionType.OBJECT_HASH.name())
+						.validator(ConfigDef.CaseInsensitiveValidString.in(Arrays.stream(DistributionType.values())
+								.map(DistributionType::name).toArray(String[]::new)))
 						.documentation(
 								"Based on tasks.max config and the type of strategy selected, objects are processed in distributed"
 										+ " way by Kafka connect workers.")
 						.since(siBuilder.version("1.0.0").build()).build())
 				.define(ExtendedConfigKey.builder(NATIVE_START_KEY).documentation(
 						"An identifier for the source connector to know which key to start processing from, on a restart it will also begin reading messages from this point as well")
+						.since(siBuilder.version("1.0.0").build()).build())
+				.define(ExtendedConfigKey.builder(TRANSFORMER_BUFFER).type(ConfigDef.Type.INT).defaultValue(4096)
+						.validator(ScaleValidator.between(4096, Integer.MAX_VALUE, Scale.IEC))
+						.documentation(
+								"Defines the size in bytes of the transformer buffer used when reading buffered input streams.")
+						.since(siBuilder.version("1.0.0").build()).build())
+				.define(ExtendedConfigKey.builder(TRANSFORMER_CACHE).type(ConfigDef.Type.INT).defaultValue(500)
+						.validator(ScaleValidator.between(100, Integer.MAX_VALUE, Scale.IEC))
+						.documentation(
+								"Defines the size in bytes of the transformer cache used when processing Avro based input like Avro or Parquet streams.")
 						.since(siBuilder.version("1.0.0").build()).build());
+
 	}
 
 	/**
@@ -154,6 +162,26 @@ public final class SourceConfigFragment extends ConfigFragment {
 	 */
 	public int getRingBufferSize() {
 		return getInt(RING_BUFFER_SIZE);
+	}
+
+	/**
+	 * Gets the size, in bytes, of the transformer buffer in bytes. Only applies to
+	 * transformers that create buffered input streams.
+	 * 
+	 * @return the size in bytes of the transformer buffer.
+	 */
+	public int getTransformerBufferSize() {
+		return getInt(TRANSFORMER_BUFFER);
+	}
+
+	/**
+	 * Gets the size, in bytes, of the transformer cache size in bytes. Only applies
+	 * to transformers that utilize caches like Avro or Parquet.
+	 *
+	 * @return the size in bytes of the transformer buffer.
+	 */
+	public int getTransformerCacheSize() {
+		return getInt(TRANSFORMER_CACHE);
 	}
 
 	/**
@@ -243,6 +271,28 @@ public final class SourceConfigFragment extends ConfigFragment {
 		 */
 		public Setter nativeStartKey(final String nativeStartKey) {
 			return setValue(NATIVE_START_KEY, nativeStartKey);
+		}
+
+		/**
+		 * Sets the transformer buffer size.
+		 * 
+		 * @param bufferSize
+		 *            the buffer size in bytes.
+		 * @return this.
+		 */
+		public Setter transformerBuffer(final int bufferSize) {
+			return setValue(TRANSFORMER_BUFFER, bufferSize);
+		}
+
+		/**
+		 * Sets the cache size in bytes.
+		 * 
+		 * @param cacheSize
+		 *            the cache size in bytes.
+		 * @return this
+		 */
+		public Setter transformerCache(final int cacheSize) {
+			return setValue(TRANSFORMER_CACHE, cacheSize);
 		}
 	}
 }
