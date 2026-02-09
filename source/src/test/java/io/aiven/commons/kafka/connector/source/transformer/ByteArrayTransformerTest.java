@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * The Byte array transformer test.
  */
-public class ByteArrayTransformerTest extends IOTransformerTest {
+final class ByteArrayTransformerTest extends IOTransformerTest {
 	/** The size of the buffer used in testing */
 	private final static int BUFFER_SIZE = 4096;
 	/** THe function to extract the byte buffer from the object */
