@@ -20,13 +20,10 @@ import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeSourceData;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceRecord;
-import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.SchemaAndValue;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -40,12 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Base test for transformers.
  */
-public abstract class TransformerTest {
-
-	/**
-	 * The transformer under test.
-	 */
-	protected Transformer transformer;
+public abstract class IORecordTransformerTest extends IOTransformerTest {
 
 	/**
 	 * Setup the transformer for testing.
@@ -79,11 +71,6 @@ public abstract class TransformerTest {
 	 * @return the message to extract.
 	 */
 	protected abstract Function<Object, String> messageExtractor();
-
-	@BeforeEach
-	final void setUp() {
-		transformer = setupTransformer();
-	}
 
 	@Test
 	final void testReadRecordsInvalidData() {
@@ -151,45 +138,4 @@ public abstract class TransformerTest {
 		assertThat(records).isEmpty();
 	}
 
-	@Test
-	void testGetRecordsWithIOException() throws IOException {
-		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
-
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
-			@Override
-			public IOSupplier<InputStream> getInputStream(ExampleSourceRecord sourceRecord) {
-				return () -> new InputStream() {
-					@Override
-					public int read() throws IOException {
-						throw new IOException("Test Exception");
-					}
-				};
-			}
-		};
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
-
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
-
-		assertThat(records).isEmpty();
-	}
-
-	@Test
-	final void testCustomSpliteratorWithIOExceptionDuringInitialization() throws IOException {
-		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
-			public IOSupplier<InputStream> getInputStream(ExampleSourceRecord sourceRecord) {
-				return new IOSupplier<InputStream>() {
-					@Override
-					public InputStream get() throws IOException {
-						throw new IOException("Test IOException during initialization");
-					}
-				};
-			}
-		};
-
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
-
-		assertThat(records).isEmpty();
-	}
 }

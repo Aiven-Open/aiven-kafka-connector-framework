@@ -102,6 +102,13 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- Source: https://mvnrepository.com/artifact/io.confluent/kafka-connect-avro-converter -->
+      <dependency>
+        <groupId>io.confluent</groupId>
+        <artifactId>kafka-connect-avro-converter</artifactId>
+        <version>8.1.1</version>
+        <scope>compile</scope>
+      </dependency>
       <dependency>
         <groupId>com.github.victools</groupId>
         <artifactId>jsonschema-generator</artifactId>
@@ -117,6 +124,16 @@
         <artifactId>kafka-config</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.parquet</groupId>
+        <artifactId>parquet-avro</artifactId>
+        <version>1.17.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-annotations</artifactId>
+        <version>4.9.8</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -131,6 +148,10 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
     </dependency>
   </dependencies>
 

@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-final class AvroTransformerTest extends TransformerTest {
+final class AvroTransformerTest extends IORecordTransformerTest {
 
 	@Override
 	protected Transformer setupTransformer() {

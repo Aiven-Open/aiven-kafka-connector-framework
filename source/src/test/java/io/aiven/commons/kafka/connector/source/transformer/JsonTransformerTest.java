@@ -28,7 +28,7 @@ import java.util.function.Function;
 /**
  * Tests the JSON Transformer
  */
-final class JsonTransformerTest extends TransformerTest {
+final class JsonTransformerTest extends IORecordTransformerTest {
 
 	@Override
 	protected Transformer setupTransformer() {
@@ -46,11 +46,11 @@ final class JsonTransformerTest extends TransformerTest {
 
 	@Override
 	protected String generatedMessagePrefix() {
-		return "Test message";
+		return "value";
 	}
 
 	@Override
 	protected Function<Object, String> messageExtractor() {
-		return sv -> ((Map) sv).get("key").toString();
+		return sv -> ((Map) sv).get("value").toString();
 	}
 }
