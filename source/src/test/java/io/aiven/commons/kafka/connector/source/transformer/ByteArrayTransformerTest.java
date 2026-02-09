@@ -36,8 +36,14 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * The Byte array transformer test.
+ */
 public class ByteArrayTransformerTest extends IOTransformerTest {
+	/** The size of the buffer used in testing */
 	private final static int BUFFER_SIZE = 4096;
+	/** THe function to extract the byte buffer from the object */
+	private final static Function<Object, byte[]> messageExtractor = o -> (byte[]) o;
 
 	@Override
 	protected byte[] generateOneBuffer() {
@@ -48,6 +54,13 @@ public class ByteArrayTransformerTest extends IOTransformerTest {
 		return setupTransformer(BUFFER_SIZE);
 	}
 
+	/**
+	 * Sets up the transformer with the specified buffer size.
+	 * 
+	 * @param bufferSize
+	 *            the buffer size for the transformer.
+	 * @return the configured transformer.
+	 */
 	private Transformer setupTransformer(int bufferSize) {
 		Map<String, String> props = new HashMap<>();
 		SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
@@ -57,8 +70,7 @@ public class ByteArrayTransformerTest extends IOTransformerTest {
 		return new ByteArrayTransformer(sourceCommonConfig);
 	}
 
-	private final Function<Object, byte[]> messageExtractor = o -> (byte[]) o;
-
+	@Override
 	@Test
 	void testReadData() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
@@ -72,6 +84,7 @@ public class ByteArrayTransformerTest extends IOTransformerTest {
 				.containsExactly(ByteArrayDataFixture.generateByteData(BUFFER_SIZE));
 	}
 
+	@Override
 	@Test
 	void testReadRecordsSkipFew() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
@@ -92,6 +105,7 @@ public class ByteArrayTransformerTest extends IOTransformerTest {
 		}
 	}
 
+	@Override
 	@Test
 	void testReadRecordsSkipMoreRecordsThanExist() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
@@ -110,8 +124,13 @@ public class ByteArrayTransformerTest extends IOTransformerTest {
 	}
 
 	/**
-	 * @param maxBufferSize
-	 *            the maximum buffer size
+	 * Test that buffers that are too long wrap correctly. The buffer that is
+	 * provided is 10 x {@link #BUFFER_SIZE}. The {@code bufferFactorCount}
+	 * determines how many records that will be split into.
+	 * 
+	 * @param bufferFactorCount
+	 *            the factor to multiply the {@link #BUFFER_SIZE} by to create the
+	 *            actual test buffer size.
 	 * @param numberOfExpectedRecords
 	 *            the number of records the byte array is split into based off the
 	 *            max buffer size

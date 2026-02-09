@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.aiven.commons.kafka.connector.source.transformer;
 
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
@@ -33,7 +32,8 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Base test for transformers.
+ * Base test for transformers that consume {@code IOSource<InputStream>}
+ * objects.
  */
 public abstract class IOTransformerTest {
 
@@ -49,6 +49,14 @@ public abstract class IOTransformerTest {
 	 */
 	protected abstract Transformer setupTransformer();
 
+	/**
+	 * Generate one buffer for the transformer to read. This must be a valid data
+	 * buffer for the Transformer under test.
+	 * 
+	 * @return the buffer to read.
+	 * @throws IOException
+	 *             on generation error.
+	 */
 	protected abstract byte[] generateOneBuffer() throws IOException;
 
 	@BeforeEach
@@ -61,17 +69,43 @@ public abstract class IOTransformerTest {
 		transformer.close();
 	}
 
+	/**
+	 * Verifies that properly formed data can be read.
+	 * 
+	 * @throws Exception
+	 *             on error
+	 */
 	@Test
 	abstract void testReadData() throws Exception;
 
+	/**
+	 * Verifies that output records that are extracted from the data can be skipped.
+	 * For example a JSONL transformer returns one record for every line in the
+	 * JSONL structure. The transformer must be able to start returning output from
+	 * some point after the start of the structure
+	 * 
+	 * @throws Exception
+	 *             on error.
+	 */
 	@Test
 	abstract void testReadRecordsSkipFew() throws Exception;
 
+	/**
+	 * Verifies that output attempting to skip more records than are embedded in the
+	 * structure does not fail.
+	 * 
+	 * @throws Exception
+	 *             on error.
+	 */
 	@Test
 	abstract void testReadRecordsSkipMoreRecordsThanExist() throws Exception;
 
+	/**
+	 * Verifies that an IOException thrown when the IOSupplier is retrieved does not
+	 * cause the Transformer to abort.
+	 */
 	@Test
-	void testIOExceptionDuringCreation() {
+	final void testIOExceptionDuringCreation() {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", new byte[0]);
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
 			@Override
@@ -88,8 +122,12 @@ public abstract class IOTransformerTest {
 		assertThat(records).isEmpty();
 	}
 
+	/**
+	 * Verifies that an IOException during the InputStream read does not cause the
+	 * Transformer to abort.
+	 */
 	@Test
-	void testIOExceptionDuringDataRead() throws IOException {
+	final void testIOExceptionDuringDataRead() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", new byte[0]);
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
 			@Override
@@ -107,8 +145,11 @@ public abstract class IOTransformerTest {
 		assertThat(records).isEmpty();
 	}
 
+	/**
+	 * Verifies that an empty InputStream does not cause Transformer failure.
+	 */
 	@Test
-	void testGetRecordsEmptyInputStream() {
+	final void testGetRecordsEmptyInputStream() {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", new byte[0]);
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
 		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
@@ -118,7 +159,14 @@ public abstract class IOTransformerTest {
 		assertThat(records).isEmpty();
 	}
 
-	void verifyCloseCalledAtEnd() throws IOException {
+	/**
+	 * Verifies that close is call after the records are processed.
+	 * 
+	 * @throws IOException
+	 *             on error.
+	 */
+	@Test
+	final void verifyCloseCalledAtEnd() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateOneBuffer());
 		final CloseTrackingStream[] ctsRef = new CloseTrackingStream[1];
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
@@ -138,6 +186,13 @@ public abstract class IOTransformerTest {
 		assertThat(ctsRef[0].closeCount).isGreaterThan(0);
 	}
 
+	/**
+	 * Verifies that close is called after the iterator finished.
+	 * 
+	 * @throws IOException
+	 *             on error.
+	 */
+	@Test
 	void verifyCloseCalledAtIteratorEnd() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateOneBuffer());
 		final CloseTrackingStream[] ctsRef = new CloseTrackingStream[1];
@@ -160,6 +215,9 @@ public abstract class IOTransformerTest {
 		assertThat(ctsRef[0].closeCount).isGreaterThan(0);
 	}
 
+	/**
+	 * A class to track that an input stream has been closed.
+	 */
 	private static class CloseTrackingStream extends InputStream {
 		InputStream delegate;
 		int closeCount;

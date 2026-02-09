@@ -35,7 +35,8 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Base test for transformers.
+ * Base test for transformers that provide consume {@code IOSource<InputStream>}
+ * objects and produce records.
  */
 public abstract class IORecordTransformerTest extends IOTransformerTest {
 
@@ -65,10 +66,14 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	 */
 	protected abstract Function<Object, String> messageExtractor();
 
+	/**
+	 * Test that invalid data does not throw an exception to the reader and does not
+	 * return any daa.
+	 */
 	@Test
 	final void testReadRecordsInvalidData() {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
-				ByteBuffer.wrap("mock-avro-data".getBytes(StandardCharsets.UTF_8)));
+				ByteBuffer.wrap("A-bad-data-block".getBytes(StandardCharsets.UTF_8)));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
 		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
 
@@ -77,6 +82,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 		assertThat(recs).isEmpty();
 	}
 
+	@Override
 	@Test
 	final void testReadData() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(25));
@@ -94,6 +100,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 				.containsExactlyElementsOf(expected);
 	}
 
+	@Override
 	@Test
 	final void testReadRecordsSkipFew() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
@@ -115,6 +122,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 				.containsExactlyElementsOf(expected);
 	}
 
+	@Override
 	@Test
 	final void testReadRecordsSkipMoreRecordsThanExist() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
@@ -130,5 +138,4 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 
 		assertThat(records).isEmpty();
 	}
-
 }

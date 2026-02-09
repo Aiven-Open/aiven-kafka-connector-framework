@@ -26,6 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * The AVRO transformer test
+ */
 final class AvroTransformerTest extends IORecordTransformerTest {
 
 	@Override
