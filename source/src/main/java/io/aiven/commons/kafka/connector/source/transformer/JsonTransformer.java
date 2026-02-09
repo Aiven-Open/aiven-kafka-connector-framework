@@ -16,7 +16,6 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import org.apache.commons.io.function.IOSupplier;
@@ -43,15 +42,21 @@ public class JsonTransformer extends InputStreamTransformer {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JsonTransformer.class);
 
-
 	/**
 	 * Constructs the JSON Transformer with the specified config.
-	 * @param config the SourceCommonConfig instance to use.
+	 * 
+	 * @param config
+	 *            the SourceCommonConfig instance to use.
 	 */
 	public JsonTransformer(final SourceCommonConfig config) {
 		super(config);
 		jsonConverter = new JsonConverter();
 		jsonConverter.configure(Map.of("schemas.enable", "false"), false);
+	}
+
+	@Override
+	public void close() throws Exception {
+		jsonConverter.close();
 	}
 
 	@Override

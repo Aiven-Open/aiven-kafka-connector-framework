@@ -21,7 +21,6 @@ import io.aiven.commons.kafka.connector.source.impl.ExampleNativeSourceData;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceRecord;
 import org.apache.kafka.connect.data.SchemaAndValue;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -38,12 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Base test for transformers.
  */
-public abstract class TransformerTest {
-
-	/**
-	 * The transformer under test.
-	 */
-	protected Transformer transformer;
+public abstract class IORecordTransformerTest extends IOTransformerTest {
 
 	/**
 	 * Setup the transformer for testing.
@@ -77,11 +71,6 @@ public abstract class TransformerTest {
 	 * @return the message to extract.
 	 */
 	protected abstract Function<Object, String> messageExtractor();
-
-	@BeforeEach
-	final void setUp() {
-		transformer = setupTransformer();
-	}
 
 	@Test
 	final void testReadRecordsInvalidData() {
@@ -148,4 +137,5 @@ public abstract class TransformerTest {
 
 		assertThat(records).isEmpty();
 	}
+
 }
