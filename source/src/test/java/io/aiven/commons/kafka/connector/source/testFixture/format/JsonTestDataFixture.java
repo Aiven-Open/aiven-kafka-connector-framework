@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -191,29 +191,6 @@ final public class JsonTestDataFixture {
 	}
 
 	/**
-	 * Reads and decodes CSV based lines. Reads each line from the byte array and
-	 * splits it based on ',' returning the field values specified.
-	 *
-	 * @param input
-	 *            the serialized data
-	 * @param fieldsToDecode
-	 *            the indices of the fields to return in the value.
-	 * @return a list of lists of strings. The innermost list are the values
-	 *         returned from the csv files.
-	 * @throws IOException
-	 *             on IO error.
-	 */
-	public static List<List<String>> readAndDecodeLines(final byte[] input, final int... fieldsToDecode)
-			throws IOException {
-		try (InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(input), StandardCharsets.UTF_8);
-				BufferedReader bufferedReader = new BufferedReader(reader)) {
-			return bufferedReader.lines().map(l -> l.split(","))
-					.map(fields -> decodeRequiredFields(fields, fieldsToDecode)).collect(Collectors.toList());
-		}
-
-	}
-
-	/**
 	 * Reads based lines from the byte array.
 	 *
 	 * @param input
@@ -229,32 +206,4 @@ final public class JsonTestDataFixture {
 		}
 	}
 
-	/**
-	 * Decodes base 64 encoded fields.
-	 *
-	 * @param originalFields
-	 *            the list of fields.
-	 * @param fieldsToDecode
-	 *            the list of fields to decode.
-	 * @return the original fields with the specified fields decoded.
-	 */
-	private static List<String> decodeRequiredFields(final String[] originalFields, final int[] fieldsToDecode) {
-		final List<String> result = Arrays.asList(originalFields);
-		for (final int fieldIdx : fieldsToDecode) {
-			result.set(fieldIdx, b64Decode(result.get(fieldIdx)));
-		}
-		return result;
-	}
-
-	/**
-	 * Decode a base 64 string.
-	 *
-	 * @param value
-	 *            the value to decode.
-	 * @return the decoded value.
-	 */
-	public static String b64Decode(final String value) {
-		Objects.requireNonNull(value, "value cannot be null");
-		return new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8);
-	}
 }
