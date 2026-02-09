@@ -32,8 +32,8 @@ import java.util.function.Consumer;
 
 /**
  * ByteArrayTransformer chunks an entire object into a maximum size specified by
- * the {@link SourceConfigFragment.Setter#getTransformerBufferSize()}
- * configuration option.
+ * the {@link SourceConfigFragment.Setter#transformerBuffer(int)} configuration
+ * option.
  * <p>
  * If the configuration option specifies a buffer that is smaller than the
  * length of the input stream, the record will be split into multiple parts.
