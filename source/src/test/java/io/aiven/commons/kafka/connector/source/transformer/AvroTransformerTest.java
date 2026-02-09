@@ -1,0 +1,55 @@
+/*
+ * Copyright 2026 Aiven Oy
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.aiven.commons.kafka.connector.source.transformer;
+
+import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
+import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
+import io.aiven.commons.kafka.connector.source.testFixture.format.AvroTestDataFixture;
+import org.apache.kafka.connect.data.Struct;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+final class AvroTransformerTest extends TransformerTest {
+
+	@Override
+	protected Transformer setupTransformer() {
+		Map<String, String> props = new HashMap<>();
+		SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
+		setter.transformerCache(100);
+		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
+				props);
+		return new AvroTransformer(sourceCommonConfig);
+	}
+
+	@Override
+	protected byte[] generateData(int numberOfRecords) throws IOException {
+		return AvroTestDataFixture.generateAvroData(numberOfRecords);
+	}
+
+	@Override
+	protected String generatedMessagePrefix() {
+		return "Hello, from Avro Test Data Fixture! object ";
+	}
+
+	@Override
+	protected Function<Object, String> messageExtractor() {
+		return sv -> ((Struct) sv).getString("message");
+	}
+}
