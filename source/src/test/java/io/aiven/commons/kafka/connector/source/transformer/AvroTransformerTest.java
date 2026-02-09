@@ -39,6 +39,11 @@ final class AvroTransformerTest extends IORecordTransformerTest {
 	}
 
 	@Override
+	protected byte[] generateOneBuffer() throws IOException {
+		return AvroTestDataFixture.generateAvroData(1);
+	}
+
+	@Override
 	protected byte[] generateData(int numberOfRecords) throws IOException {
 		return AvroTestDataFixture.generateAvroData(numberOfRecords);
 	}

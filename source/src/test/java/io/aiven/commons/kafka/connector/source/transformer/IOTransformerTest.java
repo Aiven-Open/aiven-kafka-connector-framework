@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Function;
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,36 +44,12 @@ public abstract class IOTransformerTest {
 
 	/**
 	 * Setup the transformer for testing.
-	 * 
+	 *
 	 * @return a configured Transformer.
 	 */
 	protected abstract Transformer setupTransformer();
 
-	/**
-	 * Get the test data in the format for the Transformer.
-	 * 
-	 * @param numberOfRecords
-	 *            the number of recordds in the test data.
-	 * @return a byte array containing the data.
-	 * @throws IOException
-	 *             on error.
-	 */
-	protected abstract byte[] generateData(int numberOfRecords) throws IOException;
-
-	/**
-	 * Get the string prefix for the data messages.
-	 * 
-	 * @return the string prefix for the data messages.
-	 */
-	protected abstract String generatedMessagePrefix();
-
-	/**
-	 * Given a value object from a SchemaAndValue object extract the message from
-	 * it.
-	 * 
-	 * @return the message to extract.
-	 */
-	protected abstract Function<Object, String> messageExtractor();
+	protected abstract byte[] generateOneBuffer() throws IOException;
 
 	@BeforeEach
 	final void setUp() {
@@ -84,6 +60,15 @@ public abstract class IOTransformerTest {
 	final void teardown() throws Exception {
 		transformer.close();
 	}
+
+	@Test
+	abstract void testReadData() throws Exception;
+
+	@Test
+	abstract void testReadRecordsSkipFew() throws Exception;
+
+	@Test
+	abstract void testReadRecordsSkipMoreRecordsThanExist() throws Exception;
 
 	@Test
 	void testIOExceptionDuringCreation() {
@@ -120,5 +105,82 @@ public abstract class IOTransformerTest {
 		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
 		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
 		assertThat(records).isEmpty();
+	}
+
+	@Test
+	void testGetRecordsEmptyInputStream() {
+		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", new byte[0]);
+		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
+		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+
+		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+
+		assertThat(records).isEmpty();
+	}
+
+	void verifyCloseCalledAtEnd() throws IOException {
+		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateOneBuffer());
+		final CloseTrackingStream[] ctsRef = new CloseTrackingStream[1];
+		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
+			@Override
+			public IOSupplier<InputStream> getInputStream(ExampleSourceRecord sourceRecord) {
+				return () -> {
+					ctsRef[0] = new CloseTrackingStream(super.getInputStream(sourceRecord).get());
+					return ctsRef[0];
+				};
+			}
+		};
+		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+
+		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+
+		assertThat(records.count()).isGreaterThan(0);
+		assertThat(ctsRef[0].closeCount).isGreaterThan(0);
+	}
+
+	void verifyCloseCalledAtIteratorEnd() throws IOException {
+		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateOneBuffer());
+		final CloseTrackingStream[] ctsRef = new CloseTrackingStream[1];
+		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
+			@Override
+			public IOSupplier<InputStream> getInputStream(ExampleSourceRecord sourceRecord) {
+				return () -> {
+					ctsRef[0] = new CloseTrackingStream(super.getInputStream(sourceRecord).get());
+					return ctsRef[0];
+				};
+			}
+		};
+
+		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+
+		final Iterator<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord).iterator();
+		while (records.hasNext()) {
+			records.next();
+		}
+		assertThat(ctsRef[0].closeCount).isGreaterThan(0);
+	}
+
+	private static class CloseTrackingStream extends InputStream {
+		InputStream delegate;
+		int closeCount;
+
+		CloseTrackingStream(final InputStream stream) {
+			super();
+			this.delegate = stream;
+		}
+
+		@Override
+		public int read() throws IOException {
+			if (closeCount > 0) {
+				throw new IOException("ERROR Read after close");
+			}
+			return delegate.read();
+		}
+
+		@Override
+		public void close() throws IOException {
+			closeCount++;
+			delegate.close();
+		}
 	}
 }

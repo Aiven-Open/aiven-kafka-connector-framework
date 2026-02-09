@@ -40,6 +40,11 @@ final class JsonTransformerTest extends IORecordTransformerTest {
 	}
 
 	@Override
+	protected byte[] generateOneBuffer() throws IOException {
+		return JsonTestDataFixture.generateJsonData(1);
+	}
+
+	@Override
 	protected byte[] generateData(int numberOfRecords) throws IOException {
 		return JsonTestDataFixture.generateJsonData(numberOfRecords);
 	}

@@ -40,15 +40,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 public abstract class IORecordTransformerTest extends IOTransformerTest {
 
 	/**
-	 * Setup the transformer for testing.
+	 * Get the string prefix for the data messages.
 	 * 
-	 * @return a configured Transformer.
+	 * @return the string prefix for the data messages.
 	 */
-	protected abstract Transformer setupTransformer();
+	protected abstract String generatedMessagePrefix();
 
 	/**
 	 * Get the test data in the format for the Transformer.
-	 * 
+	 *
 	 * @param numberOfRecords
 	 *            the number of recordds in the test data.
 	 * @return a byte array containing the data.
@@ -56,13 +56,6 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	 *             on error.
 	 */
 	protected abstract byte[] generateData(int numberOfRecords) throws IOException;
-
-	/**
-	 * Get the string prefix for the data messages.
-	 * 
-	 * @return the string prefix for the data messages.
-	 */
-	protected abstract String generatedMessagePrefix();
 
 	/**
 	 * Given a value object from a SchemaAndValue object extract the message from
@@ -85,7 +78,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	}
 
 	@Test
-	final void testReadRecords() throws Exception {
+	final void testReadData() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(25));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
 		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
