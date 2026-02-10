@@ -25,10 +25,9 @@ import java.util.stream.Stream;
 
 /**
  * Extracts data from the native abstract source record to Key SchemaAndValue
- * object and a stream of SchemaAndValue objects for the values.
- *
- * This class is used within the AbstractSourceRecordIterator to convert the
- * abstract source record into one or more Kafka source records.
+ * object and a stream of SchemaAndValue objects for the values. This class is
+ * used within the AbstractSourceRecordIterator to convert the abstract source
+ * record into one or more Kafka source records.
  *
  */
 public abstract class Transformer implements AutoCloseable {
@@ -63,7 +62,7 @@ public abstract class Transformer implements AutoCloseable {
 	 * Convert the native key into a Schema and Value for Kafka.
 	 * 
 	 * @param abstractSourceRecord
-	 *            the Abstract source record to extract the keyData from.
+	 *            the abstract source record to extract the keyData from.
 	 * 
 	 * @return a SchemaAndValue for the key.
 	 */

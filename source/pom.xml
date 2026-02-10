@@ -30,7 +30,9 @@
   <name>Source connector framework</name>
   <description>A framework to make development of source connectors easier</description>
 
-  <properties></properties>
+  <properties>
+    <apache.csv.version>1.14.1</apache.csv.version>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -79,12 +81,18 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <scope>provided</scope>
+      <scope>compile</scope>
+    </dependency>
+    <!-- csv commons -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-csv</artifactId>
+      <version>${apache.csv.version}</version>
     </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
