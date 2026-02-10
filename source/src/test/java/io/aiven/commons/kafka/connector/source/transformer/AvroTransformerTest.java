@@ -26,6 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * The AVRO transformer test
+ */
 final class AvroTransformerTest extends IORecordTransformerTest {
 
 	@Override
@@ -36,6 +39,11 @@ final class AvroTransformerTest extends IORecordTransformerTest {
 		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
 				props);
 		return new AvroTransformer(sourceCommonConfig);
+	}
+
+	@Override
+	protected byte[] generateOneBuffer() throws IOException {
+		return AvroTestDataFixture.generateAvroData(1);
 	}
 
 	@Override

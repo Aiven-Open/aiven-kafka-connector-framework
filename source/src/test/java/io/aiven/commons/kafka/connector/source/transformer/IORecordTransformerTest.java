@@ -35,27 +35,10 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Base test for transformers.
+ * Base test for transformers that provide consume {@code IOSource<InputStream>}
+ * objects and produce records.
  */
 public abstract class IORecordTransformerTest extends IOTransformerTest {
-
-	/**
-	 * Setup the transformer for testing.
-	 * 
-	 * @return a configured Transformer.
-	 */
-	protected abstract Transformer setupTransformer();
-
-	/**
-	 * Get the test data in the format for the Transformer.
-	 * 
-	 * @param numberOfRecords
-	 *            the number of recordds in the test data.
-	 * @return a byte array containing the data.
-	 * @throws IOException
-	 *             on error.
-	 */
-	protected abstract byte[] generateData(int numberOfRecords) throws IOException;
 
 	/**
 	 * Get the string prefix for the data messages.
@@ -65,6 +48,17 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	protected abstract String generatedMessagePrefix();
 
 	/**
+	 * Get the test data in the format for the Transformer.
+	 *
+	 * @param numberOfRecords
+	 *            the number of recordds in the test data.
+	 * @return a byte array containing the data.
+	 * @throws IOException
+	 *             on error.
+	 */
+	protected abstract byte[] generateData(int numberOfRecords) throws IOException;
+
+	/**
 	 * Given a value object from a SchemaAndValue object extract the message from
 	 * it.
 	 * 
@@ -72,10 +66,14 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	 */
 	protected abstract Function<Object, String> messageExtractor();
 
+	/**
+	 * Test that invalid data does not throw an exception to the reader and does not
+	 * return any daa.
+	 */
 	@Test
 	final void testReadRecordsInvalidData() {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
-				ByteBuffer.wrap("mock-avro-data".getBytes(StandardCharsets.UTF_8)));
+				ByteBuffer.wrap("A-bad-data-block".getBytes(StandardCharsets.UTF_8)));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
 		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
 
@@ -84,8 +82,9 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 		assertThat(recs).isEmpty();
 	}
 
+	@Override
 	@Test
-	final void testReadRecords() throws Exception {
+	final void testReadData() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(25));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
 		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
@@ -101,6 +100,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 				.containsExactlyElementsOf(expected);
 	}
 
+	@Override
 	@Test
 	final void testReadRecordsSkipFew() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
@@ -122,6 +122,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 				.containsExactlyElementsOf(expected);
 	}
 
+	@Override
 	@Test
 	final void testReadRecordsSkipMoreRecordsThanExist() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
@@ -137,5 +138,4 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 
 		assertThat(records).isEmpty();
 	}
-
 }
