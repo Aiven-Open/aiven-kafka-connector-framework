@@ -181,11 +181,9 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 	 * </p>
 	 *
 	 * @param config the SourceCommonConfig instance.
-	 * @param backOffConfig
-	 *            the configuration for the Backoff.
 	 * @return The iterator of SourceRecords.
 	 */
-	abstract protected AbstractSourceRecordIterator<K, N, O, T> getIterator(SourceCommonConfig config, BackoffConfig backOffConfig);
+	abstract protected AbstractSourceRecordIterator<K, N, O, T> getIterator(SourceCommonConfig config);
 
 	/**
 	 * Called by {@link #start} to allows the concrete implementation to configure
@@ -204,7 +202,7 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 		final SourceCommonConfig config = configure(props);
 		maxPollRecords = config.getMaxPollRecords();
 		queue = new LinkedBlockingQueue<>(maxPollRecords * 2);
-		nativeIterator = getIterator(config, backoffConfig);
+		nativeIterator = getIterator(config);
 		final Iterator<SourceRecord> inner = IteratorUtils.transformedIterator(nativeIterator,
 				r -> r.getSourceRecord(config.getErrorsTolerance(), new OffsetManager<>(context)));
 		sourceRecordIterator = IteratorUtils.filteredIterator(inner, Objects::nonNull);
