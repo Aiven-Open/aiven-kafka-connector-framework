@@ -21,6 +21,7 @@ import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfig;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigDef;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
+import io.aiven.commons.kafka.connector.source.transformer.Transformer;
 import org.apache.kafka.common.config.ConfigValue;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
@@ -104,6 +105,9 @@ public class SourceCommonConfig extends ConnectorCommonConfig {
 		return sourceConfigFragment.getRingBufferSize();
 	}
 
+	public Transformer getTransformer() {
+		return sourceConfigFragment.getTransformer();
+	}
 	/**
 	 * Gets the size of the Transformer buffer if the transformer builds a buffered
 	 * input stream.

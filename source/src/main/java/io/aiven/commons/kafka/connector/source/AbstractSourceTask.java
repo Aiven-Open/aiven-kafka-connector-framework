@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,6 +30,7 @@ import io.aiven.commons.timing.AbortTrigger;
 import io.aiven.commons.timing.Backoff;
 import io.aiven.commons.timing.BackoffConfig;
 import io.aiven.commons.timing.SupplierOfLong;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
@@ -55,7 +57,7 @@ import org.slf4j.LoggerFactory;
  * </ul>
  *
  */
-public abstract class AbstractSourceTask extends SourceTask {
+public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>, T extends AbstractSourceRecord<K, N, O, T>> extends SourceTask {
 
 	/**
 	 * A {@code null} list representing no values in the polling functionality.
@@ -105,6 +107,8 @@ public abstract class AbstractSourceTask extends SourceTask {
 
 	private Iterator<SourceRecord> sourceRecordIterator;
 
+	private AbstractSourceRecordIterator<K, N, O, T> nativeIterator;
+
 	/**
 	 * Constructor.
 	 */
@@ -145,9 +149,14 @@ public abstract class AbstractSourceTask extends SourceTask {
 					getLogger().warn("{} interrupted -- EXITING", this.toString());
 				} catch (RuntimeException e) { // NOPMD AvoidCatchingGenericException
 					getLogger().error("{} failed -- EXITING", this.toString(), e);
-				}
+				} finally {
+                    try {
+                        nativeIterator.close();
+                    } catch (Exception e) {
+                        getLogger().error("Error closing iterator: {}", e.getMessage());
+                    }
+                }
 				getLogger().info("{} finished", this.toString());
-
 			}
 		}, this.getClass().getName() + " polling thread");
 	}
@@ -171,11 +180,12 @@ public abstract class AbstractSourceTask extends SourceTask {
 	 * task to abort.
 	 * </p>
 	 *
-	 * @param config
+	 * @param config the SourceCommonConfig instance.
+	 * @param backOffConfig
 	 *            the configuration for the Backoff.
 	 * @return The iterator of SourceRecords.
 	 */
-	abstract protected Iterator<SourceRecord> getIterator(BackoffConfig config);
+	abstract protected AbstractSourceRecordIterator<K, N, O, T> getIterator(SourceCommonConfig config, BackoffConfig backOffConfig);
 
 	/**
 	 * Called by {@link #start} to allows the concrete implementation to configure
@@ -194,7 +204,10 @@ public abstract class AbstractSourceTask extends SourceTask {
 		final SourceCommonConfig config = configure(props);
 		maxPollRecords = config.getMaxPollRecords();
 		queue = new LinkedBlockingQueue<>(maxPollRecords * 2);
-		sourceRecordIterator = getIterator(backoffConfig);
+		nativeIterator = getIterator(config, backoffConfig);
+		final Iterator<SourceRecord> inner = IteratorUtils.transformedIterator(nativeIterator,
+				r -> r.getSourceRecord(config.getErrorsTolerance(), new OffsetManager<>(context)));
+		sourceRecordIterator = IteratorUtils.filteredIterator(inner, Objects::nonNull);
 		implemtationPollingThread.start();
 	}
 
@@ -254,7 +267,9 @@ public abstract class AbstractSourceTask extends SourceTask {
 			return results;
 		} else {
 			getLogger().info("Stopping");
+
 			closeResources();
+
 			return NULL_RESULT;
 		}
 	}

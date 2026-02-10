@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class AbstractSourceRecordIterator<K extends Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>, T extends AbstractSourceRecord<K, N, O, T>>
 		implements
-			Iterator<T> {
+			Iterator<T>, AutoCloseable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSourceRecordIterator.class);
 
@@ -111,15 +111,12 @@ public final class AbstractSourceRecordIterator<K extends Comparable<K>, N, O ex
 	 *
 	 * @param sourceConfig
 	 *            The source configuration.
-	 * @param transformer
-	 *            The transformer to use for extracting key data and records from
-	 *            the native data stream.
 	 * @param offsetManager
 	 *            the Offset manager to use.
 	 * @param nativeSourceData
 	 *            Access methods for the native source.
 	 */
-	public AbstractSourceRecordIterator(final SourceCommonConfig sourceConfig, final Transformer transformer,
+	public AbstractSourceRecordIterator(final SourceCommonConfig sourceConfig,
 			final OffsetManager<O> offsetManager, final NativeSourceData<K, N, O, T> nativeSourceData) {
 		super();
 
@@ -127,7 +124,7 @@ public final class AbstractSourceRecordIterator<K extends Comparable<K>, N, O ex
 		final int maxTasks = sourceConfig.getMaxTasks();
 		this.nativeSourceData = nativeSourceData;
 		this.sourceConfig = sourceConfig;
-		this.transformer = transformer;
+		this.transformer = sourceConfig.getTransformer();
 		this.offsetManager = offsetManager;
 		this.taskId = sourceConfig.getTaskId() % maxTasks;
 		this.taskAssignment = new TaskAssignment(distributionType.getDistributionStrategy(maxTasks));
@@ -194,6 +191,13 @@ public final class AbstractSourceRecordIterator<K extends Comparable<K>, N, O ex
 		sourceRecord.setKeyData(transformer.generateKeyData(sourceRecord));
 		lastSeenNativeKey = sourceRecord.getNativeKey();
 		return transformer.generateRecords(nativeSourceData, sourceRecord).map(new Mapper<>(sourceRecord));
+	}
+
+	@Override
+	public void close() throws Exception {
+		if (transformer != null) {
+			transformer.close();
+		}
 	}
 
 	/**
