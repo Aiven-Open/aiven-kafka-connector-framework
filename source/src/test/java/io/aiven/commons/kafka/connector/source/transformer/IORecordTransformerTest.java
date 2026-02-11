@@ -96,6 +96,12 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 
 		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
 
+		// List<SchemaAndValue> recordList = records.toList();
+		// for( var record : recordList) {
+		// var value = record.value();
+		// System.out.println(value);
+		// }
+
 		assertThat(records).extracting(SchemaAndValue::value).extracting(messageExtractor())
 				.containsExactlyElementsOf(expected);
 	}
