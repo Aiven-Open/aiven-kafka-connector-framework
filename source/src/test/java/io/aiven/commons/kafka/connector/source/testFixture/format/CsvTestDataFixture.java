@@ -17,6 +17,7 @@ package io.aiven.commons.kafka.connector.source.testFixture.format;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -28,6 +29,8 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 public class CsvTestDataFixture {
+
+	public final static String MESSAGE_PREFIX = "Hello, from CSV Test Data Fixture: ";
 
 	public final static String MSG_HEADER = CSVFormat.RFC4180.format("id", "message", "value");
 
@@ -56,9 +59,8 @@ public class CsvTestDataFixture {
 	 *            the number of records to write.
 	 * @return A byte array containing the specified number of records.
 	 */
-	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 	public static byte[] generateCsvData(final int messageId, final int numOfRecs) {
-		return (MSG_HEADER + System.lineSeparator() + generateCsvRecords(messageId, numOfRecs, "test message"))
+		return generateCsvRecords(messageId, numOfRecs, "test message")
 				.getBytes(StandardCharsets.UTF_8);
 	}
 
@@ -70,7 +72,7 @@ public class CsvTestDataFixture {
 	 * @return The specified number of JSON records encoded into a string.
 	 */
 	public static String generateCsvRecords(final int recordCount) {
-		return MSG_HEADER + System.lineSeparator() + generateCsvRecords(0, recordCount, "test message");
+		return generateCsvRecords(0, recordCount, "test message");
 	}
 
 	/**
@@ -83,7 +85,7 @@ public class CsvTestDataFixture {
 	 * @return a standard JSON test record.
 	 */
 	public static String generateCsvRecord(final int messageId, final String msg) {
-		return CSVFormat.RFC4180.format(messageId, msg, "value-" + messageId);
+		return CSVFormat.RFC4180.format(messageId, msg, MESSAGE_PREFIX + messageId);
 	}
 
 	/**
@@ -96,7 +98,7 @@ public class CsvTestDataFixture {
 	 * @return the string representing the csv records.
 	 */
 	public static String generateCsvRecords(final int messageId, final int recordCount, final String testMessage) {
-		final StringBuilder csvRecords = new StringBuilder();
+		final StringBuilder csvRecords = new StringBuilder(MSG_HEADER).append(System.lineSeparator());
 		for (int i = 0; i < recordCount; i++) {
 			csvRecords.append(generateCsvRecord(messageId + i, testMessage)).append("\n");
 		}
@@ -121,7 +123,7 @@ public class CsvTestDataFixture {
 	 * read multiple JSON records.
 	 *
 	 * @param values
-	 *            The Strings containing the serialized JSON records.
+	 *            The Strings containing the serialized CSV records.
 	 * @return a list of CsvRecords extracted from the values.
 	 * @throws IOException
 	 *             on IO error.
@@ -145,6 +147,10 @@ public class CsvTestDataFixture {
 	 *             on IO error.
 	 */
 	public static List<CSVRecord> readCsvRecords(final byte[] bytes) throws IOException {
-		return CSVParser.parse(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8, CSVFormat.RFC4180).getRecords();
+		return CSVFormat.RFC4180.builder()
+				.setHeader()
+				.setSkipHeaderRecord(true)
+				.get()
+				.parse(new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8)).getRecords();
 	}
 }

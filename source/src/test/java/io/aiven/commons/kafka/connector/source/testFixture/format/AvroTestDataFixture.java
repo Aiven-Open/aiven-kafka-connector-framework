@@ -38,6 +38,8 @@ import java.util.function.Function;
  */
 public final class AvroTestDataFixture {
 
+	public static final String MESSAGE_PREFIX = "Hello, from Avro Test Data Fixture! object: ";
+
 	/** The Json string used to create the {@link #DEFAULT_SCHEMA} */
 	public static final String SCHEMA_JSON = "{\n  \"type\": \"record\",\n  \"name\": \"TestRecord\",\n"
 			+ "  \"fields\": [\n    {\"name\": \"message\", \"type\": \"string\"},\n"
@@ -203,7 +205,7 @@ public final class AvroTestDataFixture {
 	 */
 	public static GenericRecord generateAvroRecord(final int messageId, final Schema schema) {
 		final GenericRecord avroRecord = new GenericData.Record(schema);
-		avroRecord.put("message", "Hello, from Avro Test Data Fixture! object " + messageId);
+		avroRecord.put("message", MESSAGE_PREFIX + messageId);
 		avroRecord.put("id", messageId);
 		return avroRecord;
 	}

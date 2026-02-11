@@ -53,7 +53,7 @@ final class AvroTransformerTest extends IORecordTransformerTest {
 
 	@Override
 	protected String generatedMessagePrefix() {
-		return "Hello, from Avro Test Data Fixture! object ";
+		return AvroTestDataFixture.MESSAGE_PREFIX;
 	}
 
 	@Override
