@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * An actual NativeSourceData implementation would use a NativeClient to
- * retrieve the NativeItems.
+ * A simple String implementation would use a NativeClient to retrieve the
+ * NativeItems.
  *
  */
 public class ExampleCsvSourceData implements NativeSourceData<String> {

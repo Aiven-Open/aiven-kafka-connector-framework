@@ -25,8 +25,6 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -40,7 +38,7 @@ import java.util.stream.Stream;
  * usable by Connect to add messages to Kafka.
  */
 public class CsvTransformer extends Transformer {
-	private static final Logger LOGGER = LoggerFactory.getLogger(CsvTransformer.class);
+
 	/**
 	 * Constructor.
 	 *
@@ -79,6 +77,7 @@ public class CsvTransformer extends Transformer {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+
 
 	}
 
