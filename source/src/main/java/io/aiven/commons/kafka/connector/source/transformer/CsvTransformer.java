@@ -18,14 +18,13 @@
  */
 package io.aiven.commons.kafka.connector.source.transformer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.task.Context;
+import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.function.IOSupplier;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.slf4j.Logger;
@@ -35,7 +34,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -45,7 +46,6 @@ import java.util.function.Consumer;
  */
 public class CsvTransformer extends InputStreamTransformer {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CsvTransformer.class);
-	private final ObjectMapper mapper = new ObjectMapper();
 	/**
 	 * Constructor.
 	 *
@@ -94,25 +94,20 @@ public class CsvTransformer extends InputStreamTransformer {
 
 			@Override
 			public boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
-				String line = null;
+				String data = null, header = null;
 				try {
-					// remove blank and empty lines.
-					while (StringUtils.isBlank(line)) {
-						line = reader.readLine();
-						if (line == null) {
+					// This is problematic and I need to review.
+					while (StringUtils.isBlank(data) || StringUtils.isBlank(header)) {
+						header = reader.readLine();
+						data = reader.readLine();
+						if (header == null && data == null) {
 							// end of file
 							return false;
 						}
 					}
-					line = line.trim();
 
-					try {
-						mapper.readValue(line.getBytes(StandardCharsets.UTF_8), CSVRecord.class);
-					} catch(IOException io) {
-						LOGGER.warn("Exception trying to parse CSVRecord from bytes, skipping invalid data ",io);
-						return true;
-					}
-					action.accept(toConnectData(line.getBytes(StandardCharsets.UTF_8), null));
+					action.accept(toConnectData(header + System.lineSeparator() + data));
+
 					return true;
 				} catch (IOException e) {
 					LOGGER.error("Error reading input stream: {}", e.getMessage(), e);
@@ -125,22 +120,34 @@ public class CsvTransformer extends InputStreamTransformer {
 	/**
 	 *
 	 * @param value
-	 *            A single line from a csv wrapped in a csv commons object
+	 *            A single line from a csv wrapped in String format with the headers
 	 *
-	 * @param valueSchema
-	 *            A schema that matches the value supplied
 	 * @return A SchemaAndValue object that can be used by Kafka Connect to send
 	 *         Data to Kafka
 	 */
-	private SchemaAndValue toConnectData(byte[] value, Schema valueSchema) {
+	private SchemaAndValue toConnectData(String value) throws IOException {
+
 		if (value == null) {
 			return SchemaAndValue.NULL;
 		}
-
-			if (valueSchema == null) {
-			valueSchema = SchemaBuilder.OPTIONAL_BYTES_SCHEMA;
+		List<CSVRecord> records = CSVFormat.RFC4180.builder().setHeader().get().parse(new StringReader(value))
+				.getRecords();
+		if (records.size() > 1) {
+			throw new RuntimeException(
+					String.format("Too many records returned to be transformed: records %s", records.size()));
 		}
-		return new SchemaAndValue(valueSchema, value);
+		CSVRecord record = records.get(0);
+
+		SchemaBuilder valueSchema = SchemaBuilder.struct();
+
+		for (String header : record.getParser().getHeaderNames()) {
+			valueSchema.field(header, SchemaBuilder.STRING_SCHEMA);
+		}
+
+		// TODO may need update here to auto add in fields, need to check how toMap
+		// reacts when headers not provided.
+
+		return new SchemaAndValue(valueSchema, record.toMap());
 	}
 
 }

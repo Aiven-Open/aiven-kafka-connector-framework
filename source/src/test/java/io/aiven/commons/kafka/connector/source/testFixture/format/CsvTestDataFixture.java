@@ -29,7 +29,7 @@ import org.apache.commons.csv.CSVRecord;
 
 public class CsvTestDataFixture {
 
-	public final static String[] MSG_HEADER = {"id", "message", "value"};
+	public final static String MSG_HEADER = CSVFormat.RFC4180.format("id", "message", "value");
 
 	private CsvTestDataFixture() {
 		// do not instantiate
@@ -82,7 +82,7 @@ public class CsvTestDataFixture {
 	 * @return a standard JSON test record.
 	 */
 	public static String generateCsvRecord(final int messageId, final String msg) {
-		return CSVFormat.RFC4180.format(messageId, msg, "value-" + messageId);
+		return MSG_HEADER + System.lineSeparator() + CSVFormat.RFC4180.format(messageId, msg, "value-" + messageId);
 	}
 
 	/**
