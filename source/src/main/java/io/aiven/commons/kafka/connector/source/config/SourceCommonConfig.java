@@ -105,8 +105,13 @@ public class SourceCommonConfig extends ConnectorCommonConfig {
 		return sourceConfigFragment.getRingBufferSize();
 	}
 
+	/**
+	 * Gets the transformer defined for this source.
+	 * 
+	 * @return the Transformer defined for this source.
+	 */
 	public Transformer getTransformer() {
-		return sourceConfigFragment.getTransformer();
+		return sourceConfigFragment.getTransformer(this);
 	}
 	/**
 	 * Gets the size of the Transformer buffer if the transformer builds a buffered

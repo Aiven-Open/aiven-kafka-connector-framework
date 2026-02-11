@@ -18,7 +18,6 @@ package io.aiven.commons.kafka.connector.source.impl;
 
 import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.source.AbstractSourceRecord;
-import io.aiven.commons.kafka.connector.source.task.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,16 +44,14 @@ final public class ExampleSourceRecord
 
 			@Override
 			public String getNativeKey() {
-				return nativeItem.key;
+				return nativeItem.key();
 			}
 
 			@Override
 			public long getNativeItemSize() {
-				return nativeItem.data.capacity();
+				return nativeItem.data().capacity();
 			}
 		});
-		setContext(new Context<>(nativeItem.key));
-		setOffsetManagerEntry(new ExampleOffsetManagerEntry(nativeItem.key, "group1"));
 	}
 
 	/**

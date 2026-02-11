@@ -26,10 +26,13 @@ import io.aiven.commons.kafka.config.validator.ScaleValidator;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import io.aiven.commons.kafka.connector.source.transformer.ByteArrayTransformer;
 import io.aiven.commons.kafka.connector.source.transformer.Transformer;
+import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigException;
+import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
@@ -111,10 +114,9 @@ public final class SourceConfigFragment extends ConfigFragment {
 				.define(ExtendedConfigKey.builder(NATIVE_START_KEY).documentation(
 						"An identifier for the source connector to know which key to start processing from, on a restart it will also begin reading messages from this point as well")
 						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(TRANSFORMER_CLASS).type(ConfigDef.Type.CLASS).defaultValue(ByteArrayTransformer.class)
-						.validator(new TransformerValidator())
-						.documentation(
-								"Defines the class for the Transformer").internalConfig(true)
+				.define(ExtendedConfigKey.builder(TRANSFORMER_CLASS).type(ConfigDef.Type.CLASS)
+						.defaultValue(ByteArrayTransformer.class).validator(new TransformerValidator())
+						.documentation("Defines the class for the Transformer").internalConfig(true)
 						.since(siBuilder.version("1.0.0").build()).build())
 				.define(ExtendedConfigKey.builder(TRANSFORMER_BUFFER).type(ConfigDef.Type.INT).defaultValue(4096)
 						.validator(ScaleValidator.between(4096, Integer.MAX_VALUE, Scale.IEC))
@@ -174,9 +176,36 @@ public final class SourceConfigFragment extends ConfigFragment {
 		return getInt(RING_BUFFER_SIZE);
 	}
 
-	public Transformer getTransformer() {
-		return getConfiguredInstance(TRANSFORMER_CLASS, Transformer.class);
+	/**
+	 * Gets the Transformer instance for this source.
+	 * 
+	 * @param config
+	 *            the configuration for this source.
+	 * @return the Transformer instance for this source.
+	 */
+	public Transformer getTransformer(SourceCommonConfig config) {
+		Class<? extends Transformer> clazz;
+		Object klass = values().get(TRANSFORMER_CLASS);
+		if (klass instanceof String) {
+			try {
+				clazz = Utils.loadClass((String) klass, Transformer.class);
+			} catch (ClassNotFoundException e) {
+				throw new KafkaException("Class " + klass + " cannot be found", e);
+			}
+		} else if (klass instanceof Class<?> && Transformer.class.isAssignableFrom((Class<?>) klass)) {
+			clazz = (Class<? extends Transformer>) klass;
+		} else {
+			throw new KafkaException(
+					"Unexpected element of type " + klass.getClass().getName() + ", expected String or Class");
+		}
+		try {
+			return clazz.getDeclaredConstructor(SourceCommonConfig.class).newInstance(config);
+		} catch (InvocationTargetException | InstantiationException | IllegalAccessException
+				| NoSuchMethodException e) {
+			throw new KafkaException(e);
+		}
 	}
+
 	/**
 	 * Gets the size, in bytes, of the transformer buffer in bytes. Only applies to
 	 * transformers that create buffered input streams.
@@ -286,6 +315,13 @@ public final class SourceConfigFragment extends ConfigFragment {
 			return setValue(NATIVE_START_KEY, nativeStartKey);
 		}
 
+		/**
+		 * Sets the transformer class for this source.
+		 * 
+		 * @param transformer
+		 *            the class of the Transformer for this souce.
+		 * @return the transformer for this source.
+		 */
 		public Setter transformerClass(final Class<? extends Transformer> transformer) {
 			return setValue(TRANSFORMER_CLASS, transformer);
 		}
@@ -320,15 +356,15 @@ public final class SourceConfigFragment extends ConfigFragment {
 			if (value == null) {
 				throw new ConfigException("Transformer class may not be null");
 			}
-            try {
-                Class<?> clazz = value instanceof Class<?> ? (Class<?>) value : Class.forName(value.toString());
-				if (! Transformer.class.isAssignableFrom(clazz)) {
+			try {
+				Class<?> clazz = value instanceof Class<?> ? (Class<?>) value : Class.forName(value.toString());
+				if (!Transformer.class.isAssignableFrom(clazz)) {
 					throw new ConfigException("Transformer class in configuration must extend Transformer");
 				}
-            } catch (ClassNotFoundException e) {
-                throw new ConfigException("Transformer class specified in configuration not found: {}", e.getMessage());
-            }
-        }
+			} catch (ClassNotFoundException e) {
+				throw new ConfigException("Transformer class specified in configuration not found: {}", e.getMessage());
+			}
+		}
 
 		@Override
 		public String toString() {

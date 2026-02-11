@@ -21,26 +21,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.nio.ByteBuffer;
 
 /**
- * A "native" object for testing.
+ * A "native" object for testing. In a real implementation this would be the
+ * object returned from storage. The {@link ExampleSourceRecord} would convert
+ * this into an {@link io.aiven.commons.kafka.connector.common.NativeInfo}
+ * implementation during construction.
  */
-public class ExampleNativeItem {
-	// instance vars are package private.
-	final String key;
-	final ByteBuffer data;
-
-	/**
-	 * Constructor.
-	 *
-	 * @param key
-	 *            the key for this object.
-	 * @param data
-	 *            the data for this object.
-	 */
-	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "stores mutable fields in offset manager to be reviewed before release")
-	public ExampleNativeItem(final String key, final ByteBuffer data) {
-		this.key = key;
-		this.data = data;
-	}
+public record ExampleNativeItem(String key, ByteBuffer data) {
 
 	/**
 	 * Constructor.
@@ -52,7 +38,6 @@ public class ExampleNativeItem {
 	 */
 	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "stores mutable fields in offset manager to be reviewed before release")
 	public ExampleNativeItem(final String key, final byte[] data) {
-		this.key = key;
-		this.data = ByteBuffer.wrap(data);
+		this(key, ByteBuffer.wrap(data));
 	}
 }

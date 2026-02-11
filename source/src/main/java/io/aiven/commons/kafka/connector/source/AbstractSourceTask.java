@@ -56,8 +56,18 @@ import org.slf4j.LoggerFactory;
  * before stopping.</li>
  * </ul>
  *
+ * @param <K>
+ *            the key type for the native object.
+ * @param <N>
+ *            the native object type.
+ * @param <O>
+ *            the OffsetManagerEntry for the iterator.
+ * @param <T>
+ *            the implementation class for AbstractSourceRecord.
  */
-public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>, T extends AbstractSourceRecord<K, N, O, T>> extends SourceTask {
+public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>, T extends AbstractSourceRecord<K, N, O, T>>
+		extends
+			SourceTask {
 
 	/**
 	 * A {@code null} list representing no values in the polling functionality.
@@ -67,7 +77,7 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 	/**
 	 * The maximum time to spend polling. This is set to 4 seconds as 5 seconds is
 	 * the kafka limit that is allotted to a system for shutdown, and this allows
-	 * the polling and iterator to smoothly shutdown accounting for latentcy.
+	 * the polling and iterator to smoothly shutdown accounting for latency.
 	 */
 	public static final Duration MAX_POLL_TIME = Duration.ofSeconds(4);
 	/**
@@ -103,8 +113,6 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 
 	private final Backoff pollBackoff;
 
-	private final BackoffConfig backoffConfig;
-
 	private Iterator<SourceRecord> sourceRecordIterator;
 
 	private AbstractSourceRecordIterator<K, N, O, T> nativeIterator;
@@ -116,7 +124,7 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 		super();
 
 		connectorStopped = new AtomicBoolean();
-		backoffConfig = new BackoffConfig() {
+		BackoffConfig backoffConfig = new BackoffConfig() {
 			@Override
 			public SupplierOfLong getSupplierOfTimeRemaining() {
 				return MAX_POLL_TIME::toMillis;
@@ -136,6 +144,7 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 		iteratorBackoff = new Backoff(backoffConfig);
 		pollBackoff = new Backoff(backoffConfig);
 		implemtationPollingThread = new Thread(new Runnable() {
+			@SuppressWarnings("NOPMD.AvoidCatchingGenericException")
 			@Override
 			public void run() {
 				try {
@@ -146,17 +155,17 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 						}
 					}
 				} catch (InterruptedException e) {
-					getLogger().warn("{} interrupted -- EXITING", this.toString());
-				} catch (RuntimeException e) { // NOPMD AvoidCatchingGenericException
-					getLogger().error("{} failed -- EXITING", this.toString(), e);
+					getLogger().warn("{} interrupted -- EXITING", this);
+				} catch (RuntimeException e) {
+					getLogger().error("{} failed -- EXITING", this, e);
 				} finally {
-                    try {
-                        nativeIterator.close();
-                    } catch (Exception e) {
-                        getLogger().error("Error closing iterator: {}", e.getMessage());
-                    }
-                }
-				getLogger().info("{} finished", this.toString());
+					try {
+						nativeIterator.close();
+					} catch (Exception e) {
+						getLogger().error("Error closing iterator: {}", e.getMessage());
+					}
+				}
+				getLogger().info("{} finished", this);
 			}
 		}, this.getClass().getName() + " polling thread");
 	}
@@ -180,7 +189,8 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 	 * task to abort.
 	 * </p>
 	 *
-	 * @param config the SourceCommonConfig instance.
+	 * @param config
+	 *            the SourceCommonConfig instance.
 	 * @return The iterator of SourceRecords.
 	 */
 	abstract protected AbstractSourceRecordIterator<K, N, O, T> getIterator(SourceCommonConfig config);

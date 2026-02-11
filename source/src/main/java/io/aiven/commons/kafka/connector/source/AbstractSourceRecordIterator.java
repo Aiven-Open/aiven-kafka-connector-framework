@@ -54,7 +54,8 @@ import org.slf4j.LoggerFactory;
  */
 public final class AbstractSourceRecordIterator<K extends Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>, T extends AbstractSourceRecord<K, N, O, T>>
 		implements
-			Iterator<T>, AutoCloseable {
+			Iterator<T>,
+			AutoCloseable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSourceRecordIterator.class);
 
@@ -116,8 +117,8 @@ public final class AbstractSourceRecordIterator<K extends Comparable<K>, N, O ex
 	 * @param nativeSourceData
 	 *            Access methods for the native source.
 	 */
-	public AbstractSourceRecordIterator(final SourceCommonConfig sourceConfig,
-			final OffsetManager<O> offsetManager, final NativeSourceData<K, N, O, T> nativeSourceData) {
+	public AbstractSourceRecordIterator(final SourceCommonConfig sourceConfig, final OffsetManager<O> offsetManager,
+			final NativeSourceData<K, N, O, T> nativeSourceData) {
 		super();
 
 		final DistributionType distributionType = sourceConfig.getDistributionType();
@@ -274,6 +275,7 @@ public final class AbstractSourceRecordIterator<K extends Comparable<K>, N, O ex
 		@Override
 		public Optional<T> apply(final N nativeItem) {
 			final K itemName = nativeSourceData.getNativeKey(nativeItem);
+			// extract the context here so that we can avoid expensive operations
 			final Optional<Context<K>> optionalContext = nativeSourceData.extractContext(nativeItem);
 			if (optionalContext.isPresent() && !ringBuffer.contains(itemName)) {
 				final T sourceRecord = nativeSourceData.createSourceRecord(nativeItem);

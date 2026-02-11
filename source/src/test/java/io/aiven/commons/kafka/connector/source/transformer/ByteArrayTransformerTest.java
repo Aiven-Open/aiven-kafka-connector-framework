@@ -76,7 +76,7 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
 				ByteArrayDataFixture.generateByteData(BUFFER_SIZE));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 
 		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
 
@@ -90,7 +90,7 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
 				ByteArrayDataFixture.generateByteRecords(BUFFER_SIZE, 25));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 		// skip 5 records -- we have to set the record after the read because the
 		// getOffsetManagerEntry() creates a defensive copy
 		final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
@@ -111,7 +111,7 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
 				ByteArrayDataFixture.generateByteRecords(BUFFER_SIZE, 25));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 		// skip 25 records -- we have to set the record after the read because the
 		// getOffsetManagerEntry() creates a defensive copy
 		final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
@@ -147,7 +147,7 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
 				ByteArrayDataFixture.generateByteData(byteCount));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 
 		final List<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord).toList();
 
