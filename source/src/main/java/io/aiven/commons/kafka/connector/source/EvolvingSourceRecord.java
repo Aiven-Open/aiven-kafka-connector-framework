@@ -33,7 +33,7 @@ import java.io.InputStream;
 /**
  * An abstract source record as retrieved from the storage layer.
  */
-final public class EvolvingSourceRecord {
+public class EvolvingSourceRecord {
 	/** the key for the source record */
 	private SchemaAndValue keyData;
 	/** The value for the source record. */

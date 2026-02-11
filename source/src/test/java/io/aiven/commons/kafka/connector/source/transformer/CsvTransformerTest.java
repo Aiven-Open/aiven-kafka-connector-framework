@@ -16,19 +16,37 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
+import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
+import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
+import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
+import io.aiven.commons.kafka.connector.source.impl.csv.ExampleCsvSourceData;
+import io.aiven.commons.kafka.connector.source.task.Context;
 import io.aiven.commons.kafka.connector.source.testFixture.format.CsvTestDataFixture;
+import org.apache.kafka.connect.data.SchemaAndValue;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-final class CsvTransformerTest extends IORecordTransformerTest {
+import static org.assertj.core.api.Assertions.assertThat;
 
-	@Override
-	protected Transformer setupTransformer() {
+final class CsvTransformerTest {
+
+	private CsvTransformer transformer;
+
+	private CsvTransformer setupTransformer() {
 		Map<String, String> props = new HashMap<>();
 		SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
 		setter.transformerCache(100);
@@ -38,23 +56,12 @@ final class CsvTransformerTest extends IORecordTransformerTest {
 	}
 
 	/**
-	 * Generate one buffer for the transformer to read. This must be a valid data
-	 * buffer for the Transformer under test.
-	 *
-	 * @return the buffer to read.
-	 */
-	@Override
-	protected byte[] generateOneBuffer() {
-		return CsvTestDataFixture.generateCsvData(1);
-	}
-
-	/**
 	 * Get the string prefix for the data messages.
 	 *
 	 * @return the string prefix for the data messages.
 	 */
-	@Override
-	protected String generatedMessagePrefix() {
+
+	private String generatedMessagePrefix() {
 		return CsvTestDataFixture.MESSAGE_PREFIX;
 	}
 
@@ -67,9 +74,9 @@ final class CsvTransformerTest extends IORecordTransformerTest {
 	 * @throws IOException
 	 *             on error.
 	 */
-	@Override
-	protected byte[] generateData(int numberOfRecords) throws IOException {
-		return CsvTestDataFixture.generateCsvData(0, numberOfRecords);
+
+	private String generateData(int numberOfRecords) throws IOException {
+		return CsvTestDataFixture.generateCsvRecords(numberOfRecords);
 	}
 
 	/**
@@ -78,8 +85,88 @@ final class CsvTransformerTest extends IORecordTransformerTest {
 	 *
 	 * @return the message to extract.
 	 */
-	@Override
-	protected Function<Object, String> messageExtractor() {
+	private Function<Object, String> messageExtractor() {
 		return sv -> ((Map) sv).get("value").toString();
+	}
+
+	@BeforeEach
+	void setUp() {
+		transformer = setupTransformer();
+	}
+
+	@AfterEach
+	void teardown() throws Exception {
+		transformer.close();
+	}
+
+	@Test
+	void testReadRecordsInvalidData() throws IOException {
+		final String nativeItem = "A-bad-data-block";
+
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+		final List<Object> recs = records.collect(Collectors.toList());
+		assertThat(recs).isEmpty();
+	}
+
+	@Test
+	void testReadData() throws Exception {
+		final String nativeItem = generateData(25);
+
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+
+		final List<String> expected = new ArrayList<>();
+		for (int i = 0; i < 25; i++) {
+			expected.add(generatedMessagePrefix() + i);
+		}
+
+		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+		assertThat(records).extracting(SchemaAndValue::value).extracting(messageExtractor())
+				.containsExactlyElementsOf(expected);
+	}
+
+	@Test
+	void testReadRecordsSkipFew() throws Exception {
+		final String nativeItem = generateData(20);
+		final ExampleCsvSourceData nativeSourceData = new ExampleCsvSourceData();
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+		// skip 5 records -- we have to set the record after the read because the
+		// getOffsetManagerEntry() creates a defensive copy
+		// final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
+		// entry.setRecordCount(5);
+		// sourceRecord.setOffsetManagerEntry(entry);
+
+		final List<String> expected = new ArrayList<>();
+		for (int i = 5; i < 20; i++) {
+			expected.add(generatedMessagePrefix() + i);
+		}
+		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+
+		assertThat(records).extracting(SchemaAndValue::value).extracting(messageExtractor())
+				.containsExactlyElementsOf(expected);
+	}
+
+	private EvolvingSourceRecord createEvolvingSourceRecord(String nativeItem) {
+		final ExampleSourceNativeInfo exp = new ExampleSourceNativeInfo(
+				new ExampleNativeItem(nativeItem, nativeItem.getBytes(StandardCharsets.UTF_8)));
+		return new EvolvingSourceRecord(exp, new ExampleOffsetManagerEntry(nativeItem, "group1"),
+				new Context(nativeItem));
+	}
+
+	@Test
+	void testReadRecordsSkipMoreRecordsThanExist() throws Exception {
+		final String nativeItem = generateData(20);
+
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+		// skip 25 records -- we have to set the record after the read because the
+		// getOffsetManagerEntry() creates a defensive copy
+		// final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
+		// entry.setRecordCount(25);
+		// sourceRecord.setOffsetManagerEntry(entry);
+
+		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+
+		assertThat(records).isEmpty();
+
 	}
 }
