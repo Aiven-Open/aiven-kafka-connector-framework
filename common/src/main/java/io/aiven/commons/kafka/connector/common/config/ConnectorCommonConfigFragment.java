@@ -5,7 +5,7 @@
        you may not use this file except in compliance with the License.
        You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
        Unless required by applicable law or agreed to in writing,
        software distributed under the License is distributed on an
@@ -14,7 +14,7 @@
        specific language governing permissions and limitations
        under the License.
 
-       SPDX-License-Identifier: Apache-2
+       SPDX-License-Identifier: Apache-2.0
 */
 package io.aiven.commons.kafka.connector.common.config;
 
@@ -27,6 +27,12 @@ import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.config.validator.EnumValidator;
 import io.aiven.commons.kafka.config.validator.UrlValidator;
 import io.aiven.commons.util.io.compression.CompressionType;
+import org.apache.kafka.common.config.ConfigDef;
+import org.apache.kafka.common.config.ConfigValue;
+import org.apache.kafka.connect.connector.Connector;
+import org.apache.kafka.connect.runtime.ConnectorConfig;
+import org.apache.kafka.connect.storage.Converter;
+
 import java.net.URI;
 import java.util.Locale;
 import java.util.Map;
@@ -477,5 +483,61 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
     public Setter compressionType(CompressionType compressionType) {
       return setValue(DATA_COMPRESSION_TYPE, compressionType.name());
     }
-  }
+
+		/**
+		 * Sets the value converter schema registry flag.
+		 *
+		 * @param enableRegistry
+		 *            the state of the key converter schema registry flag.
+		 * @return this
+		 */
+		public Setter enableKeyConverterRegistry(boolean enableRegistry) {
+			return setValue(KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE, enableRegistry);
+		}
+
+		/**
+		 * The class for the connector.
+		 *
+		 * @param connectorClass
+		 *            the class for the connector.
+		 * @return this
+		 */
+		public Setter connector(final Class<? extends Connector> connectorClass) {
+			return setValue(ConnectorConfig.CONNECTOR_CLASS_CONFIG, connectorClass);
+		}
+
+		/**
+		 * Sets the connector name.
+		 *
+		 * @param name
+		 *            the connector name.
+		 * @return this
+		 */
+		public Setter name(final String name) {
+			return setValue(ConnectorConfig.NAME_CONFIG, name);
+		}
+
+		/**
+		 * Sets the key converter for the connector.
+		 *
+		 * @param keyConverter
+		 *            The key converter class.
+		 * @return this
+		 */
+		public Setter keyConverter(Class<? extends Converter> keyConverter) {
+			return setValue(ConnectorConfig.KEY_CONVERTER_CLASS_CONFIG, keyConverter);
+		}
+
+		/**
+		 * Sets the value converter for the connector.
+		 *
+		 * @param valueConverter
+		 *            The value converter class.
+		 * @return this
+		 */
+		public Setter valueConverter(Class<? extends Converter> valueConverter) {
+			return setValue(ConnectorConfig.VALUE_CONVERTER_CLASS_CONFIG, valueConverter);
+		}
+
+	}
 }
