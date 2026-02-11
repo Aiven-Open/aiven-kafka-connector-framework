@@ -71,11 +71,11 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	 * return any daa.
 	 */
 	@Test
-	final void testReadRecordsInvalidData() {
+	final void testReadRecordsInvalidData() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
 				ByteBuffer.wrap("A-bad-data-block".getBytes(StandardCharsets.UTF_8)));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 
 		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
 		final List<Object> recs = records.collect(Collectors.toList());
@@ -87,7 +87,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	final void testReadData() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(25));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 
 		final List<String> expected = new ArrayList<>();
 		for (int i = 0; i < 25; i++) {
@@ -111,7 +111,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	final void testReadRecordsSkipFew() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 		// skip 5 records -- we have to set the record after the read because the
 		// getOffsetManagerEntry() creates a defensive copy
 		final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
@@ -133,7 +133,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	final void testReadRecordsSkipMoreRecordsThanExist() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 		// skip 25 records -- we have to set the record after the read because the
 		// getOffsetManagerEntry() creates a defensive copy
 		final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();

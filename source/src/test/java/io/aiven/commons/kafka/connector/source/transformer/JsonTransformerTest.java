@@ -51,7 +51,7 @@ final class JsonTransformerTest extends IORecordTransformerTest {
 
 	@Override
 	protected String generatedMessagePrefix() {
-		return "value";
+		return JsonTestDataFixture.MESSAGE_PREFIX;
 	}
 
 	@Override

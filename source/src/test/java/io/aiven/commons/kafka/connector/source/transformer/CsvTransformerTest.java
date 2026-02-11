@@ -58,7 +58,7 @@ final class CsvTransformerTest extends IORecordTransformerTest {
 	 */
 	@Override
 	protected String generatedMessagePrefix() {
-		return "Hello, from Csv the Test Data Fixture! Object ";
+		return CsvTestDataFixture.MESSAGE_PREFIX;
 	}
 
 	/**
@@ -83,12 +83,6 @@ final class CsvTransformerTest extends IORecordTransformerTest {
 	 */
 	@Override
 	protected Function<Object, String> messageExtractor() {
-		return sv -> {
-			try {
-				return new ObjectMapper().writeValueAsString(((Struct) sv).getMap("value"));
-			} catch (JsonProcessingException e) {
-				throw new RuntimeException(e);
-			}
-		};
+		return sv ->  ((Map) sv).get("value").toString();
 	}
 }

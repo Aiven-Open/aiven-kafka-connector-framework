@@ -126,6 +126,13 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- Source: https://mvnrepository.com/artifact/org.awaitility/awaitility -->
+    <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <!--      <version>4.3.0</version>-->
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

@@ -21,16 +21,24 @@ import io.aiven.commons.kafka.connector.source.task.Context;
 import org.apache.commons.io.function.IOSupplier;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * An actual NativeSourceData implementation would use a NativeClient to
+ * retrieve the NativeItems.
+ *
+ */
 public class ExampleNativeSourceData
 		implements
 			NativeSourceData<String, ExampleNativeItem, ExampleOffsetManagerEntry, ExampleSourceRecord> {
 
-	IOSupplier<InputStream> streamSupplier;
-	public ExampleNativeSourceData() {
+	ExampleNativeClient client;
+
+	public ExampleNativeSourceData() throws IOException {
+		client = new ExampleNativeClient();
 	}
 
 	@Override
@@ -40,41 +48,71 @@ public class ExampleNativeSourceData
 
 	@Override
 	public Stream<ExampleNativeItem> getNativeItemStream(String offset) {
-		return Stream.empty();
+		// the offset is a String because it is the K type in NativeSourceData<K,N,O,T>
+		// above
+		return client.listObjects(offset).stream();
 	}
 
 	@Override
 	public IOSupplier<InputStream> getInputStream(ExampleSourceRecord sourceRecord) {
-		return () -> new ByteArrayInputStream(sourceRecord.getNativeItem().data.array());
+		// the sourceRecord is an ExampleSourceRecord because that is the T type in
+		// NativeSourceData<K,N,O,T> above
+		return () -> new ByteArrayInputStream(sourceRecord.getNativeItem().data().array());
 	}
 
 	@Override
 	public String getNativeKey(ExampleNativeItem nativeItem) {
-		return nativeItem.key;
+		// the nativeItem is an ExampleSourceItem because that is the N type in
+		// NativeSourceData<K,N,O,T> above
+		// the return type is a String because that is the K type in
+		// NativeSourceData<K,N,O,T> above
+		return nativeItem.key();
 	}
 
 	@Override
 	public String parseNativeKey(String keyString) {
+		// it is necessary to be able to present the Key as a string. This is the string
+		// representation of the K type in NativeSourceData<K,N,O,T> above.
+		// the return type is a String because that is the K type in
+		// NativeSourceData<K,N,O,T> above
 		return keyString;
 	}
 
 	@Override
 	public ExampleSourceRecord createSourceRecord(ExampleNativeItem nativeItem) {
+		// the nativeItem is an ExampleSourceItem because that is the N type in
+		// NativeSourceData<K,N,O,T> above
+		// the return type is an ExampleSourceRecord because that is the T type in
+		// NativeSourceData<K,N,O,T> above
 		return new ExampleSourceRecord(nativeItem);
 	}
 
 	@Override
 	public ExampleOffsetManagerEntry createOffsetManagerEntry(ExampleNativeItem nativeItem) {
-		return new ExampleOffsetManagerEntry(nativeItem.key, "group1");
+		// the nativeItem is an ExampleSourceItem because that is the N type in
+		// NativeSourceData<K,N,O,T> above
+		// the return type is an ExampleOffsetManagerEntry because that is the O type in
+		// NativeSourceData<K,N,O,T> above
+		// the OffsetManagerEntry is a case where the native key needs to be represented
+		// as a string
+		return new ExampleOffsetManagerEntry(nativeItem.key(), "group1");
 	}
 
 	@Override
 	public OffsetManager.OffsetManagerKey getOffsetManagerKey(String nativeKey) {
+		// the nativeKey is a string because that is the K type in in
+		// NativeSourceData<K,N,O,T> above
 		return new ExampleOffsetManagerEntry(nativeKey, "group1").getManagerKey();
 	}
 
 	@Override
 	public Optional<Context<String>> extractContext(ExampleNativeItem nativeItem) {
-		return Optional.empty();
+		// the nativeKey is a string because that is the K type in in
+		// NativeSourceData<K,N,O,T> above
+		// This is where Contextual information can be extracted from the nativeItem. At
+		// a minimum the
+		// nativeKey must be provided. See the Context class for other properties that
+		// can be set.
+		return Optional.of(new Context<>(getNativeKey(nativeItem)));
 	}
 }

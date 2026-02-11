@@ -36,7 +36,10 @@ import java.util.stream.Collectors;
  */
 final public class JsonTestDataFixture {
 
-	private final static String MSG_FORMAT = "{\"id\" : %s, \"message\" : \"%s\", \"value\" : \"value%s\"}%n";
+	public final static String MESSAGE_PREFIX = "Hello, from JSON Test Data Fixture: ";
+
+
+	private final static String MSG_FORMAT = "{\"id\" : %s, \"message\" : \"%s\", \"value\" : \"%s\"}%n";
 
 	public static final String SCHEMA_JSON = "{\n  \"type\": \"struct\", \"name\": \"TestRecord\",\n "
 			+ "  \"fields\": [\n {\"field\": \"message\", \"type\": \"string\"},\n"
@@ -119,7 +122,7 @@ final public class JsonTestDataFixture {
 	 * @return a standard JSON test record.
 	 */
 	public static String generateJsonRecord(final int messageId, final String msg) {
-		return String.format(MSG_FORMAT, messageId, msg, messageId);
+		return String.format(MSG_FORMAT, messageId, msg, MESSAGE_PREFIX + messageId);
 	}
 
 	/**

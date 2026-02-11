@@ -24,9 +24,15 @@ import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.config.validator.ScaleValidator;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
+import io.aiven.commons.kafka.connector.source.transformer.ByteArrayTransformer;
+import io.aiven.commons.kafka.connector.source.transformer.Transformer;
+import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.config.ConfigDef;
+import org.apache.kafka.common.config.ConfigException;
+import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
@@ -43,8 +49,10 @@ public final class SourceConfigFragment extends ConfigFragment {
 
 	/** The name of the ring buffer size property */
 	private static final String RING_BUFFER_SIZE = "ring.buffer.size";
-	/** The name of the native start key property. Visible for us in logging */
+	/** The name of the native start key property. Visible for use in logging */
 	public static final String NATIVE_START_KEY = "native.start.key";
+
+	private static final String TRANSFORMER_CLASS = "transformer.class";
 	private static final String TRANSFORMER_BUFFER = "transformer.buffer";
 	private static final String TRANSFORMER_CACHE = "transformer.cache.size";
 
@@ -106,6 +114,10 @@ public final class SourceConfigFragment extends ConfigFragment {
 				.define(ExtendedConfigKey.builder(NATIVE_START_KEY).documentation(
 						"An identifier for the source connector to know which key to start processing from, on a restart it will also begin reading messages from this point as well")
 						.since(siBuilder.version("1.0.0").build()).build())
+				.define(ExtendedConfigKey.builder(TRANSFORMER_CLASS).type(ConfigDef.Type.CLASS)
+						.defaultValue(ByteArrayTransformer.class).validator(new TransformerValidator())
+						.documentation("Defines the class for the Transformer").internalConfig(true)
+						.since(siBuilder.version("1.0.0").build()).build())
 				.define(ExtendedConfigKey.builder(TRANSFORMER_BUFFER).type(ConfigDef.Type.INT).defaultValue(4096)
 						.validator(ScaleValidator.between(4096, Integer.MAX_VALUE, Scale.IEC))
 						.documentation(
@@ -162,6 +174,36 @@ public final class SourceConfigFragment extends ConfigFragment {
 	 */
 	public int getRingBufferSize() {
 		return getInt(RING_BUFFER_SIZE);
+	}
+
+	/**
+	 * Gets the Transformer instance for this source.
+	 * 
+	 * @param config
+	 *            the configuration for this source.
+	 * @return the Transformer instance for this source.
+	 */
+	public Transformer getTransformer(SourceCommonConfig config) {
+		Class<? extends Transformer> clazz;
+		Object klass = values().get(TRANSFORMER_CLASS);
+		if (klass instanceof String) {
+			try {
+				clazz = Utils.loadClass((String) klass, Transformer.class);
+			} catch (ClassNotFoundException e) {
+				throw new KafkaException("Class " + klass + " cannot be found", e);
+			}
+		} else if (klass instanceof Class<?> && Transformer.class.isAssignableFrom((Class<?>) klass)) {
+			clazz = (Class<? extends Transformer>) klass;
+		} else {
+			throw new KafkaException(
+					"Unexpected element of type " + klass.getClass().getName() + ", expected String or Class");
+		}
+		try {
+			return clazz.getDeclaredConstructor(SourceCommonConfig.class).newInstance(config);
+		} catch (InvocationTargetException | InstantiationException | IllegalAccessException
+				| NoSuchMethodException e) {
+			throw new KafkaException(e);
+		}
 	}
 
 	/**
@@ -274,6 +316,17 @@ public final class SourceConfigFragment extends ConfigFragment {
 		}
 
 		/**
+		 * Sets the transformer class for this source.
+		 * 
+		 * @param transformer
+		 *            the class of the Transformer for this souce.
+		 * @return the transformer for this source.
+		 */
+		public Setter transformerClass(final Class<? extends Transformer> transformer) {
+			return setValue(TRANSFORMER_CLASS, transformer);
+		}
+
+		/**
 		 * Sets the transformer buffer size.
 		 * 
 		 * @param bufferSize
@@ -293,6 +346,29 @@ public final class SourceConfigFragment extends ConfigFragment {
 		 */
 		public Setter transformerCache(final int cacheSize) {
 			return setValue(TRANSFORMER_CACHE, cacheSize);
+		}
+	}
+
+	private static class TransformerValidator implements ConfigDef.Validator {
+
+		@Override
+		public void ensureValid(String name, Object value) {
+			if (value == null) {
+				throw new ConfigException("Transformer class may not be null");
+			}
+			try {
+				Class<?> clazz = value instanceof Class<?> ? (Class<?>) value : Class.forName(value.toString());
+				if (!Transformer.class.isAssignableFrom(clazz)) {
+					throw new ConfigException("Transformer class in configuration must extend Transformer");
+				}
+			} catch (ClassNotFoundException e) {
+				throw new ConfigException("Transformer class specified in configuration not found: {}", e.getMessage());
+			}
+		}
+
+		@Override
+		public String toString() {
+			return String.format("A class that extends %s.", Transformer.class.getCanonicalName());
 		}
 	}
 }

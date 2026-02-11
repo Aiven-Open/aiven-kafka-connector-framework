@@ -17,7 +17,9 @@ package io.aiven.commons.kafka.connector.source.transformer;
 
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeSourceData;
+import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceRecord;
+import io.aiven.commons.kafka.connector.source.task.Context;
 import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.junit.jupiter.api.AfterEach;
@@ -58,6 +60,21 @@ public abstract class IOTransformerTest {
 	 *             on generation error.
 	 */
 	protected abstract byte[] generateOneBuffer() throws IOException;
+
+	/**
+	 * Creates an ExampleSourceRecord with the Context of OffsetManagerEntry as
+	 * would be set by the AbstractSourceRecordIterator processes.
+	 * 
+	 * @param nativeItem
+	 *            the native Item to create the recrod for
+	 * @return the populated native Item.
+	 */
+	protected ExampleSourceRecord createExampleSourceRecord(ExampleNativeItem nativeItem) {
+		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		sourceRecord.setContext(new Context<>(nativeItem.key()));
+		sourceRecord.setOffsetManagerEntry(new ExampleOffsetManagerEntry(nativeItem.key(), "group1"));
+		return sourceRecord;
+	}
 
 	@BeforeEach
 	final void setUp() {
@@ -105,7 +122,7 @@ public abstract class IOTransformerTest {
 	 * cause the Transformer to abort.
 	 */
 	@Test
-	final void testIOExceptionDuringCreation() {
+	final void testIOExceptionDuringCreation() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", new byte[0]);
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
 			@Override
@@ -115,7 +132,7 @@ public abstract class IOTransformerTest {
 				};
 			}
 		};
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 
 		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
 
@@ -140,7 +157,7 @@ public abstract class IOTransformerTest {
 				};
 			}
 		};
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
 		assertThat(records).isEmpty();
 	}
@@ -149,10 +166,10 @@ public abstract class IOTransformerTest {
 	 * Verifies that an empty InputStream does not cause Transformer failure.
 	 */
 	@Test
-	final void testGetRecordsEmptyInputStream() {
+	final void testGetRecordsEmptyInputStream() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", new byte[0]);
 		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 
 		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
 
@@ -178,7 +195,7 @@ public abstract class IOTransformerTest {
 				};
 			}
 		};
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 
 		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
 
@@ -206,7 +223,7 @@ public abstract class IOTransformerTest {
 			}
 		};
 
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
+		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 
 		final Iterator<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord).iterator();
 		while (records.hasNext()) {

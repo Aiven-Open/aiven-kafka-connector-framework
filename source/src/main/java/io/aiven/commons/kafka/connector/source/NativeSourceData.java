@@ -61,12 +61,14 @@ public interface NativeSourceData<K extends Comparable<K>, N, O extends OffsetMa
 	/**
 	 * Gets an IOSupplier for the specific source record.
 	 *
-	 * The implementation should accept an AbstractSourceRecord created from a
-	 * sourceRecord returned from a previous call to {@link #createSourceRecord}.
+	 * The implementation should extract an input stream from native item in the
+	 * source record.
 	 *
 	 * @param sourceRecord
 	 *            the source record to get the input stream from.
 	 * @return the IOSupplier that retrieves an InputStream from the source record.
+	 * @throws UnsupportedOperationException
+	 *             If the source record does not provide an input stream.
 	 */
 	IOSupplier<InputStream> getInputStream(T sourceRecord);
 
@@ -120,8 +122,16 @@ public interface NativeSourceData<K extends Comparable<K>, N, O extends OffsetMa
 	OffsetManager.OffsetManagerKey getOffsetManagerKey(K nativeKey);
 
 	/**
-	 * Extract context information from the native item.
-	 * 
+	 * Extract context information from the native item. There are three possible
+	 * returns from this method.
+	 * <ol>
+	 * <li>The item contains information that should be in the context: Create a
+	 * populated Context and return it.</li>
+	 * <li>The item does not contain information that should be in the context:
+	 * Create a Context object containing only the native key and return it.</li>
+	 * <li>The item should not be processed: Return an {@link Optional#empty()}</li>
+	 * </ol>
+	 *
 	 * @param nativeItem
 	 *            the native item to extract context from.
 	 * @return An Optional containing the extracted context if possible.
