@@ -58,7 +58,8 @@ public class CsvTestDataFixture {
 	 */
 	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 	public static byte[] generateCsvData(final int messageId, final int numOfRecs) {
-		return generateCsvRecords(messageId, numOfRecs, "test message").getBytes(StandardCharsets.UTF_8);
+		return (MSG_HEADER + System.lineSeparator() + generateCsvRecords(messageId, numOfRecs, "test message"))
+				.getBytes(StandardCharsets.UTF_8);
 	}
 
 	/**
@@ -69,7 +70,7 @@ public class CsvTestDataFixture {
 	 * @return The specified number of JSON records encoded into a string.
 	 */
 	public static String generateCsvRecords(final int recordCount) {
-		return generateCsvRecords(0, recordCount, "test message");
+		return MSG_HEADER + System.lineSeparator() + generateCsvRecords(0, recordCount, "test message");
 	}
 
 	/**
@@ -82,7 +83,7 @@ public class CsvTestDataFixture {
 	 * @return a standard JSON test record.
 	 */
 	public static String generateCsvRecord(final int messageId, final String msg) {
-		return MSG_HEADER + System.lineSeparator() + CSVFormat.RFC4180.format(messageId, msg, "value-" + messageId);
+		return CSVFormat.RFC4180.format(messageId, msg, "value-" + messageId);
 	}
 
 	/**

@@ -75,6 +75,7 @@ public class CsvTransformer extends InputStreamTransformer {
 			Context<?> context) {
 		return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
 			BufferedReader reader;
+			String headers;
 
 			@Override
 			protected void inputOpened(final InputStream input) {
@@ -94,19 +95,27 @@ public class CsvTransformer extends InputStreamTransformer {
 
 			@Override
 			public boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
-				String data = null, header = null;
+				String data = null;
 				try {
+					// TODO configure headers to be supplied ignored or part of csv
+					if (StringUtils.isBlank(headers)) {
+						headers = reader.readLine();
+						if (headers == null) {
+							// end of file
+							return false;
+						}
+					}
 					// This is problematic and I need to review.
-					while (StringUtils.isBlank(data) || StringUtils.isBlank(header)) {
-						header = reader.readLine();
+					while (StringUtils.isBlank(data)) {
+
 						data = reader.readLine();
-						if (header == null && data == null) {
+						if (data == null) {
 							// end of file
 							return false;
 						}
 					}
 
-					action.accept(toConnectData(header + System.lineSeparator() + data));
+					action.accept(toConnectData(headers + System.lineSeparator() + data));
 
 					return true;
 				} catch (IOException e) {
