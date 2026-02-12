@@ -78,6 +78,7 @@
     <!--
 Sink module is removed until there is code
 <module>sink</module>-->
+      <module>common-tests</module>
   </modules>
 
   <scm>

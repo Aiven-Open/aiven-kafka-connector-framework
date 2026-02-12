@@ -28,66 +28,66 @@ import java.util.Map;
  * Creates consumer properties to read Kafka topics.
  */
 public final class ConsumerPropertiesBuilder {
-    /** The properties for this builder */
-    private final Map<String,String> props = new HashMap<>();
+	/** The properties for this builder */
+	private final Map<String, String> props = new HashMap<>();
 
-    /**
-     * Creates a ConsumerPropertiesBuilder for a bootstrap server. By default, the key and value are serialized as
-     * strings.
-     *
-     * @param bootstrapServers
-     *            the bootstrap server to talk to.
-     */
-    public ConsumerPropertiesBuilder(final String bootstrapServers) {
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-consumer-group");
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        valueDeserializer(StringDeserializer.class);
-        keyDeserializer(StringDeserializer.class);
-    }
+	/**
+	 * Creates a ConsumerPropertiesBuilder for a bootstrap server. By default, the
+	 * key and value are serialized as strings.
+	 *
+	 * @param bootstrapServers
+	 *            the bootstrap server to talk to.
+	 */
+	public ConsumerPropertiesBuilder(final String bootstrapServers) {
+		props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+		props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-consumer-group");
+		props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+		valueDeserializer(StringDeserializer.class);
+		keyDeserializer(StringDeserializer.class);
+	}
 
-    /**
-     * Sets the key deserializer.
-     *
-     * @param keyDeserializer
-     *            the class for the key deserializer.
-     * @return this.
-     */
-    public ConsumerPropertiesBuilder keyDeserializer(final Class<? extends Deserializer<?>> keyDeserializer) {
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer.getCanonicalName());
-        return this;
-    }
+	/**
+	 * Sets the key deserializer.
+	 *
+	 * @param keyDeserializer
+	 *            the class for the key deserializer.
+	 * @return this.
+	 */
+	public ConsumerPropertiesBuilder keyDeserializer(final Class<? extends Deserializer<?>> keyDeserializer) {
+		props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer.getCanonicalName());
+		return this;
+	}
 
-    /**
-     * Sets the value deserializer.
-     *
-     * @param valueDeserializer
-     *            the class for the value deserializer.
-     * @return this.
-     */
-    public ConsumerPropertiesBuilder valueDeserializer(final Class<? extends Deserializer<?>> valueDeserializer) {
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer.getCanonicalName());
-        return this;
-    }
+	/**
+	 * Sets the value deserializer.
+	 *
+	 * @param valueDeserializer
+	 *            the class for the value deserializer.
+	 * @return this.
+	 */
+	public ConsumerPropertiesBuilder valueDeserializer(final Class<? extends Deserializer<?>> valueDeserializer) {
+		props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer.getCanonicalName());
+		return this;
+	}
 
-    /**
-     * Sets the schema registry URL.
-     *
-     * @param schemaRegistryUrl
-     *            the URL as a string.
-     * @return this.
-     */
-    public ConsumerPropertiesBuilder schemaRegistry(final String schemaRegistryUrl) {
-        ConnectorCommonConfigFragment.setter(props).schemaRegistry(schemaRegistryUrl);
-        return this;
-    }
+	/**
+	 * Sets the schema registry URL.
+	 *
+	 * @param schemaRegistryUrl
+	 *            the URL as a string.
+	 * @return this.
+	 */
+	public ConsumerPropertiesBuilder schemaRegistry(final String schemaRegistryUrl) {
+		ConnectorCommonConfigFragment.setter(props).schemaRegistry(schemaRegistryUrl);
+		return this;
+	}
 
-    /**
-     * Builds the properties.
-     *
-     * @return the properties from this builder.
-     */
-    public Map<String, String> build() {
-        return new HashMap<String, String>(props);
-    }
+	/**
+	 * Builds the properties.
+	 *
+	 * @return the properties from this builder.
+	 */
+	public Map<String, String> build() {
+		return new HashMap<String, String>(props);
+	}
 }

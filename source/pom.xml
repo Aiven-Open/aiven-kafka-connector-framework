@@ -44,13 +44,12 @@
       <artifactId>framework-common-for-connectors</artifactId>
       <version>${project.parent.version}</version>
     </dependency>
-      <dependency>
-          <groupId>io.aiven.commons</groupId>
-          <artifactId>kafka-common-connector-framework</artifactId>
-          <version>${project.version}</version>
-        <classifier>test-jar</classifier>
-          <scope>test</scope>
-      </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>kafka-common-connector-framework-tests</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>com.github.victools</groupId>
       <artifactId>jsonschema-generator</artifactId>

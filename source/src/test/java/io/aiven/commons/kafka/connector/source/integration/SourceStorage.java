@@ -19,11 +19,13 @@ package io.aiven.commons.kafka.connector.source.integration;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 
 import io.aiven.commons.kafka.connector.common.integration.StorageBase;
+import io.aiven.commons.kafka.connector.source.transformer.TransformerRegistry;
+
 import java.util.Map;
 import java.util.function.BiFunction;
 
 /**
- *
+ * The definition of the interface to write data to the SourceStorage so that it can be read back through normal channels.
  *
  * @param <K>
  *            the native key type
@@ -33,58 +35,94 @@ import java.util.function.BiFunction;
  *            The OffsetManagerEntry type.
  */
 public interface SourceStorage<K extends Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>>
-        extends
-            StorageBase<K, N> {
+		extends
+			StorageBase<K, N> {
 
-    K createKey(String prefix, String topic, int partition);
+	/**
+	 * Gets the list of supported transformers for the storage.
+	 * @return A TransformerRegistry containing the acceptable transformers.
+	 */
+	TransformerRegistry supportedTransformers();
+	/**
+	 * Create a native key from a topic and partition.
+	 * @param topic the topic for the key.
+	 * @param partition the partition for the key.
+	 * @return a new Key.
+	 */
+	K createKey(String topic, int partition);
 
-    WriteResult<K> writeWithKey(K nativeKey, byte[] testDataBytes);
+	/**
+	 * Write a record into the storage using the native key.
+	 * @param nativeKey the native key to use in the storage engine.
+	 * @param testDataBytes the bytes to associate with the key.
+	 * @return A WriteResule for the write.
+	 */
+	WriteResult<K> writeWithKey(K nativeKey, byte[] testDataBytes);
 
-    Map<String, String> createConnectorConfig();
+	/**
+	 * Create a connector configuration.  This includes any information necessary to connect to the
+	 * storage engine.
+	 * @return the connector config map.
+	 */
+	Map<String, String> createConnectorConfig();
 
-    BiFunction<Map<String, Object>, Map<String, Object>, O> offsetManagerEntryFactory();
+	/**
+	 * Returns a BiFunction that converts OffsetManager key and data into an
+	 * OffsetManagerEntry for this system.
+	 * <ul>
+	 * <li>The first argument to the method is the
+	 * {@link OffsetManager.OffsetManagerEntry#getManagerKey()} value.</li>
+	 * <li>The second argument is the
+	 * {@link OffsetManager.OffsetManagerEntry#getProperties()} value.</li>
+	 * <li>Method should return a proper
+	 * {@link OffsetManager.OffsetManagerEntry}</li>
+	 * </ul>
+	 *
+	 * @return A BiFunction that crates an OffsetManagerEntry.
+	 */
+	BiFunction<Map<String, Object>, Map<String, Object>, O> offsetManagerEntryFactory();
 
-    /**
-     * The result of a successful write.
-     *
-     * @param <K>
-     *            the native key type.
-     */
-    final class WriteResult<K extends Comparable<K>> {
-        /** the OffsetManagerKey for the result */
-        private final OffsetManager.OffsetManagerKey offsetKey;
-        /** The native Key for the result */
-        private final K nativeKey;
+	/**
+	 * The result of a successful write.
+	 *
+	 * @param <K>
+	 *            the native key type.
+	 */
+	final class WriteResult<K extends Comparable<K>> {
+		/** the OffsetManagerKey for the result */
+		private final OffsetManager.OffsetManagerKey offsetKey;
+		/** The native Key for the result */
+		private final K nativeKey;
 
-        /**
-         * Constructor.
-         *
-         * @param offsetKey
-         *            the OffsetManagerKey for the result.
-         * @param nativeKey
-         *            the native key for the result.
-         */
-        public WriteResult(final OffsetManager.OffsetManagerKey offsetKey, final K nativeKey) {
-            this.offsetKey = offsetKey;
-            this.nativeKey = nativeKey;
-        }
+		/**
+		 * Constructor.
+		 *
+		 * @param offsetKey
+		 *            the OffsetManagerKey for the result.
+		 * @param nativeKey
+		 *            the native key for the result.
+		 */
+		public WriteResult(final OffsetManager.OffsetManagerKey offsetKey, final K nativeKey) {
+			this.offsetKey = offsetKey;
+			this.nativeKey = nativeKey;
+		}
 
-        /**
-         * Gets the OffsetManagerKey.
-         *
-         * @return the OffsetManagerKey
-         */
-        public OffsetManager.OffsetManagerKey getOffsetManagerKey() {
-            return offsetKey;
-        }
+		/**
+		 * Gets the OffsetManagerKey.
+		 *
+		 * @return the OffsetManagerKey
+		 */
+		public OffsetManager.OffsetManagerKey getOffsetManagerKey() {
+			return offsetKey;
+		}
 
-        /**
-         * Gets the native key.
-         *
-         * @return the native key.
-         */
-        K getNativeKey() {
-            return nativeKey;
-        }
-    }
+		/**
+		 * Gets the native key.
+		 *
+		 * @return the native key.
+		 */
+		K getNativeKey() {
+			return nativeKey;
+		}
+	}
 }
