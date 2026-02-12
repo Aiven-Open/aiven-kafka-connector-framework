@@ -45,7 +45,7 @@ public class CsvTransformer extends Transformer {
 	 * @param config
 	 *            The configuration for the source connector.
 	 */
-	protected CsvTransformer(SourceCommonConfig config) {
+	public CsvTransformer(SourceCommonConfig config) {
 		super(config);
 	}
 

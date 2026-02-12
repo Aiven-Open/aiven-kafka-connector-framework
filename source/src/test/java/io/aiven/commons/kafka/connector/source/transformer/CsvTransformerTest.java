@@ -18,7 +18,6 @@ package io.aiven.commons.kafka.connector.source.transformer;
 
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
-import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
@@ -47,8 +46,6 @@ final class CsvTransformerTest {
 
 	private CsvTransformer setupTransformer() {
 		Map<String, String> props = new HashMap<>();
-		SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
-		setter.transformerCache(100);
 		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
 				props);
 		return new CsvTransformer(sourceCommonConfig);
