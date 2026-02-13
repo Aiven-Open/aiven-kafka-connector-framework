@@ -29,9 +29,7 @@ public enum DistributionType {
 	 * a hash value of the storage key and return a modulus of that relative to the
 	 * number of maxTasks to decide which task should process a given object
 	 */
-	OBJECT_HASH(context -> context.getStorageKey().isPresent()
-			? Optional.of((long) context.getStorageKey().get().hashCode())
-			: Optional.empty()),
+	OBJECT_HASH(context -> Optional.of((long) context.getNativeKey().hashCode())),
 	/**
 	 * Partition takes the context and requires the context contain the partition id
 	 * for it to be able to decide the distribution across the max tasks, using a
@@ -46,7 +44,7 @@ public enum DistributionType {
 	 * used as the creator in the {@link DistributionType} to generate a value that
 	 * is used to calculate the task to assign the distribution to.
 	 */
-	private final Function<Context<?>, Optional<Long>> mutation;
+	private final Function<Context, Optional<Long>> mutation;
 
 	/**
 	 * Creator
@@ -55,7 +53,7 @@ public enum DistributionType {
 	 *            the mutation required to get the correct details from the context
 	 *            for distribution
 	 */
-	DistributionType(final Function<Context<?>, Optional<Long>> mutation) {
+	DistributionType(final Function<Context, Optional<Long>> mutation) {
 		this.mutation = mutation;
 	}
 

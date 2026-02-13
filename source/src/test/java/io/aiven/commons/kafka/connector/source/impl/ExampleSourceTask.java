@@ -15,7 +15,7 @@
  */
 package io.aiven.commons.kafka.connector.source.impl;
 
-import io.aiven.commons.kafka.connector.source.AbstractSourceRecordIterator;
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecordIterator;
 import io.aiven.commons.kafka.connector.source.AbstractSourceTask;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -26,30 +26,28 @@ import org.apache.kafka.common.config.ConfigException;
 import java.io.IOException;
 import java.util.Map;
 
-public class ExampleSourceTask
-		extends
-			AbstractSourceTask<String, ExampleNativeItem, ExampleOffsetManagerEntry, ExampleSourceRecord> {
+public class ExampleSourceTask extends AbstractSourceTask {
 	private ExampleNativeSourceData nativeSourceData;
 
 	public ExampleSourceTask() {
 	}
 
 	@Override
-	protected AbstractSourceRecordIterator<String, ExampleNativeItem, ExampleOffsetManagerEntry, ExampleSourceRecord> getIterator(
-			SourceCommonConfig config) {
-		return new AbstractSourceRecordIterator<>(config, new OffsetManager<>(context), nativeSourceData);
+	protected EvolvingSourceRecordIterator getIterator(final SourceCommonConfig config) {
+		return new EvolvingSourceRecordIterator(config, nativeSourceData);
 	}
 
 	@Override
-	protected SourceCommonConfig configure(Map<String, String> props) {
+	protected SourceCommonConfig configure(final Map<String, String> props, final OffsetManager offsetManager) {
+		SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
+		setter.transformerClass(JsonTransformer.class);
+		SourceCommonConfig result = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
 		try {
-			nativeSourceData = new ExampleNativeSourceData();
+			nativeSourceData = new ExampleNativeSourceData(result, offsetManager);
 		} catch (IOException e) {
 			throw new ConfigException("Unable to create native source data", e);
 		}
-		SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
-		setter.transformerClass(JsonTransformer.class);
-		return new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+		return result;
 	}
 
 	@Override

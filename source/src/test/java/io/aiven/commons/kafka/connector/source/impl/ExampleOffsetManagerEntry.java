@@ -32,7 +32,10 @@ import java.util.Map;
  * single Kafka record. All other items are optional.
  *
  */
-public class ExampleOffsetManagerEntry implements OffsetManager.OffsetManagerEntry<ExampleOffsetManagerEntry> {
+public class ExampleOffsetManagerEntry
+		implements
+			OffsetManager.OffsetManagerEntry,
+			Comparable<ExampleOffsetManagerEntry> {
 	public Map<String, Object> data;
 
 	private int recordCount;

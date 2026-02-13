@@ -38,7 +38,6 @@ final public class JsonTestDataFixture {
 
 	public final static String MESSAGE_PREFIX = "Hello, from JSON Test Data Fixture: ";
 
-
 	private final static String MSG_FORMAT = "{\"id\" : %s, \"message\" : \"%s\", \"value\" : \"%s\"}%n";
 
 	public static final String SCHEMA_JSON = "{\n  \"type\": \"struct\", \"name\": \"TestRecord\",\n "

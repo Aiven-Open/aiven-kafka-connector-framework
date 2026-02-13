@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Function;
 
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTaskContext;
@@ -34,11 +33,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * An offset manager that handles local updates to Kafka offset manager.
- * 
- * @param <E>
- *            The concrete OffsetManagerEntry implementation class.
  */
-public final class OffsetManager<E extends OffsetManager.OffsetManagerEntry<E>> {
+public final class OffsetManager {
 	/** The logger to write to */
 	private static final Logger LOGGER = LoggerFactory.getLogger(OffsetManager.class);
 
@@ -64,19 +60,16 @@ public final class OffsetManager<E extends OffsetManager.OffsetManagerEntry<E>> 
 	}
 
 	/**
-	 * Get an entry from the offset manager. This method will return the local copy
-	 * if it has been created otherwise will get the data from Kafka. If there is
-	 * not a local copy and not one from Kafka then an empty Optional is returned
+	 * Get entry data from the offset manager. This method will return a copy of the
+	 * local data if it has been created otherwise will get the data from Kafka. If
+	 * there is not a local copy and not one from Kafka then an empty Optional is
+	 * returned
 	 *
 	 * @param key
 	 *            the key for the entry.
-	 * @param creator
-	 *            a function to create the connector defined offset entry from a Map
-	 *            of string to object.
-	 * @return the entry.
+	 * @return the entry data
 	 */
-	public Optional<E> getEntry(final OffsetManagerKey key, final Function<Map<String, Object>, E> creator) {
-		LOGGER.debug("getEntry: {}", key.getPartitionMap());
+	public Optional<Map<String, Object>> getEntryData(OffsetManagerKey key) {
 		final Map<String, Object> data = offsets.compute(key.getPartitionMap(), (k, v) -> {
 			if (v == null) {
 				final Map<String, Object> kafkaData = context.offsetStorageReader().offset(key.getPartitionMap());
@@ -87,7 +80,7 @@ public final class OffsetManager<E extends OffsetManager.OffsetManagerEntry<E>> 
 				return v;
 			}
 		});
-		return data == null ? Optional.empty() : Optional.of(creator.apply(data));
+		return data == null ? Optional.empty() : Optional.of(new HashMap<>(data));
 	}
 
 	/**
@@ -97,7 +90,7 @@ public final class OffsetManager<E extends OffsetManager.OffsetManagerEntry<E>> 
 	 *            the entry that should be added to the offset manager.
 	 *
 	 */
-	public void addEntry(final OffsetManagerEntry<E> entry) {
+	public void addEntry(final OffsetManagerEntry entry) {
 		offsets.put(entry.getManagerKey().getPartitionMap(), entry.getProperties());
 	}
 
@@ -118,7 +111,6 @@ public final class OffsetManager<E extends OffsetManager.OffsetManagerEntry<E>> 
 				.forEach(entry -> matchingOffsets.put(entry.getKey(), entry.getValue()));
 		// offsets is multithreaded batching in matchingOffsets is faster
 		offsets.putAll(matchingOffsets);
-
 	}
 
 	/**
@@ -147,11 +139,8 @@ public final class OffsetManager<E extends OffsetManager.OffsetManagerEntry<E>> 
 
 	/**
 	 * The definition of an entry in the OffsetManager.
-	 *
-	 * @param <T>
-	 *            the concrete implementation of OffsetManagerEntry.
 	 */
-	public interface OffsetManagerEntry<T extends OffsetManagerEntry<T>> extends Comparable<T> {
+	public interface OffsetManagerEntry {
 
 		/**
 		 * Creates a new OffsetManagerEntry by wrapping the properties with the current
@@ -162,7 +151,7 @@ public final class OffsetManager<E extends OffsetManager.OffsetManagerEntry<E>> 
 		 *            the properties to wrap. May be {@code null}.
 		 * @return an OffsetManagerProperty
 		 */
-		T fromProperties(Map<String, Object> properties);
+		OffsetManagerEntry fromProperties(Map<String, Object> properties);
 
 		/**
 		 * Extracts the data from the entry in the correct format to return to Kafka.

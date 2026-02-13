@@ -16,15 +16,11 @@
 
 package io.aiven.commons.kafka.connector.source.impl;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import java.nio.ByteBuffer;
 
 /**
  * A "native" object for testing. In a real implementation this would be the
- * object returned from storage. The {@link ExampleSourceRecord} would convert
- * this into an {@link io.aiven.commons.kafka.connector.common.NativeInfo}
- * implementation during construction.
+ * object returned from storage.
  */
 public record ExampleNativeItem(String key, ByteBuffer data) {
 
@@ -36,7 +32,6 @@ public record ExampleNativeItem(String key, ByteBuffer data) {
 	 * @param data
 	 *            the data for this object.
 	 */
-	@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "stores mutable fields in offset manager to be reviewed before release")
 	public ExampleNativeItem(final String key, final byte[] data) {
 		this(key, ByteBuffer.wrap(data));
 	}

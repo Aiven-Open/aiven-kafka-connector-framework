@@ -16,9 +16,8 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
-import io.aiven.commons.kafka.connector.common.NativeInfo;
-import io.aiven.commons.kafka.connector.source.AbstractSourceRecord;
-import io.aiven.commons.kafka.connector.source.NativeSourceData;
+import io.aiven.commons.kafka.connector.source.AbstractSourceNativeInfo;
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import org.apache.commons.io.function.IOSupplier;
@@ -36,7 +35,7 @@ import java.util.stream.StreamSupport;
  * Extracts data from the native abstract source record to Key SchemaAndValue
  * object and a stream of SchemaAndValue objects for the values.
  *
- * This class is used within the AbstractSourceRecordIterator to convert the
+ * This class is used within the EvolvingSourceRecordIterator to convert the
  * abstract source record into one or more Kafka source records.
  *
  * This implementation of Transformer assumes that the SourceRecord supports
@@ -58,20 +57,15 @@ public abstract class InputStreamTransformer extends Transformer {
 	/**
 	 * Gets a stream of SchemaAndValue records from the input stream.
 	 * 
-	 * @param nativeSourceData
-	 *            The native source data.
 	 * @param sourceRecord
-	 *            The AbstractSourceRecord being processed.
-	 * @param <T>
-	 *            The concrete class of the AbstractSourceRecord.
+	 *            The EvolvingSourceRecord being processed.
 	 * @return the stream of values for Kafka SourceRecords.
 	 */
 	@Override
-	public <T extends AbstractSourceRecord<?, ?, ?, T>> Stream<SchemaAndValue> generateRecords(
-			final NativeSourceData<?, ?, ?, T> nativeSourceData, final T sourceRecord) {
+	public Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord) {
 
-		final StreamSpliterator spliterator = createSpliterator(nativeSourceData.getInputStream(sourceRecord),
-				sourceRecord.getNativeItemSize(), sourceRecord.getContext());
+		final StreamSpliterator spliterator = createSpliterator(sourceRecord.getInputStream(),
+				sourceRecord.estimateInputStreamLength(), sourceRecord.getContext());
 		return StreamSupport.stream(spliterator, false).onClose(spliterator::close).skip(sourceRecord.getRecordCount());
 	}
 
@@ -82,27 +76,27 @@ public abstract class InputStreamTransformer extends Transformer {
 	 *            the input stream supplier.
 	 * @param streamLength
 	 *            the length of the input stream,
-	 *            {@link NativeInfo#UNKNOWN_STREAM_LENGTH} may be used to specify a
-	 *            stream with an unknown length, streams of length zero will log an
-	 *            error and return an empty stream
+	 *            {@link AbstractSourceNativeInfo#UNKNOWN_STREAM_LENGTH} may be used
+	 *            to specify a stream with an unknown length, streams of length zero
+	 *            will log an error and return an empty stream
 	 * @param context
 	 *            the context
 	 * 
 	 * @return a StreamSpliterator instance.
 	 */
 	protected abstract StreamSpliterator createSpliterator(IOSupplier<InputStream> inputStreamIOSupplier,
-			long streamLength, Context<?> context);
+			long streamLength, Context context);
 
 	/**
 	 * Convert the native key into a Schema and Value for Kafka.
 	 * 
-	 * @param abstractSourceRecord
+	 * @param evolvingSourceRecord
 	 *            the Abstract source record to extract the keyData from.
 	 * @return a SchemaAndValue for the key.
 	 */
 	@Override
-	public SchemaAndValue generateKeyData(final AbstractSourceRecord<?, ?, ?, ?> abstractSourceRecord) {
-		return SchemaAndValueFactory.createSchemaAndValue(abstractSourceRecord.getNativeKey());
+	public SchemaAndValue generateKeyData(final EvolvingSourceRecord evolvingSourceRecord) {
+		return SchemaAndValueFactory.createSchemaAndValue(evolvingSourceRecord.getNativeKey());
 	}
 
 	/**

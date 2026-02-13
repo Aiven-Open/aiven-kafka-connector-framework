@@ -16,8 +16,7 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
-import io.aiven.commons.kafka.connector.source.AbstractSourceRecord;
-import io.aiven.commons.kafka.connector.source.NativeSourceData;
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import org.apache.kafka.connect.data.SchemaAndValue;
 
@@ -26,7 +25,7 @@ import java.util.stream.Stream;
 /**
  * Extracts data from the native abstract source record to Key SchemaAndValue
  * object and a stream of SchemaAndValue objects for the values. This class is
- * used within the AbstractSourceRecordIterator to convert the abstract source
+ * used within the EvolvingSourceRecordIterator to convert the abstract source
  * record into one or more Kafka source records.
  *
  */
@@ -46,27 +45,22 @@ public abstract class Transformer implements AutoCloseable {
 	/**
 	 * Gets a stream of SchemaAndValue records from the input stream.
 	 * 
-	 * @param nativeSourceData
-	 *            The native source data.
 	 * @param sourceRecord
-	 *            The AbstractSourceRecord being processed.
+	 *            The EvolvingSourceRecord being processed.
 	 * 
-	 * @param <T>
-	 *            The concrete class of the AbstractSourceRecord.
 	 * @return the stream of values for Kafka SourceRecords.
 	 */
-	public abstract <T extends AbstractSourceRecord<?, ?, ?, T>> Stream<SchemaAndValue> generateRecords(
-			final NativeSourceData<?, ?, ?, T> nativeSourceData, final T sourceRecord);
+	public abstract Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord);
 
 	/**
 	 * Convert the native key into a Schema and Value for Kafka.
 	 * 
-	 * @param abstractSourceRecord
+	 * @param evolvingSourceRecord
 	 *            the abstract source record to extract the keyData from.
 	 * 
 	 * @return a SchemaAndValue for the key.
 	 */
-	public abstract SchemaAndValue generateKeyData(final AbstractSourceRecord<?, ?, ?, ?> abstractSourceRecord);
+	public abstract SchemaAndValue generateKeyData(final EvolvingSourceRecord evolvingSourceRecord);
 
 	@Override
 	public void close() throws Exception {

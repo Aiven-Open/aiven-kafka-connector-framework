@@ -28,7 +28,7 @@ public final class DistributionStrategy {
 	/** the number of tasks to distribute load across */
 	private int maxTasks;
 	/** the function that takes a {@link Context} and creates a numeric value. */
-	private final Function<Context<?>, Optional<Long>> creator;
+	private final Function<Context, Optional<Long>> creator;
 
 	/** An undefined distribution strategy */
 	public final static int UNDEFINED = -1;
@@ -47,7 +47,7 @@ public final class DistributionStrategy {
 	 * @param maxTasks
 	 *            The maximum number of tasks the connector is supporting.
 	 */
-	public DistributionStrategy(final Function<Context<?>, Optional<Long>> creator, final int maxTasks) {
+	public DistributionStrategy(final Function<Context, Optional<Long>> creator, final int maxTasks) {
 		assertPositiveInteger(maxTasks);
 		this.creator = creator;
 		this.maxTasks = maxTasks;
@@ -68,7 +68,7 @@ public final class DistributionStrategy {
 	 *            This is the context to derive the taskId from.
 	 * @return the taskId which this particular task should be assigned to.
 	 */
-	public int getTaskFor(final Context<?> ctx) {
+	public int getTaskFor(final Context ctx) {
 		return creator.apply(ctx).map(aLong -> Math.floorMod(Math.abs(aLong), maxTasks)).orElse(UNDEFINED);
 	}
 

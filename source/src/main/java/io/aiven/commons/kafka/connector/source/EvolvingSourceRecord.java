@@ -16,50 +16,50 @@
 
 package io.aiven.commons.kafka.connector.source;
 
+import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.source.SourceRecord;
 
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
-import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.source.task.Context;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
+
 /**
  * An abstract source record as retrieved from the storage layer.
- *
- * @param <N>
- *            the native object type.
- * @param <K>
- *            the key type for the native object.
- * @param <O>
- *            the OffsetManagerEntry for the iterator.
- * @param <T>
- *            the implementation class for AbstractSourceRecord.
  */
-public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>, T extends AbstractSourceRecord<K, N, O, T>> {
+final public class EvolvingSourceRecord {
 	/** the key for the source record */
 	private SchemaAndValue keyData;
 	/** The value for the source record. */
 	private SchemaAndValue valueData;
 	/** The offset manager entry for this record */
-	private O offsetManagerEntry;
+	private OffsetManager.OffsetManagerEntry offsetManagerEntry;
 	/** The context associated with this record */
-	private Context<K> context;
+	private final Context context;
 	/** The native info for this record. */
-	protected final NativeInfo<K, N> nativeInfo;
+	private final AbstractSourceNativeInfo<?, ?> sourceNativeInfo;
 
 	/**
 	 * Construct a source record from a native item.
 	 * 
-	 * @param nativeInfo
+	 * @param sourceNativeInfo
 	 *            the native information for the native that his record represents.
+	 * @param offsetManagerEntry
+	 *            the offset manager entry for this record.
+	 * @param context
+	 *            the context for this record.
 	 */
-	public AbstractSourceRecord(final NativeInfo<K, N> nativeInfo) {
-		this.nativeInfo = nativeInfo;
+	public EvolvingSourceRecord(final AbstractSourceNativeInfo<?, ?> sourceNativeInfo,
+			final OffsetManager.OffsetManagerEntry offsetManagerEntry, final Context context) {
+		this.sourceNativeInfo = sourceNativeInfo;
+		this.offsetManagerEntry = offsetManagerEntry;
+		this.context = context;
 	}
 
 	/**
@@ -69,8 +69,8 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 * @param sourceRecord
 	 *            the source record to copy.
 	 */
-	protected AbstractSourceRecord(final AbstractSourceRecord<K, N, O, T> sourceRecord) {
-		this(sourceRecord.nativeInfo);
+	public EvolvingSourceRecord(final EvolvingSourceRecord sourceRecord) {
+		this.sourceNativeInfo = sourceRecord.sourceNativeInfo;
 		this.offsetManagerEntry = sourceRecord.offsetManagerEntry
 				.fromProperties(sourceRecord.getOffsetManagerEntry().getProperties());
 		this.keyData = sourceRecord.keyData;
@@ -83,36 +83,30 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 *
 	 * @return The key for the native object.
 	 */
-	final public K getNativeKey() {
-		return nativeInfo.getNativeKey();
+	public Object getNativeKey() {
+		return sourceNativeInfo.nativeKey();
 	}
 
 	/**
-	 * Gets the number of bytes in the input stream extracted from the native
-	 * object.
-	 *
-	 * @return The number of bytes in the input stream extracted from the native
-	 *         object. May be {@link NativeInfo#UNKNOWN_STREAM_LENGTH}
+	 * Gets the input stream supplier.
+	 * 
+	 * @return the InputStream supplier.
+	 * @throws UnsupportedOperationException
+	 *             if the sourceNativeInfo does not support input stream.
 	 */
-	final public long getNativeItemSize() {
-		return nativeInfo.getNativeItemSize();
+	public IOSupplier<InputStream> getInputStream() throws UnsupportedOperationException {
+		return sourceNativeInfo.getInputStreamSupplier();
 	}
 
 	/**
-	 * Makes a duplicate of this AbstractSourceRecord. This is similar to the Java
-	 * {@code clone} method but without the baggage.
-	 *
-	 * @return A duplicate of this AbstractSourceRecord
+	 * Gets the input stream supplier.
+	 * 
+	 * @return the InputStream supplier.
+	 * @throws UnsupportedOperationException
+	 *             if the sourceNativeInfo does not support input stream.
 	 */
-	abstract public T duplicate();
-
-	/**
-	 * Gets the native item that this source record is working with.
-	 *
-	 * @return The native item that this source record is working with.
-	 */
-	final public N getNativeItem() {
-		return nativeInfo.getNativeItem();
+	public long estimateInputStreamLength() throws UnsupportedOperationException {
+		return sourceNativeInfo.estimateInputStreamLength();
 	}
 
 	/**
@@ -122,7 +116,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 * @return The record count as recorded by the OffsetManager for the native item
 	 *         that this source record is working with.
 	 */
-	final public long getRecordCount() {
+	public long getRecordCount() {
 		return offsetManagerEntry == null ? 0 : offsetManagerEntry.getRecordCount();
 	}
 
@@ -130,7 +124,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 * Increments the record count as recorded by the OffsetManager for the native
 	 * item that this source record is working with.
 	 */
-	final public void incrementRecordCount() {
+	public void incrementRecordCount() {
 		this.offsetManagerEntry.incrementRecordCount();
 	}
 
@@ -140,7 +134,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 * @param keyData
 	 *            The key data for this source record.
 	 */
-	final public void setKeyData(final SchemaAndValue keyData) {
+	public void setKeyData(final SchemaAndValue keyData) {
 		this.keyData = keyData;
 	}
 
@@ -149,7 +143,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 *
 	 * @return A copy of the key data for this source record.
 	 */
-	final public SchemaAndValue getKey() {
+	public SchemaAndValue getKey() {
 		return new SchemaAndValue(keyData.schema(), keyData.value());
 	}
 
@@ -159,7 +153,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 * @param valueData
 	 *            The key data for this source record.
 	 */
-	final public void setValueData(final SchemaAndValue valueData) {
+	public void setValueData(final SchemaAndValue valueData) {
 		this.valueData = valueData;
 	}
 
@@ -168,7 +162,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 *
 	 * @return A copy of the key data for this source record.
 	 */
-	final public SchemaAndValue getValue() {
+	public SchemaAndValue getValue() {
 		return new SchemaAndValue(valueData.schema(), valueData.value());
 	}
 
@@ -178,7 +172,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 * @return The topic for the source record or {@code null} if it is not set in
 	 *         the context.
 	 */
-	final public String getTopic() {
+	public String getTopic() {
 		return context.getTopic().orElse(null);
 	}
 
@@ -188,7 +182,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 * @return The partition for the source record or {@code null} if it is not set
 	 *         in the context.
 	 */
-	final public Integer getPartition() {
+	public Integer getPartition() {
 		return context.getPartition().orElse(null);
 	}
 
@@ -198,7 +192,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 * @param offsetManagerEntry
 	 *            The offset manager entry for this source record.
 	 */
-	final public void setOffsetManagerEntry(final O offsetManagerEntry) {
+	public void setOffsetManagerEntry(final OffsetManager.OffsetManagerEntry offsetManagerEntry) {
 		this.offsetManagerEntry = offsetManagerEntry.fromProperties(offsetManagerEntry.getProperties());
 	}
 
@@ -207,7 +201,7 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 *
 	 * @return A copy of the offset manager entry for this source record.
 	 */
-	final public O getOffsetManagerEntry() {
+	public OffsetManager.OffsetManagerEntry getOffsetManagerEntry() {
 		return offsetManagerEntry.fromProperties(offsetManagerEntry.getProperties()); // return a defensive copy
 	}
 
@@ -216,19 +210,8 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 *
 	 * @return A copy of the Context for this source record.
 	 */
-	final public Context<K> getContext() {
-		return new Context<>(context) {
-		};
-	}
-
-	/**
-	 * Sets the Context for this source record. Makes a defensive copy.
-	 *
-	 * @param context
-	 *            The Context for this source record.
-	 */
-	final public void setContext(final Context<K> context) {
-		this.context = new Context<>(context) {
+	public Context getContext() {
+		return new Context(context) {
 		};
 	}
 
@@ -242,11 +225,11 @@ public abstract class AbstractSourceRecord<K extends Comparable<K>, N, O extends
 	 * @return A kafka {@link SourceRecord SourceRecord} This can return null if
 	 *         error tolerance is set to 'All'
 	 */
-	final public SourceRecord getSourceRecord(final ToleranceType tolerance, final OffsetManager<O> offsetManager) {
+	public SourceRecord getSourceRecord(final ToleranceType tolerance, final OffsetManager offsetManager) {
 		Logger logger = LoggerFactory.getLogger(this.getClass());
 		try {
 			if (logger.isDebugEnabled()) {
-				logger.debug("Source Record: {} for Topic: {} , Partition: {}, recordCount: {}", getNativeKey(),
+				logger.debug("Source Record: {} for Topic: {} , Partition: {}, recordCount: {}", sourceNativeInfo,
 						getTopic(), getPartition(), getRecordCount());
 			}
 			offsetManager.addEntry(offsetManagerEntry);

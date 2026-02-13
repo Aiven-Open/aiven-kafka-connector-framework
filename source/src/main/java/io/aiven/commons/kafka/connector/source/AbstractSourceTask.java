@@ -30,6 +30,7 @@ import io.aiven.commons.timing.AbortTrigger;
 import io.aiven.commons.timing.Backoff;
 import io.aiven.commons.timing.BackoffConfig;
 import io.aiven.commons.timing.SupplierOfLong;
+import io.aiven.commons.timing.Timer;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -55,19 +56,8 @@ import org.slf4j.LoggerFactory;
  * <li>When the connector is stopped any collected records are returned to kafka
  * before stopping.</li>
  * </ul>
- *
- * @param <K>
- *            the key type for the native object.
- * @param <N>
- *            the native object type.
- * @param <O>
- *            the OffsetManagerEntry for the iterator.
- * @param <T>
- *            the implementation class for AbstractSourceRecord.
  */
-public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>, T extends AbstractSourceRecord<K, N, O, T>>
-		extends
-			SourceTask {
+public abstract class AbstractSourceTask extends SourceTask {
 
 	/**
 	 * A {@code null} list representing no values in the polling functionality.
@@ -115,7 +105,7 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 
 	private Iterator<SourceRecord> sourceRecordIterator;
 
-	private AbstractSourceRecordIterator<K, N, O, T> nativeIterator;
+	private EvolvingSourceRecordIterator nativeIterator;
 
 	/**
 	 * Constructor.
@@ -158,12 +148,6 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 					getLogger().warn("{} interrupted -- EXITING", this);
 				} catch (RuntimeException e) {
 					getLogger().error("{} failed -- EXITING", this, e);
-				} finally {
-					try {
-						nativeIterator.close();
-					} catch (Exception e) {
-						getLogger().error("Error closing iterator: {}", e.getMessage());
-					}
 				}
 				getLogger().info("{} finished", this);
 			}
@@ -193,7 +177,7 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 	 *            the SourceCommonConfig instance.
 	 * @return The iterator of SourceRecords.
 	 */
-	abstract protected AbstractSourceRecordIterator<K, N, O, T> getIterator(SourceCommonConfig config);
+	abstract protected EvolvingSourceRecordIterator getIterator(SourceCommonConfig config);
 
 	/**
 	 * Called by {@link #start} to allows the concrete implementation to configure
@@ -201,20 +185,23 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 	 *
 	 * @param props
 	 *            The properties to use for configuration.
+	 * @param offsetManager
+	 *            the OffsetManager to use.
 	 *
 	 * @return A SourceCommonConfig based configuration.
 	 */
-	abstract protected SourceCommonConfig configure(Map<String, String> props);
+	abstract protected SourceCommonConfig configure(final Map<String, String> props, final OffsetManager offsetManager);
 
 	@Override
 	public final void start(final Map<String, String> props) {
 		getLogger().debug("Starting");
-		final SourceCommonConfig config = configure(props);
+		final OffsetManager offsetManager = new OffsetManager(context);
+		final SourceCommonConfig config = configure(props, offsetManager);
 		maxPollRecords = config.getMaxPollRecords();
 		queue = new LinkedBlockingQueue<>(maxPollRecords * 2);
 		nativeIterator = getIterator(config);
 		final Iterator<SourceRecord> inner = IteratorUtils.transformedIterator(nativeIterator,
-				r -> r.getSourceRecord(config.getErrorsTolerance(), new OffsetManager<>(context)));
+				r -> r.getSourceRecord(config.getErrorsTolerance(), offsetManager));
 		sourceRecordIterator = IteratorUtils.filteredIterator(inner, Objects::nonNull);
 		implemtationPollingThread.start();
 	}
@@ -275,9 +262,16 @@ public abstract class AbstractSourceTask<K extends Comparable<K>, N, O extends O
 			return results;
 		} else {
 			getLogger().info("Stopping");
-
+			Timer timer = new Timer(Duration.ofSeconds(5));
+			timer.start();
+			while (implemtationPollingThread.isAlive() && !timer.isExpired()) {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					getLogger().info("Stopping wait was interrupted: {}", e.getMessage());
+				}
+			}
 			closeResources();
-
 			return NULL_RESULT;
 		}
 	}
