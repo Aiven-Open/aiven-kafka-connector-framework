@@ -106,16 +106,6 @@ public class Context {
 	public final Object getNativeKey() {
 		return nativeKey;
 	}
-	//
-	// /**
-	// * Sets the native key for this context.
-	// *
-	// * @param storageKey
-	// * the native key. May ve {@code null}.
-	// */
-	// public final void setStorageKey(final K storageKey) {
-	// this.storageKey = storageKey;
-	// }
 
 	/**
 	 * Gets the native offset for this context. When used as a Context within a

@@ -78,7 +78,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param sourceConfig
 	 *            the source configuration for the native source.
 	 * @param offsetManager
@@ -113,30 +113,30 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	 *            start at the beginning.
 	 * @return A stream of native objects. May be empty but not {@code null}.
 	 */
-	protected abstract Stream<? extends AbstractSourceNativeInfo<K, ?>> getNativeItemStream(K offset);
+	protected abstract Stream<? extends AbstractSourceNativeInfo<K, ?>> getNativeItemStream(final K offset);
 
 	/**
 	 * Creates an offset manager entry using the data in the map.
-	 * 
+	 *
 	 * @param data
 	 *            the data to create the offset manager from.
 	 * @return a valid offset manager entry.
 	 */
-	public abstract OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Map<String, Object> data);
+	public abstract OffsetManager.OffsetManagerEntry createOffsetManagerEntry(final Map<String, Object> data);
 
 	/**
 	 * Creates an offset manager entry from a context.
-	 * 
+	 *
 	 * @param context
 	 *            the context to create the offset manager from.
 	 * @return a valid offset manager.
 	 */
-	protected abstract OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Context context);
+	protected abstract OffsetManager.OffsetManagerEntry createOffsetManagerEntry(final Context context);
 
 	/**
 	 * Converts a source native info into an evolving record while filtering out
 	 * records that have already been processed (are in the ringBuffer).
-	 * 
+	 *
 	 * @param sourceNativeInfo
 	 *            the source native info to convert
 	 * @return a valid Evolving Source Record or an empty optional.
@@ -172,7 +172,22 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 		return context;
 	}
 
-	final Iterator<EvolvingSourceRecord> getIterator(Predicate<Context> isCorrectTask) {
+	/**
+	 * Constructs a new iterator to continue extracting data from the native
+	 * storage. Iterator is constructed by calling {@link #getNativeItemStream} and
+	 * passing the native key from which we want to start scanning. This will be
+	 * <ol>
+	 * <li>The oldest record in the ringBuffer; or</li>
+	 * <li>the startKey defined in the configuration file; or</li>
+	 * <li>{@code null}</li>
+	 * </ol>
+	 *
+	 * @param isCorrectTask
+	 *            A predicate to test if the context for the enclosed records is for
+	 *            this task.
+	 * @return an Iterator on EvolvingSourceRecords.
+	 */
+	final Iterator<EvolvingSourceRecord> getIterator(final Predicate<Context> isCorrectTask) {
 		return getNativeItemStream(ObjectUtils.getIfNull(ringBuffer.getNextEjected(), () -> {
 
 			LOGGER.info("{} set, no alternative present in buffer will begin consuming from {}",
@@ -208,7 +223,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	 *            the keyString.
 	 * @return The native Key.
 	 */
-	protected abstract K parseNativeKey(String keyString);
+	protected abstract K parseNativeKey(final String keyString);
 
 	/**
 	 * Creates an offset manager key for the native key.
@@ -217,25 +232,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	 *            THe native key to create an offset manager key for.
 	 * @return An offset manager key.
 	 */
-	protected abstract OffsetManager.OffsetManagerKey getOffsetManagerKey(K nativeKey);
-
-	// /**
-	// * Extract context information from the native item. There are three possible
-	// * returns from this method.
-	// * <ol>
-	// * <li>The item contains information that should be in the context: Create a
-	// * populated Context and return it.</li>
-	// * <li>The item does not contain information that should be in the context:
-	// * Create a Context object containing only the native key and return it.</li>
-	// * <li>The item should not be processed: Return an {@link
-	// Optional#empty()}</li>
-	// * </ol>
-	// *
-	// * @param nativeItem
-	// * the native item to extract context from.
-	// * @return An Optional containing the extracted context if possible.
-	// */
-	// abstract Optional<Context> extractContext(final N nativeItem);
+	protected abstract OffsetManager.OffsetManagerKey getOffsetManagerKey(final K nativeKey);
 
 	@Override
 	public void close() throws Exception {
@@ -259,6 +256,8 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	/**
 	 * Maps the data from the @{link Transformer} stream to an EvolvingSourceRecord
 	 * given all the additional data required.
+	 * <p>
+	 * The record count in the source record is updated.
 	 *
 	 * @param sourceRecord
 	 *            The EvolvingSourceRecord that produces the values.
@@ -272,5 +271,4 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 			return result;
 		}
 	}
-
 }
