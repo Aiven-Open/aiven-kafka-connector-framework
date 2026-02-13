@@ -33,6 +33,7 @@ public class CsvTestDataFixture {
 	public final static String MESSAGE_PREFIX = "Hello, from CSV Test Data Fixture: ";
 
 	public final static String MSG_HEADER = CSVFormat.RFC4180.format("id", "message", "value");
+	public static final String TEST_MESSAGE = "test message";
 
 	private CsvTestDataFixture() {
 		// do not instantiate
@@ -60,7 +61,7 @@ public class CsvTestDataFixture {
 	 * @return A byte array containing the specified number of records.
 	 */
 	public static byte[] generateCsvData(final int messageId, final int numOfRecs) {
-		return generateCsvRecords(messageId, numOfRecs, "test message").getBytes(StandardCharsets.UTF_8);
+		return generateCsvRecords(messageId, numOfRecs, TEST_MESSAGE).getBytes(StandardCharsets.UTF_8);
 	}
 
 	/**
@@ -71,7 +72,7 @@ public class CsvTestDataFixture {
 	 * @return The specified number of JSON records encoded into a string.
 	 */
 	public static String generateCsvRecords(final int recordCount) {
-		return generateCsvRecords(0, recordCount, "test message");
+		return generateCsvRecords(0, recordCount, TEST_MESSAGE);
 	}
 
 	/**

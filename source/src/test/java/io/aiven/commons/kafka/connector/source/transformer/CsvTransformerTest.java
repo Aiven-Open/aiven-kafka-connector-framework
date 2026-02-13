@@ -22,7 +22,6 @@ import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
-import io.aiven.commons.kafka.connector.source.impl.csv.ExampleCsvSourceData;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import io.aiven.commons.kafka.connector.source.testFixture.format.CsvTestDataFixture;
 import org.apache.kafka.connect.data.SchemaAndValue;
@@ -128,13 +127,13 @@ final class CsvTransformerTest {
 	@Test
 	void testReadRecordsSkipFew() throws Exception {
 		final String nativeItem = generateData(20);
-		final ExampleCsvSourceData nativeSourceData = new ExampleCsvSourceData();
+
 		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 		// skip 5 records -- we have to set the record after the read because the
 		// getOffsetManagerEntry() creates a defensive copy
-		// final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
-		// entry.setRecordCount(5);
-		// sourceRecord.setOffsetManagerEntry(entry);
+		final ExampleOffsetManagerEntry entry = (ExampleOffsetManagerEntry) sourceRecord.getOffsetManagerEntry();
+		entry.setRecordCount(5);
+		sourceRecord.setOffsetManagerEntry(entry);
 
 		final List<String> expected = new ArrayList<>();
 		for (int i = 5; i < 20; i++) {
@@ -160,9 +159,9 @@ final class CsvTransformerTest {
 		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 		// skip 25 records -- we have to set the record after the read because the
 		// getOffsetManagerEntry() creates a defensive copy
-		// final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
-		// entry.setRecordCount(25);
-		// sourceRecord.setOffsetManagerEntry(entry);
+		final ExampleOffsetManagerEntry entry = (ExampleOffsetManagerEntry) sourceRecord.getOffsetManagerEntry();
+		entry.setRecordCount(25);
+		sourceRecord.setOffsetManagerEntry(entry);
 
 		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
 

@@ -17,7 +17,7 @@ package io.aiven.commons.kafka.connector.source.impl.csv;
 
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
-import io.aiven.commons.kafka.connector.source.impl.ExampleNativeClient;
+import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
 import io.aiven.commons.kafka.connector.source.task.Context;
@@ -31,12 +31,14 @@ import java.util.stream.Stream;
  * NativeItems.
  *
  */
-public class ExampleCsvSourceData implements NativeSourceData<String> {
+public class ExampleCsvSourceData extends NativeSourceData<String> {
 
-	ExampleNativeClient client;
+	ExampleCsvClient client;
 
-	public ExampleCsvSourceData() throws IOException {
-		client = new ExampleNativeClient();
+	public ExampleCsvSourceData(final SourceCommonConfig sourceConfig, final OffsetManager offsetManager)
+			throws IOException {
+		super(sourceConfig, offsetManager);
+		client = new ExampleCsvClient();
 	}
 
 	@Override
@@ -55,7 +57,20 @@ public class ExampleCsvSourceData implements NativeSourceData<String> {
 		return new ExampleOffsetManagerEntry((String) context.getNativeKey(), "Group1");
 	}
 
+	/**
+	 * extracts the native Key from the string representation.
+	 *
+	 * @param keyString
+	 *            the keyString.
+	 * @return The native Key.
+	 */
 	@Override
+	protected String parseNativeKey(String keyString) {
+		return "";
+	}
+
+	@Override
+
 	protected OffsetManager.OffsetManagerKey getOffsetManagerKey(String nativeKey) {
 		return new ExampleOffsetManagerEntry(nativeKey, "Group1").getManagerKey();
 	}
@@ -64,14 +79,7 @@ public class ExampleCsvSourceData implements NativeSourceData<String> {
 	public Stream<ExampleSourceNativeInfo> getNativeItemStream(String offset) {
 		// the offset is a String because it is the K type in NativeSourceData<K> above
 		return client.listObjects(offset).stream().map(ExampleSourceNativeInfo::new);
+
 	}
 
-	@Override
-	public String parseNativeKey(String keyString) {
-		// it is necessary to be able to present the Key as a string. This is the string
-		// representation of the K type in NativeSourceData<K> above.
-		// the return type is a String because that is the K type in
-		// NativeSourceData<K> above
-		return keyString;
-	}
 }

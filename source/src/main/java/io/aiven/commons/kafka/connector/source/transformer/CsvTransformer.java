@@ -73,11 +73,10 @@ public class CsvTransformer extends Transformer {
 
 		try {
 			return getRecords(IOUtils.toString(sourceRecord.getInputStream(), StandardCharsets.UTF_8)).stream()
-					.map(this::toConnectData);
+					.skip(sourceRecord.getRecordCount()).map(this::toConnectData);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-
 
 	}
 
