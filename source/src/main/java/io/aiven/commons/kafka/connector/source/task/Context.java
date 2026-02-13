@@ -19,13 +19,10 @@ package io.aiven.commons.kafka.connector.source.task;
 import java.util.Optional;
 
 /**
- * A Context which captures all the details about the source which are required
- * to successfully send a source record onto Kafka
- *
- * @param <K>
- *            The class of the Native key for the data source
+ * A Context which captures all the details about the source object that are
+ * required to successfully send a source record onto Kafka
  */
-public class Context<K extends Comparable<K>> {
+public class Context {
 	/** The Kafka topic for this Context. May be {@code null}. */
 	private String topic;
 	/** The Kafka partition for this Context. May be {@code null}. */
@@ -36,17 +33,17 @@ public class Context<K extends Comparable<K>> {
 	 * starts at. May be {@code null}.
 	 */
 	private Long offset;
-	/** The native storage key for this Context. May be {@code null}. */
-	private K storageKey;
 
+	/** the native key that is being processed */
+	private final Object nativeKey;
 	/**
 	 * Constructor.
 	 * 
-	 * @param storageKey
-	 *            The native key for this context.
+	 * @param nativeKey
+	 *            The native key for the object being processed.
 	 */
-	public Context(final K storageKey) {
-		this.storageKey = storageKey;
+	public Context(Object nativeKey) {
+		this.nativeKey = nativeKey;
 	}
 
 	/**
@@ -55,8 +52,8 @@ public class Context<K extends Comparable<K>> {
 	 * @param anotherContext
 	 *            The Context which needs to be copied
 	 */
-	protected Context(final Context<K> anotherContext) {
-		this.storageKey = anotherContext.storageKey;
+	protected Context(final Context anotherContext) {
+		this.nativeKey = anotherContext.nativeKey;
 		this.partition = anotherContext.partition;
 		this.topic = anotherContext.topic;
 		this.offset = anotherContext.offset;
@@ -102,22 +99,12 @@ public class Context<K extends Comparable<K>> {
 
 	/**
 	 * Get the native key as specified by this context.
-	 * 
+	 *
 	 * @return the Optional storage key for the native object this context is
 	 *         associated with.
 	 */
-	public final Optional<K> getStorageKey() {
-		return Optional.ofNullable(storageKey);
-	}
-
-	/**
-	 * Sets the native key for this context.
-	 * 
-	 * @param storageKey
-	 *            the native key. May ve {@code null}.
-	 */
-	public final void setStorageKey(final K storageKey) {
-		this.storageKey = storageKey;
+	public final Object getNativeKey() {
+		return nativeKey;
 	}
 
 	/**

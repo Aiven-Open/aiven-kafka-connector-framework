@@ -60,7 +60,7 @@ public class ByteArrayTransformer extends InputStreamTransformer {
 
 	@Override
 	public StreamSpliterator createSpliterator(final IOSupplier<InputStream> inputStreamIOSupplier,
-			final long streamLength, final Context<?> context) {
+			final long streamLength, final Context context) {
 		if (streamLength == 0) {
 			LOGGER.warn(
 					"Object sent for processing has an invalid streamLength of {}, object is empty returning an empty spliterator.",

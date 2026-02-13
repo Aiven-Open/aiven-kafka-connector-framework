@@ -18,7 +18,6 @@
  */
 package io.aiven.commons.kafka.connector.source.transformer;
 
-import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import org.apache.commons.csv.CSVFormat;
@@ -63,7 +62,7 @@ public class CsvTransformer extends InputStreamTransformer {
 	 *            the input stream supplier.
 	 * @param streamLength
 	 *            the length of the input stream,
-	 *            {@link NativeInfo#UNKNOWN_STREAM_LENGTH} may be used to specify a
+	 *
 	 *            stream with an unknown length, streams of length zero will log an
 	 *            error and return an empty stream
 	 * @param context
@@ -72,7 +71,7 @@ public class CsvTransformer extends InputStreamTransformer {
 	 */
 	@Override
 	protected StreamSpliterator createSpliterator(IOSupplier<InputStream> inputStreamIOSupplier, long streamLength,
-			Context<?> context) {
+			Context context) {
 		return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
 			BufferedReader reader;
 			String headers;

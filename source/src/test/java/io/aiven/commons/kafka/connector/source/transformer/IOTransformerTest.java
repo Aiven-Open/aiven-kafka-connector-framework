@@ -15,12 +15,12 @@
  */
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.kafka.connector.source.AbstractSourceNativeInfo;
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
-import io.aiven.commons.kafka.connector.source.impl.ExampleNativeSourceData;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
-import io.aiven.commons.kafka.connector.source.impl.ExampleSourceRecord;
+import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
 import io.aiven.commons.kafka.connector.source.task.Context;
-import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,18 +62,17 @@ public abstract class IOTransformerTest {
 	protected abstract byte[] generateOneBuffer() throws IOException;
 
 	/**
-	 * Creates an ExampleSourceRecord with the Context of OffsetManagerEntry as
-	 * would be set by the AbstractSourceRecordIterator processes.
+	 * Creates an EvolvingSourceRecord with the Context of OffsetManagerEntry as
+	 * would be set by the EvolvingSourceRecordIterator processes.
 	 * 
 	 * @param nativeItem
 	 *            the native Item to create the recrod for
 	 * @return the populated native Item.
 	 */
-	protected ExampleSourceRecord createExampleSourceRecord(ExampleNativeItem nativeItem) {
-		final ExampleSourceRecord sourceRecord = new ExampleSourceRecord(nativeItem);
-		sourceRecord.setContext(new Context<>(nativeItem.key()));
-		sourceRecord.setOffsetManagerEntry(new ExampleOffsetManagerEntry(nativeItem.key(), "group1"));
-		return sourceRecord;
+	protected EvolvingSourceRecord createExampleSourceRecord(AbstractSourceNativeInfo<?, ?> nativeItem) {
+		return new EvolvingSourceRecord(nativeItem,
+				new ExampleOffsetManagerEntry((String) nativeItem.nativeKey(), "group1"),
+				new Context(nativeItem.nativeKey()));
 	}
 
 	@BeforeEach
@@ -124,17 +123,16 @@ public abstract class IOTransformerTest {
 	@Test
 	final void testIOExceptionDuringCreation() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", new byte[0]);
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
+		final ExampleSourceNativeInfo nativeSourceInfo = new ExampleSourceNativeInfo(nativeItem) {
 			@Override
-			public IOSupplier<InputStream> getInputStream(ExampleSourceRecord sourceRecord) {
-				return () -> {
-					throw new IOException("Exception creating stream");
-				};
+			public InputStream getInputStream() throws IOException {
+				throw new IOException("Exception reading data stream");
 			}
 		};
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
 
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(nativeSourceInfo);
+
+		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
 
 		assertThat(records).isEmpty();
 	}
@@ -146,10 +144,10 @@ public abstract class IOTransformerTest {
 	@Test
 	final void testIOExceptionDuringDataRead() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", new byte[0]);
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
+		final ExampleSourceNativeInfo nativeSourceInfo = new ExampleSourceNativeInfo(nativeItem) {
 			@Override
-			public IOSupplier<InputStream> getInputStream(ExampleSourceRecord sourceRecord) {
-				return () -> new InputStream() {
+			public InputStream getInputStream() {
+				return new InputStream() {
 					@Override
 					public int read() throws IOException {
 						throw new IOException("Exception reading data stream");
@@ -157,8 +155,9 @@ public abstract class IOTransformerTest {
 				};
 			}
 		};
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+
+		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(nativeSourceInfo);
+		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
 		assertThat(records).isEmpty();
 	}
 
@@ -168,10 +167,10 @@ public abstract class IOTransformerTest {
 	@Test
 	final void testGetRecordsEmptyInputStream() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", new byte[0]);
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
+		ExampleSourceNativeInfo nativeSourceInfo = new ExampleSourceNativeInfo(nativeItem);
+		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(nativeSourceInfo);
 
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
 
 		assertThat(records).isEmpty();
 	}
@@ -186,18 +185,16 @@ public abstract class IOTransformerTest {
 	final void verifyCloseCalledAtEnd() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateOneBuffer());
 		final CloseTrackingStream[] ctsRef = new CloseTrackingStream[1];
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
+		ExampleSourceNativeInfo nativeSourceInfo = new ExampleSourceNativeInfo(nativeItem) {
 			@Override
-			public IOSupplier<InputStream> getInputStream(ExampleSourceRecord sourceRecord) {
-				return () -> {
-					ctsRef[0] = new CloseTrackingStream(super.getInputStream(sourceRecord).get());
-					return ctsRef[0];
-				};
+			public InputStream getInputStream() throws IOException {
+				ctsRef[0] = new CloseTrackingStream(super.getInputStream());
+				return ctsRef[0];
 			}
 		};
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
+		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(nativeSourceInfo);
 
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
 
 		assertThat(records.count()).isGreaterThan(0);
 		assertThat(ctsRef[0].closeCount).isGreaterThan(0);
@@ -213,22 +210,21 @@ public abstract class IOTransformerTest {
 	void verifyCloseCalledAtIteratorEnd() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateOneBuffer());
 		final CloseTrackingStream[] ctsRef = new CloseTrackingStream[1];
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData() {
+		ExampleSourceNativeInfo nativeSourceInfo = new ExampleSourceNativeInfo(nativeItem) {
 			@Override
-			public IOSupplier<InputStream> getInputStream(ExampleSourceRecord sourceRecord) {
-				return () -> {
-					ctsRef[0] = new CloseTrackingStream(super.getInputStream(sourceRecord).get());
-					return ctsRef[0];
-				};
+			public InputStream getInputStream() throws IOException {
+				ctsRef[0] = new CloseTrackingStream(super.getInputStream());
+				return ctsRef[0];
 			}
 		};
 
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
+		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(nativeSourceInfo);
 
-		final Iterator<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord).iterator();
+		final Iterator<SchemaAndValue> records = transformer.generateRecords(sourceRecord).iterator();
 		while (records.hasNext()) {
 			records.next();
 		}
+
 		assertThat(ctsRef[0].closeCount).isGreaterThan(0);
 	}
 

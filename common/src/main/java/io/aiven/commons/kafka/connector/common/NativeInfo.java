@@ -30,33 +30,10 @@ package io.aiven.commons.kafka.connector.common;
  *            The native key type.
  * @param <N>
  *            The native object type.
+ * @param nativeKey
+ *            The native key for the storage.
+ * @param nativeItem
+ *            the native item for the storage.
  */
-public interface NativeInfo<K extends Comparable<K>, N> {
-	/**
-	 * Value to be returned when the length of the stream is unknown.
-	 */
-	long UNKNOWN_STREAM_LENGTH = -1;
-
-	/**
-	 * Gets the native item.
-	 *
-	 * @return The native item.
-	 */
-	N getNativeItem();
-
-	/**
-	 * Gets the native key
-	 *
-	 * @return The Native key.
-	 */
-	K getNativeKey();
-
-	/**
-	 * Gets the number of bytes in the input stream extracted from the native
-	 * object.
-	 *
-	 * @return The number of bytes in the input stream extracted from the native
-	 *         object. May be {@link #UNKNOWN_STREAM_LENGTH}
-	 */
-	long getNativeItemSize();
+public record NativeInfo<K extends Comparable<K>, N>(K nativeKey, N nativeItem) {
 }

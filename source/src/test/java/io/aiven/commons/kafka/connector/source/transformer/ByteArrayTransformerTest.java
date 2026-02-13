@@ -16,12 +16,12 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
-import io.aiven.commons.kafka.connector.source.impl.ExampleNativeSourceData;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
-import io.aiven.commons.kafka.connector.source.impl.ExampleSourceRecord;
+import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
 import io.aiven.commons.kafka.connector.source.testFixture.format.ByteArrayDataFixture;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.junit.jupiter.api.Test;
@@ -75,10 +75,8 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
 	void testReadData() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
 				ByteArrayDataFixture.generateByteData(BUFFER_SIZE));
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
-
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
+		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
 
 		assertThat(records).extracting(SchemaAndValue::value).extracting(messageExtractor)
 				.containsExactly(ByteArrayDataFixture.generateByteData(BUFFER_SIZE));
@@ -89,15 +87,14 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
 	void testReadRecordsSkipFew() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
 				ByteArrayDataFixture.generateByteRecords(BUFFER_SIZE, 25));
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
-		// skip 5 records -- we have to set the record after the read because the
+		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
+		// skip 10 records -- we have to set the record after the read because the
 		// getOffsetManagerEntry() creates a defensive copy
-		final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
+		final ExampleOffsetManagerEntry entry = (ExampleOffsetManagerEntry) sourceRecord.getOffsetManagerEntry();
 		entry.setRecordCount(10);
 		sourceRecord.setOffsetManagerEntry(entry);
 
-		final List<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord).toList();
+		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
 		assertThat(records).hasSize(15);
 		for (int i = 0; i < 15; i++) {
 			assertThat(records.get(i).value()).isEqualTo(
@@ -109,16 +106,15 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
 	@Test
 	void testReadRecordsSkipMoreRecordsThanExist() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
-				ByteArrayDataFixture.generateByteRecords(BUFFER_SIZE, 25));
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
+				ByteArrayDataFixture.generateByteRecords(BUFFER_SIZE, 20));
+		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
 		// skip 25 records -- we have to set the record after the read because the
 		// getOffsetManagerEntry() creates a defensive copy
-		final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
+		final ExampleOffsetManagerEntry entry = (ExampleOffsetManagerEntry) sourceRecord.getOffsetManagerEntry();
 		entry.setRecordCount(25);
 		sourceRecord.setOffsetManagerEntry(entry);
 
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
 
 		assertThat(records).isEmpty();
 	}
@@ -146,10 +142,9 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
 
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
 				ByteArrayDataFixture.generateByteData(byteCount));
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
+		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
 
-		final List<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord).toList();
+		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
 
 		assertThat(records).hasSize(numberOfExpectedRecords);
 	}

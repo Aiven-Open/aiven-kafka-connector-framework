@@ -60,8 +60,7 @@ public class CsvTestDataFixture {
 	 * @return A byte array containing the specified number of records.
 	 */
 	public static byte[] generateCsvData(final int messageId, final int numOfRecs) {
-		return generateCsvRecords(messageId, numOfRecs, "test message")
-				.getBytes(StandardCharsets.UTF_8);
+		return generateCsvRecords(messageId, numOfRecs, "test message").getBytes(StandardCharsets.UTF_8);
 	}
 
 	/**
@@ -147,10 +146,7 @@ public class CsvTestDataFixture {
 	 *             on IO error.
 	 */
 	public static List<CSVRecord> readCsvRecords(final byte[] bytes) throws IOException {
-		return CSVFormat.RFC4180.builder()
-				.setHeader()
-				.setSkipHeaderRecord(true)
-				.get()
+		return CSVFormat.RFC4180.builder().setHeader().setSkipHeaderRecord(true).get()
 				.parse(new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8)).getRecords();
 	}
 }

@@ -16,12 +16,9 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.testFixture.format.CsvTestDataFixture;
-import org.apache.kafka.connect.data.Struct;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -83,6 +80,6 @@ final class CsvTransformerTest extends IORecordTransformerTest {
 	 */
 	@Override
 	protected Function<Object, String> messageExtractor() {
-		return sv ->  ((Map) sv).get("value").toString();
+		return sv -> ((Map) sv).get("value").toString();
 	}
 }

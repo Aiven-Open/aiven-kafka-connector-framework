@@ -61,7 +61,7 @@ public class ParquetTransformer extends InputStreamTransformer {
 
 	@Override
 	public StreamSpliterator createSpliterator(final IOSupplier<InputStream> inputStreamIOSupplier,
-			final long streamLength, final Context<?> context) {
+			final long streamLength, final Context context) {
 
 		return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
 

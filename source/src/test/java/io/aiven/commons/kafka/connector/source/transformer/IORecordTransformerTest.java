@@ -16,10 +16,10 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
-import io.aiven.commons.kafka.connector.source.impl.ExampleNativeSourceData;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
-import io.aiven.commons.kafka.connector.source.impl.ExampleSourceRecord;
+import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.junit.jupiter.api.Test;
 
@@ -74,10 +74,12 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	final void testReadRecordsInvalidData() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
 				ByteBuffer.wrap("A-bad-data-block".getBytes(StandardCharsets.UTF_8)));
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
+		// final ExampleNativeSourceData nativeSourceData = new
+		// ExampleNativeSourceData();
+		final EvolvingSourceRecord evolvingSourceRecord = createExampleSourceRecord(
+				new ExampleSourceNativeInfo(nativeItem));
 
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+		final Stream<SchemaAndValue> records = transformer.generateRecords(evolvingSourceRecord);
 		final List<Object> recs = records.collect(Collectors.toList());
 		assertThat(recs).isEmpty();
 	}
@@ -86,21 +88,15 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	@Test
 	final void testReadData() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(25));
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
+		final EvolvingSourceRecord evolvingSourceRecord = createExampleSourceRecord(
+				new ExampleSourceNativeInfo(nativeItem));
 
 		final List<String> expected = new ArrayList<>();
 		for (int i = 0; i < 25; i++) {
 			expected.add(generatedMessagePrefix() + i);
 		}
 
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
-
-		// List<SchemaAndValue> recordList = records.toList();
-		// for( var record : recordList) {
-		// var value = record.value();
-		// System.out.println(value);
-		// }
+		final Stream<SchemaAndValue> records = transformer.generateRecords(evolvingSourceRecord);
 
 		assertThat(records).extracting(SchemaAndValue::value).extracting(messageExtractor())
 				.containsExactlyElementsOf(expected);
@@ -110,19 +106,20 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	@Test
 	final void testReadRecordsSkipFew() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
+		final EvolvingSourceRecord evolvingSourceRecord = createExampleSourceRecord(
+				new ExampleSourceNativeInfo(nativeItem));
 		// skip 5 records -- we have to set the record after the read because the
 		// getOffsetManagerEntry() creates a defensive copy
-		final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
+		final ExampleOffsetManagerEntry entry = (ExampleOffsetManagerEntry) evolvingSourceRecord
+				.getOffsetManagerEntry();
 		entry.setRecordCount(5);
-		sourceRecord.setOffsetManagerEntry(entry);
+		evolvingSourceRecord.setOffsetManagerEntry(entry);
 
 		final List<String> expected = new ArrayList<>();
 		for (int i = 5; i < 20; i++) {
 			expected.add(generatedMessagePrefix() + i);
 		}
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+		final Stream<SchemaAndValue> records = transformer.generateRecords(evolvingSourceRecord);
 
 		assertThat(records).extracting(SchemaAndValue::value).extracting(messageExtractor())
 				.containsExactlyElementsOf(expected);
@@ -132,15 +129,16 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	@Test
 	final void testReadRecordsSkipMoreRecordsThanExist() throws Exception {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", generateData(20));
-		final ExampleNativeSourceData nativeSourceData = new ExampleNativeSourceData();
-		final ExampleSourceRecord sourceRecord = createExampleSourceRecord(nativeItem);
+		final EvolvingSourceRecord evolvingSourceRecord = createExampleSourceRecord(
+				new ExampleSourceNativeInfo(nativeItem));
 		// skip 25 records -- we have to set the record after the read because the
 		// getOffsetManagerEntry() creates a defensive copy
-		final ExampleOffsetManagerEntry entry = sourceRecord.getOffsetManagerEntry();
+		final ExampleOffsetManagerEntry entry = (ExampleOffsetManagerEntry) evolvingSourceRecord
+				.getOffsetManagerEntry();
 		entry.setRecordCount(25);
-		sourceRecord.setOffsetManagerEntry(entry);
+		evolvingSourceRecord.setOffsetManagerEntry(entry);
 
-		final Stream<SchemaAndValue> records = transformer.generateRecords(nativeSourceData, sourceRecord);
+		final Stream<SchemaAndValue> records = transformer.generateRecords(evolvingSourceRecord);
 
 		assertThat(records).isEmpty();
 	}
