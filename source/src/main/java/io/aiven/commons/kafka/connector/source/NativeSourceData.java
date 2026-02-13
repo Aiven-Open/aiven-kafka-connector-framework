@@ -211,8 +211,6 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	 */
 	final Stream<EvolvingSourceRecord> transform(final EvolvingSourceRecord sourceRecord) {
 		sourceRecord.setKeyData(transformer.generateKeyData(sourceRecord));
-		// lastSeenNativeKey = ((AbstractSourceNativeInfo<K, N>)
-		// sourceRecord.nativeInfo).nativeInfo.nativeKey();
 		return transformer.generateRecords(sourceRecord).map(new Mapper(sourceRecord));
 	}
 
