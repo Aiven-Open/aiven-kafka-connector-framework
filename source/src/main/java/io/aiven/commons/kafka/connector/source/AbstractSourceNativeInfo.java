@@ -31,7 +31,9 @@ import java.io.InputStream;
  * @param <N>
  *            the native data type.
  */
-public abstract class AbstractSourceNativeInfo<K extends Comparable<K>, N>  implements Comparable<AbstractSourceNativeInfo<K, N>> {
+public abstract class AbstractSourceNativeInfo<K extends Comparable<K>, N>
+		implements
+			Comparable<AbstractSourceNativeInfo<K, N>> {
 	/**
 	 * Value to be returned when the length of the stream is unknown.
 	 */

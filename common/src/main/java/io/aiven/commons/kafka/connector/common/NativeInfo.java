@@ -35,9 +35,10 @@ package io.aiven.commons.kafka.connector.common;
  * @param nativeItem
  *            the native item for the storage.
  */
-public record NativeInfo<K extends Comparable<K>, N>(K nativeKey, N nativeItem) implements Comparable<NativeInfo<K, N>> {
-    @Override
-    public int compareTo(NativeInfo<K, N> o) {
-        return this.nativeKey.compareTo(o.nativeKey());
-    }
+public record NativeInfo<K extends Comparable<K>, N>(K nativeKey,
+		N nativeItem) implements Comparable<NativeInfo<K, N>> {
+	@Override
+	public int compareTo(NativeInfo<K, N> o) {
+		return this.nativeKey.compareTo(o.nativeKey());
+	}
 }
