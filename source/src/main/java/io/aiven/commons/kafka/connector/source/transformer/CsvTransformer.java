@@ -21,24 +21,44 @@ package io.aiven.commons.kafka.connector.source.transformer;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
+import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
  * This class provides a transformer to take a List of CSVRecord generated from
  * apache csv-commons and transforms that data into a SchemaAndValue Object
  * usable by Connect to add messages to Kafka.
+ * <p>
+ * Assumptions:
+ * <ul>
+ *     <li>All CSV rows are the same length.</li>
+ *     <li>All columns have unique names, or they have no names at all.</li>
+ * </ul>
+ * If columns have no names they are given the names "field0" to "fieldN".
+ * </p>
  */
 public class CsvTransformer extends Transformer {
-
+	/** The schema builder */
+	private SchemaBuilder valueSchema;
+	/** The configured CSV parser */
+	private CSVParser parser;
+	/** the configured format for the parser */
+	private final CSVFormat csvFormat;
+	private final List<String> headers;
 	/**
 	 * Constructor.
 	 *
@@ -47,18 +67,24 @@ public class CsvTransformer extends Transformer {
 	 */
 	public CsvTransformer(SourceCommonConfig config) {
 		super(config);
+		CSVFormat.Builder builder = CSVFormat.RFC4180.builder();
+		if (config.isCsvTransformerHeaderEnabled()) {
+			builder.setHeader().setSkipHeaderRecord(true);
+		}
+		headers = config.getCsvTransformerHeader();
+		csvFormat = builder.get();
 	}
 
 	/**
 	 * Convert the native key into a Schema and Value for Kafka.
 	 *
 	 * @param evolvingSourceRecord
-	 *            the abstract source record to extract the keyData from.
+	 *            the Abstract source record to extract the keyData from.
 	 * @return a SchemaAndValue for the key.
 	 */
 	@Override
-	public SchemaAndValue generateKeyData(EvolvingSourceRecord evolvingSourceRecord) {
-		return evolvingSourceRecord.getKey();
+	public SchemaAndValue generateKeyData(final EvolvingSourceRecord evolvingSourceRecord) {
+		return SchemaAndValueFactory.createSchemaAndValue(evolvingSourceRecord.getNativeKey());
 	}
 
 	/**
@@ -71,21 +97,47 @@ public class CsvTransformer extends Transformer {
 	@Override
 	public Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord) {
 
-		try {
-			return getRecords(IOUtils.toString(sourceRecord.getInputStream(), StandardCharsets.UTF_8)).stream()
+		try (InputStream inputStream = sourceRecord.getInputStream().get()){
+			return getRecords(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).stream()
 					.skip(sourceRecord.getRecordCount()).map(this::toConnectData);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException("Unable to read input stram for " + sourceRecord.getNativeKey(),  e);
 		}
 
 	}
 
-	private static List<CSVRecord> getRecords(String sourceRecord) {
+	private List<CSVRecord> getRecords(String sourceRecord) {
 		try {
-			return CSVFormat.RFC4180.builder().setHeader().setSkipHeaderRecord(true).get()
-					.parse(new StringReader(sourceRecord)).getRecords();
+			parser = csvFormat.parse(new StringReader(sourceRecord));
+			return parser.getRecords();
 		} catch (IOException e) {
 			throw new RuntimeException(String.format("IOException occurred when processing csv to CSVRecord %s", e));
+		}
+	}
+
+	private List<String> constructHeaders(List<String> parserHeaders) {
+		if (headers == null) {
+			return new ArrayList<>(parserHeaders);
+		}
+		List<String> result = new ArrayList<>(headers);
+		if (parserHeaders != null && headers.size() < parserHeaders.size()) {
+			result.addAll(parserHeaders.subList(headers.size(), parserHeaders.size()));
+		}
+		return result;
+	}
+
+	private void createValueSchema(CSVRecord record) {
+		valueSchema = SchemaBuilder.struct();
+		List<String> headers = constructHeaders(parser.getHeaderNames());
+
+		int limit = Math.max(headers.size(), record.size());
+		for (int i = 0; i < limit; i++) {
+			if (i < headers.size()) {
+				valueSchema.field(headers.get(i), SchemaBuilder.STRING_SCHEMA);
+			} else {
+				String name = "field" + i;
+				valueSchema.field(name, SchemaBuilder.STRING_SCHEMA);
+			}
 		}
 	}
 
@@ -98,17 +150,31 @@ public class CsvTransformer extends Transformer {
 	 *         Data to Kafka
 	 */
 	private SchemaAndValue toConnectData(CSVRecord value) {
+		final Map<String, String> output = new LinkedHashMap<>(value.size());
 
-		SchemaBuilder valueSchema = SchemaBuilder.struct();
-
-		for (String header : value.getParser().getHeaderNames()) {
-			valueSchema.field(header, SchemaBuilder.STRING_SCHEMA);
+		if (valueSchema == null ||  valueSchema.fields().size() < value.size()) {
+			createValueSchema(value);
 		}
 
-		// TODO may need update here to auto add in fields, need to check how toMap
-		// reacts when headers not provided.
+		List<Field> fields = valueSchema.fields();
+		for (int i = 0 ; i < fields.size(); i++) {
+			// handle the case where there are fewer fields than headers.
+			if (i < value.size()) {
+				output.put(valueSchema.fields().get(i).name(), value.get(i));
+			} else {
+				output.put(valueSchema.fields().get(i).name(), "");
+			}
+		}
 
-		return new SchemaAndValue(valueSchema, value.toMap());
+		return new SchemaAndValue(valueSchema, output);
 	}
 
+	@Override
+	public void close() throws Exception {
+		if (parser != null) {
+			parser.close();
+			parser = null;
+		}
+		valueSchema = null;
+	}
 }

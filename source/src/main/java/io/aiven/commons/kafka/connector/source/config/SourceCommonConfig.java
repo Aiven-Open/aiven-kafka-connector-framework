@@ -25,6 +25,7 @@ import io.aiven.commons.kafka.connector.source.transformer.Transformer;
 import org.apache.kafka.common.config.ConfigValue;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -130,6 +131,14 @@ public class SourceCommonConfig extends ConnectorCommonConfig {
 	 */
 	public int getTransformerCacheSize() {
 		return sourceConfigFragment.getTransformerCacheSize();
+	}
+
+	public boolean isCsvTransformerHeaderEnabled() {
+		return sourceConfigFragment.isCsvTransformerHeaderEnabled();
+	}
+
+	public List<String> getCsvTransformerHeader() {
+		return sourceConfigFragment.getCsvTransformerHeader();
 	}
 
 	/**
