@@ -35,6 +35,8 @@ import java.util.Map;
  * The common connector fragment.
  */
 public class ConnectorCommonConfigFragment extends ConfigFragment {
+	/** name of java property that if set allows http to be used in URLs */
+	public static final String RELAX_SCHEMES = "io.aiven.commons.kafka.connector.common.config.RELAX_SCHEMES";
 	/** the schema registry URL */
 	static final String SCHEMA_REGISTRY_URL = "schema.registry.url";
 	/**
@@ -97,7 +99,12 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 				.artifactId("aiven-kafka-connector-framework");
 		final String COMMON_GROUP = "Connector Common";
 		int connectorCommon = 0;
-		UrlValidator schemaUrlValidator = UrlValidator.builder().schemes("https").build();
+
+		UrlValidator.Builder builder = UrlValidator.builder().schemes("https");
+		if (System.getProperties().get(RELAX_SCHEMES) != null) {
+			builder.schemes("http");
+		}
+		UrlValidator schemaUrlValidator = builder.build();
 		configDef
 				.define(ExtendedConfigKey.builder(SCHEMA_REGISTRY_URL).validator(schemaUrlValidator).group(COMMON_GROUP)
 						.orderInGroup(++connectorCommon).documentation("The default schema registry URL.")
