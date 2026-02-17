@@ -100,11 +100,11 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 		final String COMMON_GROUP = "Connector Common";
 		int connectorCommon = 0;
 
-		UrlValidator.Builder builder = UrlValidator.builder().schemes("https");
+		final UrlValidator.Builder builder = UrlValidator.builder().schemes("https");
 		if (System.getProperties().get(RELAX_SCHEMES) != null) {
 			builder.schemes("http");
 		}
-		UrlValidator schemaUrlValidator = builder.build();
+		final UrlValidator schemaUrlValidator = builder.build();
 		configDef
 				.define(ExtendedConfigKey.builder(SCHEMA_REGISTRY_URL).validator(schemaUrlValidator).group(COMMON_GROUP)
 						.orderInGroup(++connectorCommon).documentation("The default schema registry URL.")
