@@ -18,111 +18,133 @@
  */
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
-import io.aiven.commons.kafka.connector.source.task.Context;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.io.function.IOSupplier;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * This class provides a transformer to take a List of CSVRecord generated from
  * apache csv-commons and transforms that data into a SchemaAndValue Object
  * usable by Connect to add messages to Kafka.
+ * <p>
+ * Assumptions:
+ * </p>
+ * <ul>
+ * <li>CSV is in RFC-4180 format.</li>
+ * <li>All columns have unique names, they have no names at all, or overriding
+ * names are provided.</li>
+ * </ul>
+ * <p>
+ * If columns have no names they are given the names "field0" to "fieldN".
+ * </p>
+ * 
+ * @see <a href=
+ *      "https://www.ietf.org/archive/id/draft-shafranovich-rfc4180-bis-03.html">RFC-4180</a>
  */
-public class CsvTransformer extends InputStreamTransformer {
-	private static final Logger LOGGER = LoggerFactory.getLogger(CsvTransformer.class);
+public class CsvTransformer extends Transformer {
+	/** The schema builder */
+	private SchemaBuilder valueSchema;
+	/** The configured CSV parser */
+	private CSVParser parser;
+	/** the configured format for the parser */
+	private final CSVFormat csvFormat;
+	private final List<String> headers;
 	/**
 	 * Constructor.
 	 *
 	 * @param config
 	 *            The configuration for the source connector.
 	 */
-	protected CsvTransformer(SourceCommonConfig config) {
+	public CsvTransformer(SourceCommonConfig config) {
 		super(config);
+		CSVFormat.Builder builder = CSVFormat.RFC4180.builder();
+		if (config.isCsvTransformerHeaderEnabled()) {
+			builder.setHeader().setSkipHeaderRecord(true);
+		}
+		headers = config.getCsvTransformerHeader();
+		csvFormat = builder.get();
 	}
 
 	/**
-	 * Creates the stream spliterator for this transformer.
+	 * Convert the native key into a Schema and Value for Kafka.
 	 *
-	 * @param inputStreamIOSupplier
-	 *            the input stream supplier.
-	 * @param streamLength
-	 *            the length of the input stream,
-	 *
-	 *            stream with an unknown length, streams of length zero will log an
-	 *            error and return an empty stream
-	 * @param context
-	 *            the context
-	 * @return a StreamSpliterator instance.
+	 * @param evolvingSourceRecord
+	 *            the evolving source record to build the keyData from.
+	 * @return a SchemaAndValue for the key.
 	 */
 	@Override
-	protected StreamSpliterator createSpliterator(IOSupplier<InputStream> inputStreamIOSupplier, long streamLength,
-			Context context) {
-		return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
-			BufferedReader reader;
-			String headers;
+	public SchemaAndValue generateKeyData(final EvolvingSourceRecord evolvingSourceRecord) {
+		return SchemaAndValueFactory.createSchemaAndValue(evolvingSourceRecord.getNativeKey());
+	}
 
-			@Override
-			protected void inputOpened(final InputStream input) {
-				reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
+	/**
+	 * Gets a stream of SchemaAndValue records from the input stream.
+	 *
+	 * @param sourceRecord
+	 *            The evolving source regord being processed.
+	 * @return the stream of values for Kafka SourceRecords.
+	 */
+	@Override
+	public Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord) {
+
+		try (InputStream inputStream = sourceRecord.getInputStream().get()) {
+			return getRecords(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).stream()
+					.skip(sourceRecord.getRecordCount()).map(this::toConnectData);
+		} catch (IOException e) {
+			throw new RuntimeException("Unable to read input stram for " + sourceRecord.getNativeKey(), e);
+		}
+
+	}
+
+	private List<CSVRecord> getRecords(String sourceRecord) {
+		try {
+			parser = csvFormat.parse(new StringReader(sourceRecord));
+			return parser.getRecords();
+		} catch (IOException e) {
+			throw new RuntimeException(String.format("IOException occurred when processing csv to CSVRecord %s", e));
+		}
+	}
+
+	private List<String> constructHeaders(List<String> parserHeaders) {
+		if (headers == null) {
+			return new ArrayList<>(parserHeaders);
+		}
+		List<String> result = new ArrayList<>(headers);
+		if (parserHeaders != null && headers.size() < parserHeaders.size()) {
+			result.addAll(parserHeaders.subList(headers.size(), parserHeaders.size()));
+		}
+		return result;
+	}
+
+	private void createValueSchema(CSVRecord record) {
+		valueSchema = SchemaBuilder.struct();
+		List<String> headers = constructHeaders(parser.getHeaderNames());
+
+		int limit = Math.max(headers.size(), record.size());
+		for (int i = 0; i < limit; i++) {
+			if (i < headers.size()) {
+				valueSchema.field(headers.get(i), SchemaBuilder.STRING_SCHEMA);
+			} else {
+				String name = "field" + i;
+				valueSchema.field(name, SchemaBuilder.STRING_SCHEMA);
 			}
-
-			@Override
-			public void doClose() {
-				if (reader != null) {
-					try {
-						reader.close();
-					} catch (IOException e) {
-						LOGGER.error("Error closing reader: {}", e.getMessage(), e);
-					}
-				}
-			}
-
-			@Override
-			public boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
-				String data = null;
-				try {
-					// TODO configure headers to be supplied ignored or part of csv
-					if (StringUtils.isBlank(headers)) {
-						headers = reader.readLine();
-						if (headers == null) {
-							// end of file
-							return false;
-						}
-					}
-					// This is problematic and I need to review.
-					while (StringUtils.isBlank(data)) {
-
-						data = reader.readLine();
-						if (data == null) {
-							// end of file
-							return false;
-						}
-					}
-
-					action.accept(toConnectData(headers + System.lineSeparator() + data));
-
-					return true;
-				} catch (IOException e) {
-					LOGGER.error("Error reading input stream: {}", e.getMessage(), e);
-					return false;
-				}
-			}
-		};
+		}
 	}
 
 	/**
@@ -133,29 +155,32 @@ public class CsvTransformer extends InputStreamTransformer {
 	 * @return A SchemaAndValue object that can be used by Kafka Connect to send
 	 *         Data to Kafka
 	 */
-	private SchemaAndValue toConnectData(String value) throws IOException {
+	private SchemaAndValue toConnectData(CSVRecord value) {
+		final Map<String, String> output = new LinkedHashMap<>(value.size());
 
-		if (value == null) {
-			return SchemaAndValue.NULL;
-		}
-		List<CSVRecord> records = CSVFormat.RFC4180.builder().setHeader().get().parse(new StringReader(value))
-				.getRecords();
-		if (records.size() > 1) {
-			throw new RuntimeException(
-					String.format("Too many records returned to be transformed: records %s", records.size()));
-		}
-		CSVRecord record = records.get(0);
-
-		SchemaBuilder valueSchema = SchemaBuilder.struct();
-
-		for (String header : record.getParser().getHeaderNames()) {
-			valueSchema.field(header, SchemaBuilder.STRING_SCHEMA);
+		if (valueSchema == null || valueSchema.fields().size() < value.size()) {
+			createValueSchema(value);
 		}
 
-		// TODO may need update here to auto add in fields, need to check how toMap
-		// reacts when headers not provided.
+		List<Field> fields = valueSchema.fields();
+		for (int i = 0; i < fields.size(); i++) {
+			// handle the case where there are fewer fields than headers.
+			if (i < value.size()) {
+				output.put(valueSchema.fields().get(i).name(), value.get(i));
+			} else {
+				output.put(valueSchema.fields().get(i).name(), "");
+			}
+		}
 
-		return new SchemaAndValue(valueSchema, record.toMap());
+		return new SchemaAndValue(valueSchema, output);
 	}
 
+	@Override
+	public void close() throws Exception {
+		if (parser != null) {
+			parser.close();
+			parser = null;
+		}
+		valueSchema = null;
+	}
 }

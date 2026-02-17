@@ -74,8 +74,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 	final void testReadRecordsInvalidData() throws IOException {
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
 				ByteBuffer.wrap("A-bad-data-block".getBytes(StandardCharsets.UTF_8)));
-		// final ExampleNativeSourceData nativeSourceData = new
-		// ExampleNativeSourceData();
+
 		final EvolvingSourceRecord evolvingSourceRecord = createExampleSourceRecord(
 				new ExampleSourceNativeInfo(nativeItem));
 
