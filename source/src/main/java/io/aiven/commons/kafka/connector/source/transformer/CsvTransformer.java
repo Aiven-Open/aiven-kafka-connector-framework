@@ -44,13 +44,18 @@ import java.util.stream.Stream;
  * usable by Connect to add messages to Kafka.
  * <p>
  * Assumptions:
+ * </p>
  * <ul>
- *     <li>CSV is in RFC-4180 format.</li>
- *     <li>All columns have unique names, they have no names at all, or overriding names are provided.</li>
+ * <li>CSV is in RFC-4180 format.</li>
+ * <li>All columns have unique names, they have no names at all, or overriding
+ * names are provided.</li>
  * </ul>
+ * <p>
  * If columns have no names they are given the names "field0" to "fieldN".
  * </p>
- * @see <a href="https://www.ietf.org/archive/id/draft-shafranovich-rfc4180-bis-03.html">RFC-4180</a>
+ * 
+ * @see <a href=
+ *      "https://www.ietf.org/archive/id/draft-shafranovich-rfc4180-bis-03.html">RFC-4180</a>
  */
 public class CsvTransformer extends Transformer {
 	/** The schema builder */
@@ -98,11 +103,11 @@ public class CsvTransformer extends Transformer {
 	@Override
 	public Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord) {
 
-		try (InputStream inputStream = sourceRecord.getInputStream().get()){
+		try (InputStream inputStream = sourceRecord.getInputStream().get()) {
 			return getRecords(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).stream()
 					.skip(sourceRecord.getRecordCount()).map(this::toConnectData);
 		} catch (IOException e) {
-			throw new RuntimeException("Unable to read input stram for " + sourceRecord.getNativeKey(),  e);
+			throw new RuntimeException("Unable to read input stram for " + sourceRecord.getNativeKey(), e);
 		}
 
 	}
@@ -153,12 +158,12 @@ public class CsvTransformer extends Transformer {
 	private SchemaAndValue toConnectData(CSVRecord value) {
 		final Map<String, String> output = new LinkedHashMap<>(value.size());
 
-		if (valueSchema == null ||  valueSchema.fields().size() < value.size()) {
+		if (valueSchema == null || valueSchema.fields().size() < value.size()) {
 			createValueSchema(value);
 		}
 
 		List<Field> fields = valueSchema.fields();
-		for (int i = 0 ; i < fields.size(); i++) {
+		for (int i = 0; i < fields.size(); i++) {
 			// handle the case where there are fewer fields than headers.
 			if (i < value.size()) {
 				output.put(valueSchema.fields().get(i).name(), value.get(i));

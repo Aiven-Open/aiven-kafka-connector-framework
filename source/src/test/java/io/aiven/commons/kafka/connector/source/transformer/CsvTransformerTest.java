@@ -226,7 +226,8 @@ final class CsvTransformerTest {
 		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
 				props);
 		transformer = new CsvTransformer(sourceCommonConfig);
-		final String nativeItem = CsvTestDataFixture.generateCsvRecord(1, "hi") + "\n" + CsvTestDataFixture.generateCsvRecord(2, "bye")+",more data";
+		final String nativeItem = CsvTestDataFixture.generateCsvRecord(1, "hi") + "\n"
+				+ CsvTestDataFixture.generateCsvRecord(2, "bye") + ",more data";
 		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
 		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
@@ -253,7 +254,8 @@ final class CsvTransformerTest {
 		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
 				props);
 		transformer = new CsvTransformer(sourceCommonConfig);
-		final String nativeItem = CsvTestDataFixture.MSG_HEADER+"\n"+CsvTestDataFixture.generateCsvRecord(1, "hi") + "\n" + CsvTestDataFixture.generateCsvRecord(2, "bye")+",more data";
+		final String nativeItem = CsvTestDataFixture.MSG_HEADER + "\n" + CsvTestDataFixture.generateCsvRecord(1, "hi")
+				+ "\n" + CsvTestDataFixture.generateCsvRecord(2, "bye") + ",more data";
 		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
 		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
@@ -307,7 +309,8 @@ final class CsvTransformerTest {
 		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
 				props);
 		transformer = new CsvTransformer(sourceCommonConfig);
-		final String nativeItem = CsvTestDataFixture.generateCsvRecords(1)+ CsvTestDataFixture.generateCsvRecord(2, "bye")+",more data";
+		final String nativeItem = CsvTestDataFixture.generateCsvRecords(1)
+				+ CsvTestDataFixture.generateCsvRecord(2, "bye") + ",more data";
 		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
 		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
@@ -337,7 +340,8 @@ final class CsvTransformerTest {
 	@Test
 	void tooManyHeadersNonParsedTest() throws Exception {
 		Map<String, String> props = new HashMap<>();
-		SourceConfigFragment.setter(props).csvTransformerHeaders("one, two, three, four").csvTransformerHeadersEnabled(false);
+		SourceConfigFragment.setter(props).csvTransformerHeaders("one, two, three, four")
+				.csvTransformerHeadersEnabled(false);
 		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
 				props);
 		transformer = new CsvTransformer(sourceCommonConfig);
@@ -368,7 +372,8 @@ final class CsvTransformerTest {
 		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
 				props);
 		transformer = new CsvTransformer(sourceCommonConfig);
-		final String nativeItem = CsvTestDataFixture.generateCsvRecord(0, CsvTestDataFixture.TEST_MESSAGE) + "\n" + CsvTestDataFixture.generateCsvRecord(2, "bye")+",more data";
+		final String nativeItem = CsvTestDataFixture.generateCsvRecord(0, CsvTestDataFixture.TEST_MESSAGE) + "\n"
+				+ CsvTestDataFixture.generateCsvRecord(2, "bye") + ",more data";
 		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
 		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
