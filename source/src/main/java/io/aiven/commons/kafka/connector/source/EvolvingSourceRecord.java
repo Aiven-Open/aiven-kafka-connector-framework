@@ -79,6 +79,15 @@ final public class EvolvingSourceRecord {
 	}
 
 	/**
+	 * Gets the AbstractNativeSource info from the constructor.
+	 * 
+	 * @return the AbstractNativeSource info from the constructor.
+	 */
+	public AbstractSourceNativeInfo<?, ?> getSourceNativeInfo() {
+		return sourceNativeInfo;
+	}
+
+	/**
 	 * Gets then key for the native object.
 	 *
 	 * @return The key for the native object.
