@@ -25,6 +25,7 @@ import io.aiven.commons.kafka.connector.source.transformer.Transformer;
 import org.apache.kafka.common.config.ConfigValue;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -130,6 +131,25 @@ public class SourceCommonConfig extends ConnectorCommonConfig {
 	 */
 	public int getTransformerCacheSize() {
 		return sourceConfigFragment.getTransformerCacheSize();
+	}
+
+	/**
+	 * Gets the CSV header enabled flag.
+	 * 
+	 * @return {@code true} if headers should be extracted from the CSV input,
+	 *         {@code false} otherwise.
+	 */
+	public boolean isCsvTransformerHeaderEnabled() {
+		return sourceConfigFragment.isCsvTransformerHeaderEnabled();
+	}
+
+	/**
+	 * Gets the specified headers, if any, for the CSV transformer.
+	 * 
+	 * @return list of headers specified for the CSV transformer.
+	 */
+	public List<String> getCsvTransformerHeader() {
+		return sourceConfigFragment.getCsvTransformerHeader();
 	}
 
 	/**

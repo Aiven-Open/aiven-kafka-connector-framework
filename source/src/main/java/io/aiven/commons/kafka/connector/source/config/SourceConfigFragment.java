@@ -34,6 +34,7 @@ import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -55,6 +56,8 @@ public final class SourceConfigFragment extends ConfigFragment {
 	private static final String TRANSFORMER_CLASS = "transformer.class";
 	private static final String TRANSFORMER_BUFFER = "transformer.buffer";
 	private static final String TRANSFORMER_CACHE = "transformer.cache.size";
+	private static final String CSV_TRANSFORMER_HEADERS_ENABLED = "transformer.csv.headers.enabled";
+	private static final String CSV_TRANSFORMER_HEADERS = "transformer.csv.headers";
 
 	/**
 	 * Creates a Setter for this fragment.
@@ -127,8 +130,19 @@ public final class SourceConfigFragment extends ConfigFragment {
 						.validator(ScaleValidator.between(100, Integer.MAX_VALUE, Scale.IEC))
 						.documentation(
 								"Defines the size in bytes of the transformer cache used when processing Avro based input like Avro or Parquet streams.")
+						.since(siBuilder.version("1.0.0").build()).build())
+				.define(ExtendedConfigKey.builder(CSV_TRANSFORMER_HEADERS_ENABLED).type(ConfigDef.Type.BOOLEAN)
+						.defaultValue("true").validator(ConfigDef.LambdaValidator.with((k, v) -> {
+							if (v instanceof String) {
+								ConfigDef.CaseInsensitiveValidString.in("true", "false").ensureValid(k, v);
+							}
+						}, ConfigDef.CaseInsensitiveValidString.in("true", "false")::toString))
+						.documentation(
+								"Only valid if CSV Transformer is used. If 'true' the first line of the CSV will be a header line describing all the columns. If 'false' no header line is provided and columns will be defined as 'field0' through 'fieldN'.")
+						.since(siBuilder.version("1.0.0").build()).build())
+				.define(ExtendedConfigKey.builder(CSV_TRANSFORMER_HEADERS).type(ConfigDef.Type.LIST).documentation(
+						"Only valid if CSV Transformer is used. A comma separated list of the field names for CVS records.  Rows with more fields than there are headers will be assigned 'fieldN' names")
 						.since(siBuilder.version("1.0.0").build()).build());
-
 	}
 
 	/**
@@ -233,6 +247,26 @@ public final class SourceConfigFragment extends ConfigFragment {
 	 */
 	public String getNativeStartKey() {
 		return getString(NATIVE_START_KEY);
+	}
+
+	/**
+	 * Gets the CSV transformer header enable flag.
+	 * 
+	 * @return {@code true} if headers should be parsed from CSV input,
+	 *         {@code false} otherwise.
+	 */
+	public Boolean isCsvTransformerHeaderEnabled() {
+		return getBoolean(CSV_TRANSFORMER_HEADERS_ENABLED);
+	}
+
+	/**
+	 * Gets the list of header for the CSV input. Will override any parsed from the
+	 * CSV input itself.
+	 * 
+	 * @return the list of headers for the CSV input.
+	 */
+	public List<String> getCsvTransformerHeader() {
+		return getList(CSV_TRANSFORMER_HEADERS);
 	}
 
 	/**
@@ -346,6 +380,29 @@ public final class SourceConfigFragment extends ConfigFragment {
 		 */
 		public Setter transformerCache(final int cacheSize) {
 			return setValue(TRANSFORMER_CACHE, cacheSize);
+		}
+
+		/**
+		 * Sets the header flag for the CSV transformer.
+		 * 
+		 * @param state
+		 *            the state for the header flag.
+		 * @return this
+		 */
+		public Setter csvTransformerHeadersEnabled(final boolean state) {
+			return setValue(CSV_TRANSFORMER_HEADERS_ENABLED, state);
+		}
+
+		/**
+		 * Sets the headers for the CSV. Should be a comma separated list of field
+		 * names.
+		 * 
+		 * @param headers
+		 *            the header names.
+		 * @return this
+		 */
+		public Setter csvTransformerHeaders(String headers) {
+			return setValue(CSV_TRANSFORMER_HEADERS, headers);
 		}
 	}
 

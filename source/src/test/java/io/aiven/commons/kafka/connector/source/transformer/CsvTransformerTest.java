@@ -18,11 +18,14 @@ package io.aiven.commons.kafka.connector.source.transformer;
 
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
+import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import io.aiven.commons.kafka.connector.source.testFixture.format.CsvTestDataFixture;
+import org.apache.kafka.connect.data.Field;
+import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -164,5 +167,236 @@ final class CsvTransformerTest {
 
 		assertThat(records).isEmpty();
 
+	}
+
+	@Test
+	void noHeaderTest() throws Exception {
+		Map<String, String> props = new HashMap<>();
+		SourceConfigFragment.setter(props).csvTransformerHeadersEnabled(false);
+		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
+				props);
+		transformer = new CsvTransformer(sourceCommonConfig);
+		final String nativeItem = CsvTestDataFixture.generateCsvRecord(1, "hi");
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+
+		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+		assertThat(records.size()).isEqualTo(1);
+		Schema schema = records.get(0).schema();
+		List<Field> fields = schema.fields();
+		assertThat(fields).hasSize(3);
+		assertThat(fields.get(0).name()).isEqualTo("field0");
+		assertThat(fields.get(1).name()).isEqualTo("field1");
+		assertThat(fields.get(2).name()).isEqualTo("field2");
+
+		Map<String, String> values = (Map) records.get(0).value();
+		assertThat(values.get("field0")).isEqualTo("1");
+		assertThat(values.get("field1")).isEqualTo("hi");
+		assertThat(values.get("field2")).isEqualTo(CsvTestDataFixture.MESSAGE_PREFIX + "1");
+	}
+
+	@Test
+	void shortRowTest() throws Exception {
+		Map<String, String> props = new HashMap<>();
+		SourceConfigFragment.setter(props).csvTransformerHeadersEnabled(false);
+		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
+				props);
+		transformer = new CsvTransformer(sourceCommonConfig);
+		final String nativeItem = CsvTestDataFixture.generateCsvRecord(1, "hi") + "\n2,bye";
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+
+		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+		assertThat(records.size()).isEqualTo(2);
+		Schema schema = records.get(1).schema();
+		List<Field> fields = schema.fields();
+		assertThat(fields).hasSize(3);
+		assertThat(fields.get(0).name()).isEqualTo("field0");
+		assertThat(fields.get(1).name()).isEqualTo("field1");
+		assertThat(fields.get(2).name()).isEqualTo("field2");
+
+		Map<String, String> values = (Map) records.get(1).value();
+		assertThat(values.get("field0")).isEqualTo("2");
+		assertThat(values.get("field1")).isEqualTo("bye");
+		assertThat(values.get("field2")).isEqualTo("");
+	}
+
+	@Test
+	void longRowTest() throws Exception {
+		Map<String, String> props = new HashMap<>();
+		SourceConfigFragment.setter(props).csvTransformerHeadersEnabled(false);
+		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
+				props);
+		transformer = new CsvTransformer(sourceCommonConfig);
+		final String nativeItem = CsvTestDataFixture.generateCsvRecord(1, "hi") + "\n"
+				+ CsvTestDataFixture.generateCsvRecord(2, "bye") + ",more data";
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+
+		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+		assertThat(records.size()).isEqualTo(2);
+		Schema schema = records.get(1).schema();
+		List<Field> fields = schema.fields();
+		assertThat(fields).hasSize(4);
+		assertThat(fields.get(0).name()).isEqualTo("field0");
+		assertThat(fields.get(1).name()).isEqualTo("field1");
+		assertThat(fields.get(2).name()).isEqualTo("field2");
+		assertThat(fields.get(3).name()).isEqualTo("field3");
+
+		Map<String, String> values = (Map) records.get(1).value();
+		assertThat(values.get("field0")).isEqualTo("2");
+		assertThat(values.get("field1")).isEqualTo("bye");
+		assertThat(values.get("field2")).isEqualTo(CsvTestDataFixture.MESSAGE_PREFIX + "2");
+		assertThat(values.get("field3")).isEqualTo("more data");
+	}
+
+	@Test
+	void longRowWithHeadersTest() throws Exception {
+		Map<String, String> props = new HashMap<>();
+		SourceConfigFragment.setter(props).csvTransformerHeadersEnabled(true);
+		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
+				props);
+		transformer = new CsvTransformer(sourceCommonConfig);
+		final String nativeItem = CsvTestDataFixture.MSG_HEADER + "\n" + CsvTestDataFixture.generateCsvRecord(1, "hi")
+				+ "\n" + CsvTestDataFixture.generateCsvRecord(2, "bye") + ",more data";
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+
+		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+		assertThat(records.size()).isEqualTo(2);
+		Schema schema = records.get(1).schema();
+		List<Field> fields = schema.fields();
+		assertThat(fields).hasSize(4);
+		assertThat(fields.get(0).name()).isEqualTo("id");
+		assertThat(fields.get(1).name()).isEqualTo("message");
+		assertThat(fields.get(2).name()).isEqualTo("value");
+		assertThat(fields.get(3).name()).isEqualTo("field3");
+
+		Map<String, String> values = (Map) records.get(1).value();
+		assertThat(values.get("id")).isEqualTo("2");
+		assertThat(values.get("message")).isEqualTo("bye");
+		assertThat(values.get("value")).isEqualTo(CsvTestDataFixture.MESSAGE_PREFIX + "2");
+		assertThat(values.get("field3")).isEqualTo("more data");
+	}
+
+	@Test
+	void tooManyHeadersTest() throws Exception {
+		Map<String, String> props = new HashMap<>();
+		SourceConfigFragment.setter(props).csvTransformerHeaders("one, two, three, four");
+		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
+				props);
+		transformer = new CsvTransformer(sourceCommonConfig);
+		final String nativeItem = CsvTestDataFixture.generateCsvRecords(1);
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+
+		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+		assertThat(records.size()).isEqualTo(1);
+		Schema schema = records.get(0).schema();
+		List<Field> fields = schema.fields();
+		assertThat(fields).hasSize(4);
+		assertThat(fields.get(0).name()).isEqualTo("one");
+		assertThat(fields.get(1).name()).isEqualTo("two");
+		assertThat(fields.get(2).name()).isEqualTo("three");
+		assertThat(fields.get(3).name()).isEqualTo("four");
+
+		Map<String, String> values = (Map) records.get(0).value();
+		assertThat(values.get("one")).isEqualTo("0");
+		assertThat(values.get("two")).isEqualTo(CsvTestDataFixture.TEST_MESSAGE);
+		assertThat(values.get("three")).isEqualTo(CsvTestDataFixture.MESSAGE_PREFIX + "0");
+		assertThat(values.get("four")).isEqualTo("");
+	}
+
+	@Test
+	void tooFewHeadersTest() throws Exception {
+		Map<String, String> props = new HashMap<>();
+		SourceConfigFragment.setter(props).csvTransformerHeaders("one, two");
+		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
+				props);
+		transformer = new CsvTransformer(sourceCommonConfig);
+		final String nativeItem = CsvTestDataFixture.generateCsvRecords(1)
+				+ CsvTestDataFixture.generateCsvRecord(2, "bye") + ",more data";
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+
+		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+		assertThat(records.size()).isEqualTo(2);
+		Schema schema = records.get(0).schema();
+		List<Field> fields = schema.fields();
+		assertThat(fields).hasSize(3);
+		assertThat(fields.get(0).name()).isEqualTo("one");
+		assertThat(fields.get(1).name()).isEqualTo("two");
+		assertThat(fields.get(2).name()).isEqualTo("value");
+
+		schema = records.get(1).schema();
+		fields = schema.fields();
+		assertThat(fields).hasSize(4);
+		assertThat(fields.get(0).name()).isEqualTo("one");
+		assertThat(fields.get(1).name()).isEqualTo("two");
+		assertThat(fields.get(2).name()).isEqualTo("value");
+		assertThat(fields.get(3).name()).isEqualTo("field3");
+
+		Map<String, String> values = (Map) records.get(1).value();
+		assertThat(values.get("one")).isEqualTo("2");
+		assertThat(values.get("two")).isEqualTo("bye");
+		assertThat(values.get("value")).isEqualTo(CsvTestDataFixture.MESSAGE_PREFIX + "2");
+		assertThat(values.get("field3")).isEqualTo("more data");
+	}
+
+	@Test
+	void tooManyHeadersNonParsedTest() throws Exception {
+		Map<String, String> props = new HashMap<>();
+		SourceConfigFragment.setter(props).csvTransformerHeaders("one, two, three, four")
+				.csvTransformerHeadersEnabled(false);
+		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
+				props);
+		transformer = new CsvTransformer(sourceCommonConfig);
+		final String nativeItem = CsvTestDataFixture.generateCsvRecord(0, CsvTestDataFixture.TEST_MESSAGE);
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+
+		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+		assertThat(records.size()).isEqualTo(1);
+		Schema schema = records.get(0).schema();
+		List<Field> fields = schema.fields();
+		assertThat(fields).hasSize(4);
+		assertThat(fields.get(0).name()).isEqualTo("one");
+		assertThat(fields.get(1).name()).isEqualTo("two");
+		assertThat(fields.get(2).name()).isEqualTo("three");
+		assertThat(fields.get(3).name()).isEqualTo("four");
+
+		Map<String, String> values = (Map) records.get(0).value();
+		assertThat(values.get("one")).isEqualTo("0");
+		assertThat(values.get("two")).isEqualTo(CsvTestDataFixture.TEST_MESSAGE);
+		assertThat(values.get("three")).isEqualTo(CsvTestDataFixture.MESSAGE_PREFIX + "0");
+		assertThat(values.get("four")).isEqualTo("");
+	}
+
+	@Test
+	void tooFewHeadersNoneParsedTest() throws Exception {
+		Map<String, String> props = new HashMap<>();
+		SourceConfigFragment.setter(props).csvTransformerHeaders("one, two").csvTransformerHeadersEnabled(false);
+		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
+				props);
+		transformer = new CsvTransformer(sourceCommonConfig);
+		final String nativeItem = CsvTestDataFixture.generateCsvRecord(0, CsvTestDataFixture.TEST_MESSAGE) + "\n"
+				+ CsvTestDataFixture.generateCsvRecord(2, "bye") + ",more data";
+		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+
+		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+		assertThat(records.size()).isEqualTo(2);
+		Schema schema = records.get(0).schema();
+		List<Field> fields = schema.fields();
+		assertThat(fields).hasSize(3);
+		assertThat(fields.get(0).name()).isEqualTo("one");
+		assertThat(fields.get(1).name()).isEqualTo("two");
+		assertThat(fields.get(2).name()).isEqualTo("field2");
+
+		schema = records.get(1).schema();
+		fields = schema.fields();
+		assertThat(fields).hasSize(4);
+		assertThat(fields.get(0).name()).isEqualTo("one");
+		assertThat(fields.get(1).name()).isEqualTo("two");
+		assertThat(fields.get(2).name()).isEqualTo("field2");
+		assertThat(fields.get(3).name()).isEqualTo("field3");
+
+		Map<String, String> values = (Map) records.get(1).value();
+		assertThat(values.get("one")).isEqualTo("2");
+		assertThat(values.get("two")).isEqualTo("bye");
+		assertThat(values.get("field2")).isEqualTo(CsvTestDataFixture.MESSAGE_PREFIX + "2");
+		assertThat(values.get("field3")).isEqualTo("more data");
 	}
 }
