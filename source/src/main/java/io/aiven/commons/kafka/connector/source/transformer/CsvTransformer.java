@@ -45,11 +45,12 @@ import java.util.stream.Stream;
  * <p>
  * Assumptions:
  * <ul>
- *     <li>All CSV rows are the same length.</li>
- *     <li>All columns have unique names, or they have no names at all.</li>
+ *     <li>CSV is in RFC-4180 format.</li>
+ *     <li>All columns have unique names, they have no names at all, or overriding names are provided.</li>
  * </ul>
  * If columns have no names they are given the names "field0" to "fieldN".
  * </p>
+ * @see <a href="https://www.ietf.org/archive/id/draft-shafranovich-rfc4180-bis-03.html">RFC-4180</a>
  */
 public class CsvTransformer extends Transformer {
 	/** The schema builder */
