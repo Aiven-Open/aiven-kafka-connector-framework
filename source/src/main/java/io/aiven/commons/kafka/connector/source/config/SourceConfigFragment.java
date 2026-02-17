@@ -133,7 +133,7 @@ public final class SourceConfigFragment extends ConfigFragment {
 						.since(siBuilder.version("1.0.0").build()).build())
 				.define(ExtendedConfigKey.builder(CSV_TRANSFORMER_HEADERS_ENABLED).type(ConfigDef.Type.BOOLEAN).defaultValue("true")
 						.validator(ConfigDef.LambdaValidator.with((k, v) -> {
-							if (v instanceof String str) {
+							if (v instanceof String) {
 								ConfigDef.CaseInsensitiveValidString.in("true", "false").ensureValid(k, v);
 							}
 						}, ConfigDef.CaseInsensitiveValidString.in("true", "false")::toString))
