@@ -80,7 +80,7 @@ public class CsvTransformer extends Transformer {
 	 * Convert the native key into a Schema and Value for Kafka.
 	 *
 	 * @param evolvingSourceRecord
-	 *            the Abstract source record to extract the keyData from.
+	 *            the evolving source record to build the keyData from.
 	 * @return a SchemaAndValue for the key.
 	 */
 	@Override
@@ -92,7 +92,7 @@ public class CsvTransformer extends Transformer {
 	 * Gets a stream of SchemaAndValue records from the input stream.
 	 *
 	 * @param sourceRecord
-	 *            The AbstractSourceRecord being processed.
+	 *            The evolving source regord being processed.
 	 * @return the stream of values for Kafka SourceRecords.
 	 */
 	@Override
