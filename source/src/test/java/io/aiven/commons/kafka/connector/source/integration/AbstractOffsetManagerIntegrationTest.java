@@ -16,10 +16,8 @@
 
 package io.aiven.commons.kafka.connector.source.integration;
 
-import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
+import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
-import io.aiven.commons.kafka.connector.source.AbstractSourceRecord;
-import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import io.aiven.commons.kafka.connector.source.transformer.ByteArrayTransformer;
@@ -35,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-//import static io.aiven.kafka.connect.common.source.AbstractSourceRecordIteratorTest.FILE_PATTERN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
@@ -47,14 +44,10 @@ import static org.assertj.core.api.Fail.fail;
  *            the native key type.
  * @param <N>
  *            the native object type
- * @param <O>
- *            The {@link OffsetManager.OffsetManagerEntry} implementation.
- * @param <T>
- *            The implementation of the {@link AbstractSourceRecord}
  */
-public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>, T extends AbstractSourceRecord<K, N, O, T>>
+public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<K>, N>
 		extends
-			AbstractSourceIntegrationBase<K, N, O, T> {
+			AbstractSourceIntegrationBase<K, N> {
 
 	/**
 	 * Static to indicate that the TASK is not set.
@@ -90,34 +83,35 @@ public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<
 		final String testData2 = "Hello, Kafka Connect S3 Source! object 2";
 		final String testData3 = "Hello, Kafka Connect S3 Source! object 3";
 
-		final Map<OffsetManager.OffsetManagerKey, Long> expectedOffsetRecords = new HashMap<>();
+		final Map<SourceStorage.WriteResult<K>, Long> expectedOffsetRecords = new HashMap<>();
 		// write 4 objects
-		expectedOffsetRecords.put(write(topic, testData1.getBytes(StandardCharsets.UTF_8), 0).getOffsetManagerKey(),
-				1L);
 
-		expectedOffsetRecords.put(write(topic, testData2.getBytes(StandardCharsets.UTF_8), 0).getOffsetManagerKey(),
-				1L);
+		expectedOffsetRecords.put(write(topic, testData1.getBytes(StandardCharsets.UTF_8), 0), 1L);
 
-		expectedOffsetRecords.put(write(topic, testData1.getBytes(StandardCharsets.UTF_8), 1).getOffsetManagerKey(),
-				1L);
+		expectedOffsetRecords.put(write(topic, testData2.getBytes(StandardCharsets.UTF_8), 0), 1L);
 
-		expectedOffsetRecords.put(write(topic, testData2.getBytes(StandardCharsets.UTF_8), 1).getOffsetManagerKey(),
-				1L);
+		expectedOffsetRecords.put(write(topic, testData1.getBytes(StandardCharsets.UTF_8), 1), 1L);
+
+		expectedOffsetRecords.put(write(topic, testData2.getBytes(StandardCharsets.UTF_8), 1), 1L);
 
 		try {
 			// Start the Connector
-			Map<String, String> props = ConnectorCommonConfigFragment.setter(createConfig(topic, ByteArrayTransformer.class))
-					.keyConverter(ByteArrayConverter.class).valueConverter(ByteArrayConverter.class).data();
+			Map<String, String> props = ConnectorCommonConfigFragment
+					.setter(createConfig(topic, ByteArrayTransformer.class)).keyConverter(ByteArrayConverter.class)
+					.valueConverter(ByteArrayConverter.class).data();
 			SourceConfigFragment.setter(props).distributionType(DistributionType.PARTITION);
 
 			final KafkaManager kafkaManager = setupKafka();
 			kafkaManager.createTopic(topic);
+			// starts the connector here.
 			kafkaManager.configureConnector(getConnectorName(), props);
 
-			assertThat(getNativeStorage()).hasSize(4);
+			// verify the records were written to storage.
+			waitForStorage(Duration.ofSeconds(2), () -> getNativeStorage().stream().map(NativeInfo::nativeKey).toList(),
+					expectedOffsetRecords.keySet().stream().map(SourceStorage.WriteResult::getNativeKey).toList());
 
 			// Poll messages from the Kafka topic and verify the consumed data
-			List<String> records = messageConsumer().consumeByteMessages(topic, 4, Duration.ofSeconds(10));
+			List<String> records = messageConsumer().consumeStringMessages(topic, 4, Duration.ofSeconds(10));
 
 			// Verify that the correct data is read from the S3 bucket and pushed to Kafka
 			assertThat(records).containsOnly(testData1, testData2);
@@ -128,10 +122,9 @@ public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<
 			kafkaManager.configureConnector(getConnectorName(), props);
 			getLogger().info(">>>>> RESTARTED");
 
-			expectedOffsetRecords.put(write(topic, testData3.getBytes(StandardCharsets.UTF_8), 1).getOffsetManagerKey(),
-					1L);
+			expectedOffsetRecords.put(write(topic, testData3.getBytes(StandardCharsets.UTF_8), 1), 1L);
 
-			records = messageConsumer().consumeByteMessages(topic, 1, Duration.ofSeconds(30));
+			records = messageConsumer().consumeStringMessages(topic, 1, Duration.ofSeconds(30));
 
 			assertThat(records).containsOnly(testData3);
 

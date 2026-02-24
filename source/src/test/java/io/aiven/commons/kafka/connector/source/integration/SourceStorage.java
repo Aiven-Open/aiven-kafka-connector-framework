@@ -25,43 +25,48 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 /**
- * The definition of the interface to write data to the SourceStorage so that it can be read back through normal channels.
+ * The definition of the interface to write data to the SourceStorage so that it
+ * can be read back through normal channels.
  *
  * @param <K>
  *            the native key type
  * @param <N>
  *            The native object type.
- * @param <O>
- *            The OffsetManagerEntry type.
  */
-public interface SourceStorage<K extends Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>>
-		extends
-			StorageBase<K, N> {
+public interface SourceStorage<K extends Comparable<K>, N> extends StorageBase<K, N> {
 
 	/**
 	 * Gets the list of supported transformers for the storage.
+	 * 
 	 * @return A TransformerRegistry containing the acceptable transformers.
 	 */
 	TransformerRegistry supportedTransformers();
 	/**
 	 * Create a native key from a topic and partition.
-	 * @param topic the topic for the key.
-	 * @param partition the partition for the key.
+	 * 
+	 * @param topic
+	 *            the topic for the key.
+	 * @param partition
+	 *            the partition for the key.
 	 * @return a new Key.
 	 */
 	K createKey(String topic, int partition);
 
 	/**
 	 * Write a record into the storage using the native key.
-	 * @param nativeKey the native key to use in the storage engine.
-	 * @param testDataBytes the bytes to associate with the key.
+	 * 
+	 * @param nativeKey
+	 *            the native key to use in the storage engine.
+	 * @param testDataBytes
+	 *            the bytes to associate with the key.
 	 * @return A WriteResule for the write.
 	 */
 	WriteResult<K> writeWithKey(K nativeKey, byte[] testDataBytes);
 
 	/**
-	 * Create a connector configuration.  This includes any information necessary to connect to the
-	 * storage engine.
+	 * Create a connector configuration. This includes any information necessary to
+	 * connect to the storage engine.
+	 * 
 	 * @return the connector config map.
 	 */
 	Map<String, String> createConnectorConfig();
@@ -80,7 +85,7 @@ public interface SourceStorage<K extends Comparable<K>, N, O extends OffsetManag
 	 *
 	 * @return A BiFunction that crates an OffsetManagerEntry.
 	 */
-	BiFunction<Map<String, Object>, Map<String, Object>, O> offsetManagerEntryFactory();
+	BiFunction<Map<String, Object>, Map<String, Object>, OffsetManager.OffsetManagerEntry> offsetManagerEntryFactory();
 
 	/**
 	 * The result of a successful write.

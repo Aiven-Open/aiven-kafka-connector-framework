@@ -87,7 +87,7 @@ public final class ConsumerPropertiesBuilder {
 	 *
 	 * @return the properties from this builder.
 	 */
-	public Map<String, String> build() {
-		return new HashMap<String, String>(props);
+	public Map<String, Object> build() {
+		return new HashMap<String, Object>(props);
 	}
 }

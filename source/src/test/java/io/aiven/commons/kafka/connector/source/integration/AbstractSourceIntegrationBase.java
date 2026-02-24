@@ -22,39 +22,35 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
-import io.aiven.commons.kafka.connector.source.AbstractSourceRecord;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.transformer.Transformer;
+import io.aiven.commons.kafka.testkit.KafkaIntegrationTestBase;
 import io.aiven.commons.kafka.testkit.KafkaManager;
-import io.aiven.commons.strings.CasedString;
-import io.aiven.commons.timing.Timer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.connect.connector.Connector;
 import org.apache.kafka.connect.json.JsonDeserializer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInfo;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -70,25 +66,8 @@ import static org.awaitility.Awaitility.await;
  *            the native key type.
  * @param <N>
  *            the native object type
- * @param <O>
- *            The {@link OffsetManager.OffsetManagerEntry} implementation.
- * @param <T>
- *            The implementation of the {@link AbstractSourceRecord}
  */
-public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>, T extends AbstractSourceRecord<K, N, O, T>> {
-
-	/**
-	 * The Test info provided before each test. Tests may access this info wihout
-	 * capturing it themselves.
-	 */
-	protected TestInfo testInfo;
-
-	/** A thread local instance of the KafkaManager */
-	private static final ThreadLocal<KafkaManager> KAFKA_MANAGER_THREAD_LOCAL = new ThreadLocal<>();
-
-	/** The thread local instance of the connector name */
-	private static final ThreadLocal<String> CONNECTOR_NAME_THREAD_LOCAL = new ThreadLocal<>() {
-	};
+public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N> extends KafkaIntegrationTestBase {
 
 	protected AbstractSourceIntegrationBase() {
 	}
@@ -99,7 +78,7 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 	 *
 	 * @return the current SourceStorage object.
 	 */
-	abstract protected SourceStorage<K, N, O> getSourceStorage();
+	abstract protected SourceStorage<K, N> getSourceStorage();
 
 	/**
 	 * Gets logger for the test class
@@ -122,7 +101,7 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 	}
 
 	/**
-	 * Write file to natvie storage with the specified key and data.
+	 * Write file to native storage with the specified key and data.
 	 *
 	 * @param nativeKey
 	 *            the key.
@@ -160,13 +139,7 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 	 * @return the name of the connector.
 	 */
 	final protected String getConnectorName() {
-		String result = CONNECTOR_NAME_THREAD_LOCAL.get();
-		if (result == null) {
-			result = new CasedString(CasedString.StringCase.CAMEL, getConnectorClass().getSimpleName())
-					.toCase(CasedString.StringCase.KEBAB).toLowerCase(Locale.ROOT) + "-" + UUID.randomUUID();
-			CONNECTOR_NAME_THREAD_LOCAL.set(result);
-		}
-		return result;
+		return getConnectorName(getConnectorClass());
 	}
 
 	/**
@@ -178,7 +151,7 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 		Map<String, String> props = getSourceStorage().createConnectorConfig();
 		CommonConfigFragment.setter(props).maxTasks(1);
 		ConnectorCommonConfigFragment.setter(props).connector(getSourceStorage().getConnectorClass())
-                .name(getConnectorName());
+				.name(getConnectorName());
 		return props;
 	}
 
@@ -195,22 +168,6 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 	 */
 	protected Duration getOffsetFlushInterval() {
 		return Duration.ofSeconds(5);
-	}
-
-	/**
-	 * Captures the test info for the current test.
-	 *
-	 * @param testInfo
-	 *            the test info.
-	 */
-	@BeforeEach
-	void captureTestInfo(final TestInfo testInfo) {
-		this.testInfo = testInfo;
-	}
-
-	@AfterAll
-	static void cleanup() {
-		tearDownKafka();
 	}
 
 	/**
@@ -244,65 +201,14 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 	 *             on IO error.
 	 */
 	final protected KafkaManager setupKafka(final boolean forceRestart) throws IOException {
-		KafkaManager kafkaManager = KAFKA_MANAGER_THREAD_LOCAL.get();
-		if (kafkaManager != null && forceRestart) {
-			tearDownKafka();
-		}
-		kafkaManager = KAFKA_MANAGER_THREAD_LOCAL.get();
-		if (kafkaManager == null) {
-			final String clusterName = new CasedString(CasedString.StringCase.CAMEL,
-					testInfo.getTestClass().get().getSimpleName()).toCase(CasedString.StringCase.KEBAB)
-					.toLowerCase(Locale.ROOT);
-			kafkaManager = new KafkaManager(clusterName, getOffsetFlushInterval(), getConnectorClass());
-			KAFKA_MANAGER_THREAD_LOCAL.set(kafkaManager);
-		}
-		return kafkaManager;
-	}
-
-	/**
-	 * Tears down any existing KafkaManager. if the KafkaManager has not be created
-	 * no action is taken.
-	 */
-	protected static void tearDownKafka() {
-		final KafkaManager kafkaManager = KAFKA_MANAGER_THREAD_LOCAL.get();
-		if (kafkaManager != null) {
-			kafkaManager.stop();
-			KAFKA_MANAGER_THREAD_LOCAL.remove();
-		}
+		return setupKafka(forceRestart, getConnectorClass());
 	}
 
 	/**
 	 * Delete the current connector from the running kafka.
 	 */
 	final protected void deleteConnector() {
-		final KafkaManager kafkaManager = KAFKA_MANAGER_THREAD_LOCAL.get();
-		if (kafkaManager != null) {
-			kafkaManager.deleteConnector(getConnectorName());
-		}
-		CONNECTOR_NAME_THREAD_LOCAL.remove();
-	}
-
-	/**
-	 * Get the current KafkaManager.
-	 *
-	 * @return the current KafkaManager.
-	 * @throws IllegalStateException
-	 *             if the KafkaManager has not been set up.
-	 */
-	final protected KafkaManager getKafkaManager() {
-		final KafkaManager kafkaManager = KAFKA_MANAGER_THREAD_LOCAL.get();
-		if (kafkaManager == null) {
-			throw new IllegalStateException("KafkaManager not initialized");
-		}
-		return kafkaManager;
-	}
-
-	/**
-	 * Removes/deletes the KafkatManager.
-	 */
-	@AfterAll
-	static void removeKafkaManager() {
-		KAFKA_MANAGER_THREAD_LOCAL.remove();
+		deleteConnector(getConnectorClass());
 	}
 
 	/**
@@ -319,7 +225,7 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 	 *
 	 * @return A BiFunction that crates an OffsetManagerEntry.
 	 */
-	final protected BiFunction<Map<String, Object>, Map<String, Object>, O> offsetManagerEntryFactory() {
+	final protected BiFunction<Map<String, Object>, Map<String, Object>, OffsetManager.OffsetManagerEntry> offsetManagerEntryFactory() {
 		return getSourceStorage().offsetManagerEntryFactory();
 	}
 
@@ -367,7 +273,7 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 	 * @return The topic extracted from the testInfo for the current test.
 	 */
 	public String getTopic() {
-		return testInfo.getTestMethod().get().getName();
+		return testInfo.getTestMethod().map(Method::getName).orElse("noMethod");
 	}
 
 	/**
@@ -379,6 +285,8 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 		 */
 		private MessageConsumer() {
 		}
+
+		public static final Function<byte[], String> byteToString = b -> new String(b, StandardCharsets.UTF_8);
 
 		/**
 		 * Read the data from the topic as byte array key and byte value. Each value is
@@ -393,36 +301,10 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 		 *            the maximum time to wait for the messages to arrive.
 		 * @return A list of values returned.
 		 */
-		public List<String> consumeByteMessages(final String topic, final int expectedMessageCount,
+		public List<String> consumeStringMessages(final String topic, final int expectedMessageCount,
 				final Duration timeout) {
-			final Map<String, String> consumerProperties = consumerPropertiesBuilder()
-					.keyDeserializer(ByteArrayDeserializer.class).valueDeserializer(ByteArrayDeserializer.class)
-					.build();
-			final List<ConsumerRecord<byte[], byte[]>> lst = consumeMessages(topic, consumerProperties,
-					expectedMessageCount, timeout);
-			return lst.stream().map(cr -> new String(cr.value(), StandardCharsets.UTF_8)).collect(Collectors.toList());
-		}
-
-		/**
-		 * Read the data from the topic as byte array key and byte value. If the
-		 * expected number of messages is not read in the allotted time the test fails.
-		 *
-		 * @param topic
-		 *            the topic to red.
-		 * @param expectedMessageCount
-		 *            the expected number of messages.
-		 * @param timeout
-		 *            the maximum time to wait for the messages to arrive.
-		 * @return A list of values returned.
-		 */
-		public List<byte[]> consumeRawByteMessages(final String topic, final int expectedMessageCount,
-				final Duration timeout) {
-			final Map<String, String> consumerProperties = consumerPropertiesBuilder()
-					.keyDeserializer(ByteArrayDeserializer.class).valueDeserializer(ByteArrayDeserializer.class)
-					.build();
-			final List<ConsumerRecord<byte[], byte[]>> lst = consumeMessages(topic, consumerProperties,
-					expectedMessageCount, timeout);
-			return lst.stream().map(ConsumerRecord::value).collect(Collectors.toList());
+			return consumeMessages(topic, consumerPropertiesBuilder(), expectedMessageCount, timeout,
+					ByteArrayDeserializer.class, StringDeserializer.class).map(ConsumerRecord::value).toList();
 		}
 
 		/**
@@ -441,12 +323,10 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 		 */
 		public List<GenericRecord> consumeAvroMessages(final String topic, final int expectedMessageCount,
 				final Duration timeout) {
-			final Map<String, String> consumerProperties = consumerPropertiesBuilder()
-					.valueDeserializer(KafkaAvroDeserializer.class)
-					.schemaRegistry(getKafkaManager().getSchemaRegistryUrl()).build();
-			final List<ConsumerRecord<String, GenericRecord>> lst = consumeMessages(topic, consumerProperties,
-					expectedMessageCount, timeout);
-			return lst.stream().map(ConsumerRecord::value).collect(Collectors.toList());
+			return consumeMessages(topic,
+					consumerPropertiesBuilder().schemaRegistry(getKafkaManager().getSchemaRegistryUrl()),
+					expectedMessageCount, timeout, StringDeserializer.class, KafkaAvroDeserializer.class)
+					.map(cr -> (GenericRecord) (cr.value())).toList();
 		}
 
 		/**
@@ -464,11 +344,8 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 		 */
 		public List<JsonNode> consumeJsonMessages(final String topic, final int expectedMessageCount,
 				final Duration timeout) {
-			final Map<String, String> consumerProperties = consumerPropertiesBuilder()
-					.valueDeserializer(JsonDeserializer.class).build();
-			final List<ConsumerRecord<String, JsonNode>> lst = consumeMessages(topic, consumerProperties,
-					expectedMessageCount, timeout);
-			return lst.stream().map(ConsumerRecord::value).collect(Collectors.toList());
+			return consumeMessages(topic, consumerPropertiesBuilder(), expectedMessageCount, timeout,
+					StringDeserializer.class, JsonDeserializer.class).map(ConsumerRecord::value).toList();
 		}
 
 		/**
@@ -478,27 +355,34 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 		 *
 		 * @param topic
 		 *            the topic to red.
-		 * @param consumerProperties
-		 *            The consumer properties.
+		 * @param consumerPropertiesBuilder
+		 *            The consumer properties builder.
 		 * @param expectedMessageCount
 		 *            the expected number of messages.
 		 * @param timeout
 		 *            the maximum time to wait for the messages to arrive.
+		 * @param keyClass
+		 *            the key deserialization class.
+		 * @param valueClass
+		 *            the value deserialization class.
 		 * @param <X>
-		 *            The key type.
+		 *            The object returned from the key serializer.
 		 * @param <V>
-		 *            the value type.
+		 *            The object returned from the value serializer.
 		 * @return A list of values returned.
 		 */
-		public <X, V> List<ConsumerRecord<X, V>> consumeMessages(final String topic,
-				final Map<String, String> consumerProperties, final int expectedMessageCount, final Duration timeout) {
-			try (KafkaConsumer<X, V> consumer = new KafkaConsumer<>(consumerProperties)) {
+		public <X, V> Stream<ConsumerRecord<X, V>> consumeMessages(final String topic,
+				final ConsumerPropertiesBuilder consumerPropertiesBuilder, final int expectedMessageCount,
+				final Duration timeout, final Class<? extends Deserializer<X>> keyClass,
+				final Class<? extends Deserializer<V>> valueClass) {
+			try (KafkaConsumer<X, V> consumer = new KafkaConsumer<>(
+					consumerPropertiesBuilder.keyDeserializer(keyClass).valueDeserializer(valueClass).build())) {
 				consumer.subscribe(Collections.singletonList(topic));
 				final List<ConsumerRecord<X, V>> recordValues = new ArrayList<>();
 				await().atMost(timeout).pollInterval(Duration.ofSeconds(1)).untilAsserted(() -> {
 					assertThat(consumeRecordsInProgress(consumer, recordValues)).hasSize(expectedMessageCount);
 				});
-				return recordValues;
+				return recordValues.stream();
 			}
 		}
 
@@ -507,17 +391,13 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 		 * parameter. This method polls the consumer for 1/2 second and adds the result
 		 * to the record values. As long as there are at more than 10 records returned
 		 * it continues to poll. Once there are fewer than 10 records returned this
-		 * mehtod returns.
+		 * method returns.
 		 *
 		 * @param consumer
 		 *            The consumer to read from.
 		 * @param recordValues
 		 *            the record values to append to.
 		 * @return {@code recordValues}
-		 * @param <X>
-		 *            the key type.
-		 * @param <V>
-		 *            the value type.
 		 */
 		private <X, V> List<ConsumerRecord<X, V>> consumeRecordsInProgress(final KafkaConsumer<X, V> consumer,
 				final List<ConsumerRecord<X, V>> recordValues) {
@@ -537,37 +417,6 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 		}
 
 		/**
-		 * Read the data and key values from the topic. Teh consumer properties should
-		 * be created with a call to {@link #consumerPropertiesBuilder}. Returns all the
-		 * records read in the specified time.
-		 *
-		 * @param topic
-		 *            the topic to red.
-		 * @param consumerProperties
-		 *            The consumer properties.
-		 * @param timeout
-		 *            the maximum time to wait for the messages to arrive.
-		 * @param <X>
-		 *            The key type.
-		 * @param <V>
-		 *            the value type.
-		 * @return A list of values returned.
-		 */
-		public <X, V> List<ConsumerRecord<X, V>> consumeMessages(final String topic,
-				final Map<String, String> consumerProperties, final Duration timeout) {
-			try (KafkaConsumer<X, V> consumer = new KafkaConsumer<>(consumerProperties)) {
-				consumer.subscribe(Collections.singletonList(topic));
-				final List<ConsumerRecord<X, V>> recordValues = new ArrayList<>();
-				final Timer timer = new Timer(timeout);
-				timer.start();
-				while (!timer.isExpired()) {
-					consumeRecordsInProgress(consumer, recordValues);
-				}
-				return recordValues;
-			}
-		}
-
-		/**
 		 * Gets the list of consumer offset messages.
 		 *
 		 * @param consumer
@@ -577,11 +426,12 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N, 
 		 * @throws IOException
 		 *             on IO error.
 		 */
-		public List<O> consumeOffsetMessages(final KafkaConsumer<byte[], byte[]> consumer) throws IOException {
+		public List<OffsetManager.OffsetManagerEntry> consumeOffsetMessages(
+				final KafkaConsumer<byte[], byte[]> consumer) throws IOException {
 			// Poll messages from the topic
-			final BiFunction<Map<String, Object>, Map<String, Object>, O> converter = offsetManagerEntryFactory();
+			final BiFunction<Map<String, Object>, Map<String, Object>, OffsetManager.OffsetManagerEntry> converter = offsetManagerEntryFactory();
 			final ObjectMapper objectMapper = new ObjectMapper();
-			final List<O> messages = new ArrayList<>();
+			final List<OffsetManager.OffsetManagerEntry> messages = new ArrayList<>();
 			final ConsumerRecords<byte[], byte[]> records = consumer.poll(Duration.ofSeconds(1));
 			// TODO there is probably a way to clean this up by using the internal data
 			// types from Kafka.

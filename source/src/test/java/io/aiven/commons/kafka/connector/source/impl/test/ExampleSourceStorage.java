@@ -1,0 +1,88 @@
+package io.aiven.commons.kafka.connector.source.impl.test;
+
+import io.aiven.commons.kafka.connector.common.NativeInfo;
+import io.aiven.commons.kafka.connector.source.OffsetManager;
+import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
+import io.aiven.commons.kafka.connector.source.impl.ExampleSourceConnector;
+import io.aiven.commons.kafka.connector.source.integration.SourceStorage;
+import io.aiven.commons.kafka.connector.source.transformer.TransformerRegistry;
+import org.apache.commons.io.function.IOSupplier;
+import org.apache.kafka.common.KafkaException;
+import org.apache.kafka.connect.connector.Connector;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+
+public class ExampleSourceStorage implements SourceStorage<String, ByteBuffer> {
+	ExampleNativeClient client;
+
+	@Override
+	public TransformerRegistry supportedTransformers() {
+		return null;
+	}
+
+	@Override
+	public String createKey(String topic, int partition) {
+		return UUID.randomUUID().toString();
+	}
+
+	@Override
+	public WriteResult<String> writeWithKey(String nativeKey, byte[] testDataBytes) {
+		client.write(nativeKey, testDataBytes);
+		OffsetManager.OffsetManagerKey offsetManagerKey = new ExampleOffsetManagerEntry(nativeKey, "grouping")
+				.getManagerKey();
+		return new WriteResult<>(offsetManagerKey, nativeKey);
+	}
+
+	@Override
+	public Map<String, String> createConnectorConfig() {
+		return new HashMap<>();
+	}
+
+	@Override
+	public BiFunction<Map<String, Object>, Map<String, Object>, OffsetManager.OffsetManagerEntry> offsetManagerEntryFactory() {
+		return (k, v) -> new ExampleOffsetManagerEntry(v);
+	}
+
+	@Override
+	public Class<? extends Connector> getConnectorClass() {
+		return ExampleSourceConnector.class;
+	}
+
+	@Override
+	public void createStorage() {
+		try {
+			client = new ExampleNativeClient(true);
+		} catch (IOException e) {
+			throw new KafkaException(e);
+		}
+	}
+
+	@Override
+	public void removeStorage() {
+		client = null;
+	}
+
+	@Override
+	public List<? extends NativeInfo<String, ByteBuffer>> getNativeStorage() {
+		return client.listObjects().stream().map(e -> new NativeInfo<String, ByteBuffer>(e.key(), e.data()))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public IOSupplier<InputStream> getInputStream(String nativeKey) {
+		return null;
+	}
+
+	@Override
+	public String defaultPrefix() {
+		return "";
+	}
+}

@@ -40,7 +40,8 @@ public class ConnectorCommonConfigFragmentTest {
   /**
 	 * Constructor.
 	 */
-	public ConnectorCommonConfigFragmentTest() {}
+	public ConnectorCommonConfigFragmentTest() {
+	}
 
 	@ParameterizedTest(name = "{index} {0}")
 	@MethodSource("testInvalidConfigData")

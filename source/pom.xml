@@ -74,6 +74,34 @@
       <artifactId>connect-api</artifactId>
       <version>${kafka.version}</version>
       <scope>provided</scope>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-server-common</artifactId>
+      <version>${kafka.version}</version>
+      <classifier>test</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
+      <version>${kafka.version}</version>
+      <classifier>test</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka_2.13</artifactId>
+      <version>${kafka.version}</version>
+      <classifier>test</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka_2.13</artifactId>
+      <version>${kafka.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
@@ -81,6 +109,10 @@
       <version>${kafka.version}</version>
       <scope>provided</scope>
     </dependency>
+    <!--    <dependency>-->
+    <!--      <groupId>org.testcontainers</groupId>-->
+    <!--      <artifactId>junit-jupiter</artifactId>-->
+    <!--    </dependency>-->
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>

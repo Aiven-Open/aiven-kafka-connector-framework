@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
+<<<<<<<< HEAD:source/src/test/java/io/aiven/commons/kafka/connector/source/impl/nativeProvided/ExampleNativeItem.java
 package io.aiven.commons.kafka.connector.source.impl.nativeProvided;
+========
+package io.aiven.commons.kafka.connector.source.impl.test;
+>>>>>>>> 566daee (partial  fix):source/src/test/java/io/aiven/commons/kafka/connector/source/impl/test/ExampleNativeItem.java
 
 import java.nio.ByteBuffer;
 

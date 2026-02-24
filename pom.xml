@@ -78,7 +78,7 @@
     <!--
 Sink module is removed until there is code
 <module>sink</module>-->
-      <module>common-tests</module>
+    <module>common-tests</module>
   </modules>
 
   <scm>
@@ -107,10 +107,29 @@ Sink module is removed until there is code
     <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
     <aiven.util.version>0.1.0</aiven.util.version>
     <confluent.avro.data.aversion>7.9.5</confluent.avro.data.aversion>
+    <aiven.kafka.testkit.version>0.1.0-SNAPSHOT</aiven.kafka.testkit.version>
+    <kafka.version>3.8.1</kafka.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+
+      <!-- imported poms -->
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>kafka-testkit</artifactId>
+        <version>${aiven.kafka.testkit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <!--      <dependency>-->
+      <!--        <groupId>org.testcontainers</groupId>-->
+      <!--        <artifactId>testcontainers</artifactId>-->
+      <!--        <version>${testcontainers.version}</version>-->
+      <!--        <type>pom</type>-->
+      <!--        <scope>import</scope>-->
+      <!--      </dependency>-->
+
       <dependency>
         <groupId>com.github.victools</groupId>
         <artifactId>jsonschema-generator</artifactId>
@@ -130,6 +149,12 @@ Sink module is removed until there is code
         <groupId>io.aiven.commons</groupId>
         <artifactId>common-util</artifactId>
         <version>${aiven.util.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>kafka-testkit</artifactId>
+        <version>${aiven.kafka.testkit.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.github.spotbugs</groupId>
@@ -174,6 +199,11 @@ Sink module is removed until there is code
   </dependencyManagement>
 
   <dependencies>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>kafka-testkit</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-config</artifactId>
