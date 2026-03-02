@@ -78,7 +78,8 @@ public interface Lookback<K extends Comparable<K>> {
 	 * as possible in the new configuration.
 	 * 
 	 * @param size
-	 *            the desired size of the lookback.  If size < 0 then 0 is used.
+	 *            the desired size of the lookback. If {@code size < 0} then 0 is
+	 *            used.
 	 * @return a {@code Lookback} instance of the desired size.
 	 */
 	default Lookback<K> resize(int size) {
