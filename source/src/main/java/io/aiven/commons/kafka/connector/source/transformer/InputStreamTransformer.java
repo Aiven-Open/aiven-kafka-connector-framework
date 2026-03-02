@@ -32,11 +32,11 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * Extracts data from the native abstract source record to Key SchemaAndValue
+ * Extracts data from the EvolvingSourceRecord to a Key SchemaAndValue
  * object and a stream of SchemaAndValue objects for the values.
  *
  * This class is used within the EvolvingSourceRecordIterator to convert the
- * abstract source record into one or more Kafka source records.
+ * EvolvingSourceRecord into one or more Kafka source records.
  *
  * This implementation of Transformer assumes that the SourceRecord supports
  * returning an inputStream.

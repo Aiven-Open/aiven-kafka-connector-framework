@@ -64,7 +64,18 @@ public class CsvTransformer extends Transformer {
 	private CSVParser parser;
 	/** the configured format for the parser */
 	private final CSVFormat csvFormat;
+	/** the list of headers for this Transformer */
 	private final List<String> headers;
+
+	/**
+	 * Gets the registry information for this transformer.
+	 * 
+	 * @return the registry information for this transformer.
+	 */
+	public static TransformerRegistry.TransformerInfo info() {
+		return new TransformerRegistry.TransformerInfo("CSV", CsvTransformer.class, true);
+	}
+
 	/**
 	 * Constructor.
 	 *

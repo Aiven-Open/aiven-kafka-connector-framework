@@ -38,6 +38,15 @@ import java.util.function.Consumer;
  */
 public class AvroTransformer extends InputStreamTransformer {
 
+	/**
+	 * Gets the registry information for this transformer.
+	 * 
+	 * @return the registry information for this transformer.
+	 */
+	public static TransformerRegistry.TransformerInfo info() {
+		return new TransformerRegistry.TransformerInfo("Avro", AvroTransformer.class, true);
+	}
+
 	private final AvroData avroData;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AvroTransformer.class);

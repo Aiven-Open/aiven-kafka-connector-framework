@@ -44,6 +44,15 @@ import java.util.function.Consumer;
  */
 public class ParquetTransformer extends InputStreamTransformer {
 
+	/**
+	 * Gets the registry information for this transformer.
+	 * 
+	 * @return the registry information for this transformer.
+	 */
+	public static TransformerRegistry.TransformerInfo info() {
+		return new TransformerRegistry.TransformerInfo("Parquet", ParquetTransformer.class, true);
+	}
+
 	private final AvroData avroData;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ParquetTransformer.class);

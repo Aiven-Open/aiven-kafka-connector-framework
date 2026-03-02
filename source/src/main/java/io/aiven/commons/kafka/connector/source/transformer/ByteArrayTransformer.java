@@ -44,6 +44,16 @@ import java.util.function.Consumer;
  * </p>
  */
 public class ByteArrayTransformer extends InputStreamTransformer {
+
+	/**
+	 * Gets the registry information for this transformer.
+	 * 
+	 * @return the registry information for this transformer.
+	 */
+	public static TransformerRegistry.TransformerInfo info() {
+		return new TransformerRegistry.TransformerInfo("Bytes", ByteArrayTransformer.class, true);
+	}
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(ByteArrayTransformer.class);
 	private final int maxBufferSize;
 
@@ -84,7 +94,7 @@ public class ByteArrayTransformer extends InputStreamTransformer {
 			protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
 
 				try {
-					/// TODO: determin if we need to create a copy of the buffer. I don't see why --
+					/// TODO: determine if we need to create a copy of the buffer. I don't see why --
 					/// CW
 					final byte[] buffer = new byte[maxBufferSize];
 					final byte[] chunk = Arrays.copyOf(buffer, IOUtils.read(inputStream, buffer));
