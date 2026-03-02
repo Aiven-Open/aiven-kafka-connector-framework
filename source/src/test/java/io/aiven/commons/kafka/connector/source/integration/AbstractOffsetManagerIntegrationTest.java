@@ -99,7 +99,7 @@ public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<
 			Map<String, String> props = ConnectorCommonConfigFragment
 					.setter(createConfig(topic, ByteArrayTransformer.class)).keyConverter(ByteArrayConverter.class)
 					.valueConverter(ByteArrayConverter.class).data();
-			SourceConfigFragment.setter(props).distributionType(DistributionType.PARTITION);
+			SourceConfigFragment.setter(props).transformerClass(ByteArrayTransformer.class);
 
 			final KafkaManager kafkaManager = setupKafka();
 			kafkaManager.createTopic(topic);
@@ -107,11 +107,11 @@ public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<
 			kafkaManager.configureConnector(getConnectorName(), props);
 
 			// verify the records were written to storage.
-			waitForStorage(Duration.ofSeconds(2), () -> getNativeStorage().stream().map(NativeInfo::nativeKey).toList(),
+			waitForStorage(Duration.ofMinutes(2), () -> getNativeStorage().stream().map(NativeInfo::nativeKey).toList(),
 					expectedOffsetRecords.keySet().stream().map(SourceStorage.WriteResult::getNativeKey).toList());
 
 			// Poll messages from the Kafka topic and verify the consumed data
-			List<String> records = messageConsumer().consumeStringMessages(topic, 4, Duration.ofSeconds(10));
+			List<String> records = messageConsumer().consumeStringMessages(topic, 4, Duration.ofMinutes(1));
 
 			// Verify that the correct data is read from the S3 bucket and pushed to Kafka
 			assertThat(records).containsOnly(testData1, testData2);

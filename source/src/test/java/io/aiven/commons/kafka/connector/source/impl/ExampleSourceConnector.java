@@ -17,16 +17,18 @@ package io.aiven.commons.kafka.connector.source.impl;
 
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
+import org.apache.kafka.common.config.Config;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.connector.Connector;
 import org.apache.kafka.connect.connector.Task;
+import org.apache.kafka.connect.source.SourceConnector;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ExampleSourceConnector extends Connector {
+public class ExampleSourceConnector extends SourceConnector {
 	private Map<String, String> props;
 
 	@Override
@@ -65,4 +67,5 @@ public class ExampleSourceConnector extends Connector {
 	public String version() {
 		return "Example version 1.0";
 	}
+
 }

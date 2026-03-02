@@ -200,6 +200,12 @@ Sink module is removed until there is code
 
   <dependencies>
     <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <version>2.0.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-testkit</artifactId>
       <scope>test</scope>

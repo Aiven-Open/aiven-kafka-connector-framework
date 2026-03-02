@@ -24,11 +24,18 @@ import java.nio.ByteBuffer;
 
 public class ExampleOffsetManagerIT extends AbstractOffsetManagerIntegrationTest<String, ByteBuffer> {
 	private static final Logger logger = LoggerFactory.getLogger(ExampleOffsetManagerIT.class);
+
+
+	private final SourceStorage<String, ByteBuffer> sourceStorage;
+
+	public ExampleOffsetManagerIT() {
+		sourceStorage = new ExampleSourceStorage();
+		sourceStorage.createStorage();
+	}
+
 	@Override
 	protected SourceStorage<String, ByteBuffer> getSourceStorage() {
-		SourceStorage<String, ByteBuffer> result = new ExampleSourceStorage();
-		result.createStorage();
-		return result;
+		return sourceStorage;
 	}
 
 	@Override

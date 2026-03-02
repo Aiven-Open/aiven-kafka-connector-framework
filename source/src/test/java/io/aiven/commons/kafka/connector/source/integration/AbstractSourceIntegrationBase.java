@@ -405,6 +405,7 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N> 
 			do {
 				final ConsumerRecords<X, V> records = consumer.poll(Duration.ofMillis(500L));
 				recordsRetrieved = records.count();
+				System.out.format("Retrieved %s records%n", recordsRetrieved);
 				records.forEach(recordValues::add);
 				// Choosing 10 records as it allows for integration tests with a smaller max
 				// poll to be added

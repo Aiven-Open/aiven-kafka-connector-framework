@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ *        SPDX-License-Identifier: Apache-2.0
  */
 package io.aiven.commons.kafka.connector.source.impl;
 
@@ -53,8 +55,14 @@ public class ExampleSourceTask extends AbstractSourceTask {
   @Override
   protected void closeResources() {}
 
-  @Override
-  public String version() {
-    return "Example version 1.0";
-  }
+	@Override
+	public String version() {
+		return "Example version 1.0";
+	}
+
+	@Override
+	public void commit() throws InterruptedException {
+		System.out.println("Commit called");
+		super.commit();
+	}
 }

@@ -73,16 +73,12 @@ public class ExampleSourceStorage implements SourceStorage<String, ByteBuffer> {
 
 	@Override
 	public void createStorage() {
-		try {
-			client = new ExampleNativeClient(true);
-		} catch (IOException e) {
-			throw new KafkaException(e);
-		}
+		client = new ExampleNativeClient(true);
 	}
 
 	@Override
 	public void removeStorage() {
-		client = null;
+		client.clear();
 	}
 
 	@Override
