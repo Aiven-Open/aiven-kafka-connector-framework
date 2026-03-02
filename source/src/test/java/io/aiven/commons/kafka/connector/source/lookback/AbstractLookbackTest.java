@@ -17,12 +17,12 @@ package io.aiven.commons.kafka.connector.source.lookback;
 
 public abstract class AbstractLookbackTest {
 
-    abstract void addTest();
+	abstract void addTest();
 
-    abstract void getTest();
+	abstract void getTest();
 
-    abstract void containsTest();
+	abstract void containsTest();
 
-    abstract void sizeTest();
+	abstract void sizeTest();
 
 }

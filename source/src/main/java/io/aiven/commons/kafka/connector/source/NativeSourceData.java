@@ -199,8 +199,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 		});
 		NativeInfoConverter converter = new NativeInfoConverter();
 		Iterator<EvolvingSourceRecord> iter = getNativeItemStream(key).map(converter::convert)
-				.filter(osr -> osr.map(sr -> isCorrectTask.test(sr.getContext())).orElse(false))
-				.map(optT -> {
+				.filter(osr -> osr.map(sr -> isCorrectTask.test(sr.getContext())).orElse(false)).map(optT -> {
 					EvolvingSourceRecord sourceRecord = optT.get();
 					lastSeenNativeKey = (K) sourceRecord.getNativeKey();
 					return sourceRecord;
