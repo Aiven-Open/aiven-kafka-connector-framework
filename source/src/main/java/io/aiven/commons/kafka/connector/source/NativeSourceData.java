@@ -208,6 +208,8 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 			@Override
 			public boolean hasNext() {
 				if (!iter.hasNext()) {
+					// adjust the lookback size if necessary.  Lookback must contain (at most) 1 less than the maximum number
+					// of items returned from by the native source.
 					if (maxDetectedClientStream < converter.getRecordCount()) {
 						maxDetectedClientStream = converter.getRecordCount();
 						if (maxDetectedClientStream <= lookback.size()) {
