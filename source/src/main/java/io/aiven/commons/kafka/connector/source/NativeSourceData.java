@@ -133,29 +133,6 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	 */
 	protected abstract OffsetManager.OffsetManagerEntry createOffsetManagerEntry(final Context context);
 
-	// /**
-	// * Converts a source native info into an evolving record while filtering out
-	// * records that have already been processed (are in the ringBuffer).
-	// *
-	// * @param sourceNativeInfo
-	// * the source native info to convert
-	// * @return a valid Evolving Source Record or an empty optional.
-	// */
-	// private Optional<EvolvingSourceRecord> nativeConverter(final
-	// AbstractSourceNativeInfo<K, ?> sourceNativeInfo) {
-	// if (!lookback.contains(sourceNativeInfo.nativeKey())) {
-	// final Context context = overrideContextTopic(sourceNativeInfo.getContext());
-	// OffsetManager.OffsetManagerEntry offsetManagerEntry =
-	// createOffsetManagerEntry(context);
-	// offsetManagerEntry =
-	// offsetManager.getEntryData(offsetManagerEntry.getManagerKey())
-	// .map(this::createOffsetManagerEntry).orElse(offsetManagerEntry);
-	// return Optional.of(new EvolvingSourceRecord(sourceNativeInfo,
-	// offsetManagerEntry, context));
-	// }
-	// return Optional.empty();
-	// }
-
 	/**
 	 * Sets the target topic in the context if the target topic is set in the
 	 * configuration.
