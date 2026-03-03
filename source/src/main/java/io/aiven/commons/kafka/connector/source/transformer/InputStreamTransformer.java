@@ -32,8 +32,8 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * Extracts data from the EvolvingSourceRecord to a Key SchemaAndValue
- * object and a stream of SchemaAndValue objects for the values.
+ * Extracts data from the EvolvingSourceRecord to a Key SchemaAndValue object
+ * and a stream of SchemaAndValue objects for the values.
  *
  * This class is used within the EvolvingSourceRecordIterator to convert the
  * EvolvingSourceRecord into one or more Kafka source records.

@@ -23,9 +23,10 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A registry of transformers. TransformerRegistry instances are immutable.  Use the builder to create them.  The
- * Builder will allow multiple registries to be merged into a new registry.
- * Transformer names are not case specific in the registry.
+ * A registry of transformers. TransformerRegistry instances are immutable. Use
+ * the builder to create them. The Builder will allow multiple registries to be
+ * merged into a new registry. Transformer names are not case specific in the
+ * registry.
  */
 public class TransformerRegistry {
 	/** The map of transformer names to info */

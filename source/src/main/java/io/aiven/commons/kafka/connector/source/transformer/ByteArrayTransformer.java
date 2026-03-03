@@ -94,7 +94,8 @@ public class ByteArrayTransformer extends InputStreamTransformer {
 			protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
 
 				try {
-					/// TODO: determine if we need to create a copy of the buffer. I don't see why --
+					/// TODO: determine if we need to create a copy of the buffer. I don't see why
+					/// --
 					/// CW
 					final byte[] buffer = new byte[maxBufferSize];
 					final byte[] chunk = Arrays.copyOf(buffer, IOUtils.read(inputStream, buffer));
