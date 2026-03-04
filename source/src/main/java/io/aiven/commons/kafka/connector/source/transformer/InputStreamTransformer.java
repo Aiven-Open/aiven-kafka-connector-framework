@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,11 +32,11 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * Extracts data from the native abstract source record to Key SchemaAndValue
- * object and a stream of SchemaAndValue objects for the values.
+ * Extracts data from the EvolvingSourceRecord to a Key SchemaAndValue object
+ * and a stream of SchemaAndValue objects for the values.
  *
  * This class is used within the EvolvingSourceRecordIterator to convert the
- * abstract source record into one or more Kafka source records.
+ * EvolvingSourceRecord into one or more Kafka source records.
  *
  * This implementation of Transformer assumes that the SourceRecord supports
  * returning an inputStream.
