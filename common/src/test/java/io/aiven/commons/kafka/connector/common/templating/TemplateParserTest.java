@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -305,7 +306,7 @@ final class TemplateParserTest {
     void missingVariablesFromWithRegistry() {
         assertThatException().isThrownBy(() -> TemplateParser.parse("{{key}}{{topic}}{{missing}}", TemplateVariableRegistry.STANDARD_SINK))
                 .isInstanceOf(ConfigException.class)
-                .withMessage("Configuration template variable 'missing' is not defined in the variable registry: {{key}}{{topic}}{{missing}}");
+                .withMessage("Invalid value {{key}}{{topic}}{{missing}} for configuration template variable 'missing': 'missing' is not defined in the variable registry");
 
     }
 
@@ -313,9 +314,35 @@ final class TemplateParserTest {
     void requiredParameterMissingWithRegistry() {
         assertThatException().isThrownBy(() -> TemplateParser.parse("{{key}}{{topic}}{{timestamp}}", TemplateVariableRegistry.STANDARD_SINK))
                 .isInstanceOf(ConfigException.class)
-                .withMessage("Invalid value null for configuration variable 'timestamp' parameter 'unit': String must be one of: yyyy, MM, dd, HH");
+                .withMessage("Invalid value {{key}}{{topic}}{{timestamp}} for configuration template variable 'timestamp': parameter 'unit' must be specified and string must be one of: yyyy, MM, dd, HH");
 
     }
 
+    @Test
+    void invalidTemplateFormat() {
+        List<String> results = TemplateParser.checkMalformed("CONFIGURATION_NAME", "{{partition : padding=true}}", null);
+        assertThat(results).containsExactly("Template text '{{partition : padding=true}}' in CONFIGURATION_NAME may be a malformed template variable '{{partition:padding=true}}'");
+        results = TemplateParser.checkMalformed("CONFIGURATION_NAME", "{{partition:padding = true}}", null);
+        assertThat(results).containsExactly("Template text '{{partition:padding = true}}' in CONFIGURATION_NAME may be a malformed template variable '{{partition:padding=true}}'");
 
+        results = TemplateParser.checkMalformed("CONFIGURATION_NAME", "some text then {{partition:padding = true}} more text then {{foo : name = value}} and text", null);
+        assertThat(results).containsExactly("Template text '{{partition:padding = true}}' in CONFIGURATION_NAME may be a malformed template variable '{{partition:padding=true}}'",
+                "Template text '{{foo : name = value}}' in CONFIGURATION_NAME may be a malformed template variable '{{foo:name=value}}'");
+
+        results = TemplateParser.checkMalformed("CONFIGURATION_NAME", "some text then {{ text that does not look like a template }} ", null);
+        assertThat(results).isEmpty();
+
+        results = TemplateParser.checkMalformed("CONFIGURATION_NAME", "some text then {{ partition : text that looks = like a template }} ", null);
+        assertThat(results).containsExactly("Template text '{{ partition : text that looks = like a template }}' in CONFIGURATION_NAME may be a malformed template variable '{{partition:textthatlooks=likeatemplate}}'");
+
+        // registry with partition
+        TemplateVariableRegistry registry = TemplateVariableRegistry.builder().add(TemplateVariable.PARTITION).build();
+        results = TemplateParser.checkMalformed("CONFIGURATION_NAME", "some text then {{ partition : text that looks = like a template }} ", registry);
+        assertThat(results).containsExactly("Template text '{{ partition : text that looks = like a template }}' in CONFIGURATION_NAME may be a malformed template variable '{{partition:textthatlooks=likeatemplate}}'");
+
+        // registry without partition
+        registry = TemplateVariableRegistry.builder().add(TemplateVariable.TIMESTAMP).build();
+        results = TemplateParser.checkMalformed("CONFIGURATION_NAME", "some text then {{ partition : text that looks = like a template }} ", registry);
+        assertThat(results).isEmpty();
+    }
 }

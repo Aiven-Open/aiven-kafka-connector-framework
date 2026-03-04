@@ -16,12 +16,17 @@
 package io.aiven.commons.kafka.connector.common.templating;
 
 import io.aiven.commons.kafka.connector.common.config.validator.BooleanValidator;
+import org.apache.commons.text.WordUtils;
 import org.apache.kafka.common.config.ConfigDef;
+import org.apache.kafka.common.config.ConfigException;
+
+import java.util.Objects;
 
 /**
  * The template variable definition.
  */
 public final class TemplateVariable {
+    private static final ParameterDescriptor PADDING_DESCRIPTOR = ParameterDescriptor.builder("padding").validator(BooleanValidator.INSTANCE).description("Specifies that the value should be left padded").build();
     /**
      * The standard key definition
      */
@@ -33,15 +38,16 @@ public final class TemplateVariable {
     /**
      * the standard partition definition
      */
-    public static final TemplateVariable PARTITION = new TemplateVariable("partition", new ParameterDescriptor("padding", false, BooleanValidator.INSTANCE));
+    public static final TemplateVariable PARTITION = new TemplateVariable("partition", PADDING_DESCRIPTOR);
     /**
      * the standard start offset definition
      */
-    public static final TemplateVariable START_OFFSET = new TemplateVariable("start_offset", new ParameterDescriptor("padding", false, BooleanValidator.INSTANCE));
+    public static final TemplateVariable START_OFFSET = new TemplateVariable("start_offset", PADDING_DESCRIPTOR);
     /**
      * The standard timestamp definition
      */
-    public static final TemplateVariable TIMESTAMP = new TemplateVariable("timestamp", new ParameterDescriptor("unit", true, ConfigDef.ValidString.in("yyyy", "MM", "dd", "HH")));
+    public static final TemplateVariable TIMESTAMP = new TemplateVariable("timestamp", ParameterDescriptor.builder("unit").required(true).validator(ConfigDef.ValidString.in("yyyy", "MM", "dd", "HH"))
+            .description("Specifies the format of the timestamp.").build());
 
     /**
      * The name of the variable
@@ -101,13 +107,32 @@ public final class TemplateVariable {
         return !ParameterDescriptor.NO_PARAMETER.equals(parameterDescriptor);
     }
 
-    public void validate(Parameter parameter) {
+    /**
+     * Validate the parameter against the template variable.
+     * @param errStr the error string for this template.
+     * @param template the template the parameter was parsed from.
+     * @param parameter The parsed parameter
+     */
+    public void validate(String errStr, String template, Parameter parameter) {
+        Objects.requireNonNull(errStr, "errStr must not be null");
+        Objects.requireNonNull(template, "template must not be null");
+        Objects.requireNonNull(parameter, "parsed parameter must not be null");
         if (hasParameter()) {
-            if (parameterDescriptor.isRequired() && parameter == null) {
-                throw new IllegalArgumentException(String.format("Variable '%s' parameter '%s' may not be null", name, parameterDescriptor.getName()));
+            if (parameterDescriptor.isRequired() && parameter.equals(Parameter.EMPTY)) {
+                String errMsg = String.format("parameter '%s' must be specified", parameterDescriptor.getName());
+                if (parameterDescriptor.hasValidator()) {
+                    String[] parts = parameterDescriptor.getValidatorHelp().split(" ");
+                    parts[0] = " and";
+                    parts[1] = WordUtils.uncapitalize(parts[1]);
+                    errMsg += String.join(" ", parts);
+                }
+                throw new ConfigException(errStr, template, errMsg);
             }
-            if (parameter != null) {
-                parameterDescriptor.validate(name, parameter.getValue());
+            if (!parameter.equals(Parameter.EMPTY)) {
+                if (!parameterDescriptor.getName().equals(parameter.getName())) {
+                    throw new ConfigException(errStr, template, String.format("parameter name should be '%s'", parameterDescriptor.getName()));
+                }
+                parameterDescriptor.validate(String.format("%s parameter '%s'", errStr, parameterDescriptor.getName()), template, parameter.getValue());
             }
         }
     }
