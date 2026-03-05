@@ -23,26 +23,27 @@ import java.util.regex.Pattern;
  * A piece of static text extracted by the parser.
  */
 public final class TextTemplatePart implements TemplatePart {
-    /** The extracted text */
-    private final String text;
+	/** The extracted text */
+	private final String text;
 
-    /**
-     * Constructor.
-     * @param text the extracted text.
-     */
-    TextTemplatePart(final String text) {
-        this.text = text;
-    }
+	/**
+	 * Constructor.
+	 * 
+	 * @param text
+	 *            the extracted text.
+	 */
+	TextTemplatePart(final String text) {
+		this.text = text;
+	}
 
-    @Override
-    public String render(final Map<String, Function<Parameter, String>> bindings) {
-        return text;
-    }
+	@Override
+	public String render(final Map<String, Function<Parameter, String>> bindings) {
+		return text;
+	}
 
-    @Override
-    public String extract(final Map<String, String> captureGroup) {
-        return Pattern.quote(text);
-    }
-
+	@Override
+	public String extract(final Map<String, String> captureGroup) {
+		return Pattern.quote(text);
+	}
 
 }

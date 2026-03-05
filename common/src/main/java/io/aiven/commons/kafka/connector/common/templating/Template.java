@@ -15,8 +15,8 @@
  */
 package io.aiven.commons.kafka.connector.common.templating;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,185 +32,301 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * A simple templating engine that allows to bind variables to supplier functions.
- *
+ * A parsed template string.
  * <p>
- * Variable syntax: {@code {{ variable_name:parameter_name=parameter_value }}}. Only alphanumeric characters and
- * {@code _} are allowed as a variable name. Any number of spaces/tabs inside the braces is allowed. Parameters for
- * variable name are optional, same as for variable only alphanumeric characters are allowed as a parameter name or a
- * parameter value.
- *
- * <p>
- * Non-bound variables are left as is.
+ * A template string is a string that has zero or more {@link TemplateVariable}s
+ * defined. For example "This is the key {{ key }}, and this is the partition {{
+ * partition:padding=true }}". To construct a {@code Template} use the
+ * {@link TemplateParser}
+ * </p>
  */
 public final class Template {
-    private final List<Pair<String, Parameter>> variablesAndParameters;
+	private static final Logger LOGGER = LoggerFactory.getLogger(Template.class);
+	/** the list of parsed variables */
+	private final List<VariableTemplatePart> variables;
+	/** The list of all template parts */
+	private final List<TemplatePart> templateParts;
+	/** The original template pattern */
+	private final String templatePattern;
 
-    private final List<TemplatePart> templateParts;
+	/**
+	 * Constructor.
+	 * 
+	 * @param templatePattern
+	 *            The textual representation of the template.
+	 * @param templateParts
+	 *            the template pars as parsed from the templatePattern.
+	 */
+	Template(final String templatePattern, final List<TemplatePart> templateParts) {
+		this.templatePattern = templatePattern;
+		this.templateParts = templateParts;
+		this.variables = templateParts.stream().filter(VariableTemplatePart.class::isInstance)
+				.map(VariableTemplatePart.class::cast).toList();
+	}
 
-    private final String originalTemplateString;
+	/**
+	 * Return the original template pattern.
+	 * 
+	 * @return the template pattern.
+	 */
+	public String originalTemplate() {
+		return templatePattern;
+	}
 
-    Template(final String template, final List<Pair<String, Parameter>> variablesAndParameters,
-             final List<TemplatePart> templateParts) {
-        this.originalTemplateString = template;
-        this.variablesAndParameters = variablesAndParameters;
-        this.templateParts = templateParts;
-    }
+	/**
+	 * Creates a new list of variable names.
+	 *
+	 * @return A new list of variable names.
+	 */
+	public List<String> variables() {
+		return variables.stream().map(VariableTemplatePart::getVariableName).collect(Collectors.toList());
+	}
 
-    public String originalTemplate() {
-        return originalTemplateString;
-    }
+	/**
+	 * Creates a new set of variable names.
+	 *
+	 * @return A new set of variable names.
+	 */
+	public Set<String> variablesSet() {
+		return variables.stream().map(VariableTemplatePart::getVariableName).collect(Collectors.toSet());
+	}
 
-    /**
-     * Creates a new list of variable names.
-     *
-     * @return A new list of variable names.
-     */
-    public List<String> variables() {
-        return variablesAndParameters.stream().map(Pair::getLeft).collect(Collectors.toList());
-    }
+	/**
+	 * Gets a list of variable names to parameters. If duplicate variables appeared
+	 * in the template there will be duplicates in the list.
+	 * 
+	 * @return the list of variable names to parameters.
+	 */
+	public List<VariableTemplatePart> variablesWithParameters() {
+		return new ArrayList<>(variables);
+	}
 
-    /**
-     * Creates a new set of variable names.
-     *
-     * @return A new set of variable names.
-     */
-    public Set<String> variablesSet() {
-        return variablesAndParameters.stream().map(Pair::getLeft).collect(Collectors.toSet());
-    }
+	/**
+	 * Gets a list of variable names to parameters where the parameters are known to
+	 * be non empty. If duplicate variables appeared in the template there will be
+	 * duplicates in the list.
+	 * 
+	 * @return the list of variable names to parameters.
+	 */
+	public List<VariableTemplatePart> variablesWithNonEmptyParameters() {
+		return variables.stream().filter(VariableTemplatePart::hasParameter).collect(Collectors.toList());
+	}
 
-    /**
-     * Gets a list of variable names to parameters.  If duplicate variables appeared in the template
-     * there will be duplicates in the list.
-     * @return the list of variable names to parameters.
-     */
-    public List<Pair<String, Parameter>> variablesWithParameters() {
-        return new ArrayList<>(variablesAndParameters);
-    }
+	/**
+	 * Creates a bound builder.
+	 * 
+	 * @return a new BoundBuilder based on this template.
+	 */
+	public BoundBuilder boundBuilder() {
+		return new BoundBuilder(variablesSet(), templatePattern);
+	}
 
-    /**
-     * Gets a list of variable names to parameters where the parameters are known to be non empty.  If duplicate variables appeared in the template
-     * there will be duplicates in the list.
-     * @return the list of variable names to parameters.
-     */
-    public List<Pair<String, Parameter>> variablesWithNonEmptyParameters() {
-        return variablesAndParameters.stream().filter(e -> !e.getRight().isEmpty()).collect(Collectors.toList());
-    }
+	/**
+	 * Creates an extractor to parse variable values back from the rendered string.
+	 * 
+	 * @return a new Extractor.
+	 */
+	public Extractor extractor() {
+		return new Extractor();
+	}
 
-    public Instance instance() {
-        return new Instance();
-    }
+	/**
+	 * Creates a template from a template string.
+	 * 
+	 * @param template
+	 *            the template string.
+	 * @return the parsed template.
+	 * @deprecated Use
+	 *             {@link TemplateParser#parse(String, TemplateVariableRegistry)}
+	 */
+	@Deprecated
+	@SuppressWarnings("PMD.ShortMethodName")
+	public static Template of(final String template) {
+		return TemplateParser.parse(template, null);
+	}
 
-    public Extractor extractor() {
-        return new Extractor();
-    }
+	@Override
+	public String toString() {
+		return templatePattern;
+	}
 
-    /**
-     * Creates a template from a template string.
-     * @param template the template string.
-     * @return the parsed template.
-     * @deprecated Use {@link TemplateParser#parse(String, TemplateVariableRegistry)}
-     */
-    @Deprecated
-    @SuppressWarnings("PMD.ShortMethodName")
-    public static Template of(final String template) {
-        return TemplateParser.parse(template, null);
-    }
+	/**
+	 * A Template with bindings for the variables.
+	 */
+	public final class Bound {
+		private final Map<String, Function<Parameter, String>> bindings;
 
-    @Override
-    public String toString() {
-        return originalTemplateString;
-    }
+		private Bound(final BoundBuilder builder) {
+			this.bindings = new HashMap<>(builder.bindings);
+		}
 
-    public final class Instance {
-        private final Map<String, Function<Parameter, String>> bindings = new HashMap<>();
+		/**
+		 * Renders the template parts.
+		 * 
+		 * @return the rendered string.
+		 */
+		public String render() {
+			final StringBuilder stringBuilder = new StringBuilder();
+			templateParts.stream().map(templatePart -> templatePart.render(bindings)).forEach(stringBuilder::append);
+			return stringBuilder.toString();
+		}
+	}
 
-        private Instance() {
-        }
+	/**
+	 * A builder for Template.Bound instances.
+	 */
+	public class BoundBuilder {
+		private final Map<String, Function<Parameter, String>> bindings = new HashMap<>();
+		private final Set<String> variableNames;
+		private final String templatePattern;
 
-        public Instance bindVariable(final String name, final Supplier<String> binding) {
-            return bindVariable(name, x -> binding.get());
-        }
+		private BoundBuilder(final Set<String> variableNames, final String templatePattern) {
+			this.variableNames = variableNames;
+			this.templatePattern = templatePattern;
+		}
 
-        public Instance bindVariable(final String name, final Function<Parameter, String> binding) {
-            Objects.requireNonNull(name, "name cannot be null");
-            Objects.requireNonNull(binding, "binding cannot be null");
+		/**
+		 * Adds all the bindings from the builder to this builder. Will overwrite any
+		 * bindings with the same name.
+		 * 
+		 * @param builder
+		 *            the builder to copy bindings from.
+		 * @return this.
+		 */
+		public BoundBuilder add(final BoundBuilder builder) {
+			bindings.putAll(builder.bindings);
+			return this;
+		}
 
-            if (StringUtils.isBlank(name)) {
-                throw new IllegalArgumentException("name must not be empty");
-            }
-            bindings.put(name, binding);
-            return this;
-        }
+		/**
+		 * Adds all the bindings from the Template.Bound to this builder.
+		 * 
+		 * @param bound
+		 *            the Template.Bound to copy from.
+		 * @return this
+		 */
+		public BoundBuilder add(final Bound bound) {
+			bindings.putAll(bound.bindings);
+			return this;
+		}
 
-        /**
-         * Renders the template parts.
-         * @return the rendered string.
-         */
-        public String render() {
-            final StringBuilder stringBuilder = new StringBuilder();
-            templateParts.stream().map(templatePart -> templatePart.render(bindings)).forEach(stringBuilder::append);
-            return stringBuilder.toString();
-        }
-    }
+		/**
+		 * Bind the variable to the supplier of string.
+		 * 
+		 * @param name
+		 *            the name to bind.
+		 * @param binding
+		 *            the binding.
+		 * @throws IllegalArgumentException
+		 *             if the variable is not in the template.
+		 * @return this
+		 */
+		public BoundBuilder bind(final String name, final Supplier<String> binding) {
+			Function<Parameter, String> func = x -> binding.get();
+			return bind(name, func);
+		}
 
-    /**
-     * Given a template, the {@link Extractor} finds the matching variables from a string.
-     * <p>
-     * Where an {@link Instance} generates strings by filling in the variables in a template, the {@link Extractor} does
-     * the opposite:
-     *
-     * <pre>
-     * // Renders the string "Hello World!"
-     * var tmpl = Template.of("Hello {{name}}!");
-     * var greeting = tmpl.instance().bindVariable("name", () -&gt; "World").render();
-     *
-     * // The other way around, extracts a name from a string:
-     * tmpl.extractor().extract(greeting); // returns a map {name=World}
-     * tmpl.extractor().extract("Hello everyone!"); // returns a map {name=everyone}
-     * </pre>
-     *
-     * The intention is that applying the map back to the template will yield the original string, but the round-trip is
-     * not always exact.
-     * <ul>
-     * <li>Rendering a string uses a supplier and the extractor returns a fixed string.</li>
-     * <li>Variable parameters are currently ignored (to be determined).</li>
-     * </ul>
-     */
-    public final class Extractor {
-        private final Pattern regex;
-        private final Map<String, String> captureGroups = new HashMap<>();
+		/**
+		 * Bind the variable to a function to convert a parameter to a string.
+		 * 
+		 * @param name
+		 *            the name to bind.
+		 * @param binding
+		 *            the function to bind.
+		 * @throws IllegalArgumentException
+		 *             if the variable is not in the template.
+		 * @return this
+		 */
+		public BoundBuilder bind(final String name, final Function<Parameter, String> binding) {
+			Objects.requireNonNull(name, "name cannot be null");
+			Objects.requireNonNull(binding, "binding cannot be null");
+			if (variableNames.contains(name)) {
+				bindings.put(name, binding);
+				return this;
+			} else {
+				throw new IllegalArgumentException(
+						String.format("Parameter '%s' does not exist in the template '%s'", name, templatePattern));
+			}
+		}
 
-        private Extractor() {
-            // Build a regex to match the template pattern. Every variable part is mapped to a capturing group
-            // and every text part is quoted to require an exact match. Variable part parameters are ignored.
-            final StringBuilder textAsRegex = new StringBuilder();
-            templateParts.stream().map(templatePart -> templatePart.extract(captureGroups))
-                    .forEach(textAsRegex::append);
-            regex = Pattern.compile(textAsRegex.toString());
-        }
+		/**
+		 * Builds the bound template. Will log any missing bindings.
+		 * 
+		 * @return the bound template.
+		 */
+		public Bound build() {
+			if (LOGGER.isInfoEnabled()) {
+				List<String> missingBindings = variableNames.stream().filter(name -> !bindings.containsKey(name))
+						.toList();
+				if (!missingBindings.isEmpty()) {
+					LOGGER.info("The following variables are unbound: " + String.join(", ", missingBindings));
+				}
+			}
+			return new Bound(this);
+		}
+	}
 
-        /**
-         * Performs the variable extraction from the input string.
-         *
-         * @param input
-         *            A string to extract variables from.
-         * @return An immutable map of key-value pairs extracted from the input string, corresponding to the template
-         *         variable names.
-         * @throws IllegalArgumentException
-         *             If the input string does not match the template.
-         */
-        public Map<String, String> extract(final String input) {
-            final Matcher matcher = regex.matcher(input);
-            if (!matcher.matches()) {
-                throw new IllegalArgumentException("Input does not match the template");
-            }
-            final Map<String, String> result = new HashMap<>();
-            for (final Map.Entry<String, String> entry : captureGroups.entrySet()) {
-                result.put(entry.getKey(), matcher.group(entry.getValue()));
-            }
-            return Collections.unmodifiableMap(result);
-        }
-    }
+	/**
+	 * Given a template, the {@link Extractor} finds the matching variables from a
+	 * string.
+	 * <p>
+	 * Where an {@link Bound} generates strings by filling in the variables in a
+	 * template, the {@link Extractor} does the opposite:
+	 *
+	 * <pre>
+	 * // Renders the string "Hello World!"
+	 * var tmpl = Template.of("Hello {{name}}!");
+	 * var greeting = tmpl.instance().bindVariable("name", () -&gt; "World").render();
+	 *
+	 * // The other way around, extracts a name from a string:
+	 * tmpl.extractor().extract(greeting); // returns a map {name=World}
+	 * tmpl.extractor().extract("Hello everyone!"); // returns a map {name=everyone}
+	 * </pre>
+	 *
+	 * The intention is that applying the map back to the template will yield the
+	 * original string, but the round-trip is not always exact.
+	 * <ul>
+	 * <li>Rendering a string uses a supplier and the extractor returns a fixed
+	 * string.</li>
+	 * <li>Variable parameters are currently ignored (to be determined).</li>
+	 * </ul>
+	 */
+	public final class Extractor {
+		private final Pattern regex;
+		private final Map<String, String> captureGroups = new HashMap<>();
+
+		private Extractor() {
+			// Build a regex to match the template pattern. Every variable part is mapped to
+			// a capturing group
+			// and every text part is quoted to require an exact match. Variable part
+			// parameters are ignored.
+			final StringBuilder textAsRegex = new StringBuilder();
+			templateParts.stream().map(templatePart -> templatePart.extract(captureGroups))
+					.forEach(textAsRegex::append);
+			regex = Pattern.compile(textAsRegex.toString());
+		}
+
+		/**
+		 * Performs the variable extraction from the input string.
+		 *
+		 * @param input
+		 *            A string to extract variables from.
+		 * @return An immutable map of key-value pairs extracted from the input string,
+		 *         corresponding to the template variable names.
+		 * @throws IllegalArgumentException
+		 *             If the input string does not match the template.
+		 */
+		public Map<String, String> extract(final String input) {
+			final Matcher matcher = regex.matcher(input);
+			if (!matcher.matches()) {
+				throw new IllegalArgumentException("Input does not match the template");
+			}
+			final Map<String, String> result = new HashMap<>();
+			for (final Map.Entry<String, String> entry : captureGroups.entrySet()) {
+				result.put(entry.getKey(), matcher.group(entry.getValue()));
+			}
+			return Collections.unmodifiableMap(result);
+		}
+	}
 
 }

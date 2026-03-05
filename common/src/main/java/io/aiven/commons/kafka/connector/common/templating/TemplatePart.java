@@ -20,21 +20,24 @@ import java.util.function.Function;
 
 /**
  * A fragment of the template as segregated by the parser.
- * The part must implement toString() to produce a string representation of itself.
  */
 public interface TemplatePart {
-    /**
-     * Renders the template part using the bindings as necessary.
-     * @param bindings the binding to map parameters with.
-     * @return the rendered string.
-     */
-    String render(Map<String, Function<Parameter, String>> bindings);
+	/**
+	 * Renders the template part using the bindings as necessary.
+	 * 
+	 * @param bindings
+	 *            the binding to map parameters with.
+	 * @return the rendered string.
+	 */
+	String render(Map<String, Function<Parameter, String>> bindings);
 
-    /**
-     * Extracts the original string from the template.
-     * @param captureGroup the capture group to use for extraction.
-     * @return the original string for this template.
-     */
-    String extract(Map<String, String> captureGroup);
+	/**
+	 * Extracts the original template string from the rendered text.
+	 * 
+	 * @param captureGroup
+	 *            the capture group to use for extraction.
+	 * @return the original string for this template.
+	 */
+	String extract(Map<String, String> captureGroup);
 
 }

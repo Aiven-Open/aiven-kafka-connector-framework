@@ -22,7 +22,8 @@ import java.util.HashSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * A helper class that can be used to test the rendering and extraction of a template in a fluent way:
+ * A helper class that can be used to test the rendering and extraction of a
+ * template in a fluent way:
  *
  * <pre>
  * // To test that a template renders correctly with the given variables.
@@ -30,70 +31,85 @@ import static org.assertj.core.api.Assertions.assertThat;
  * </pre>
  *
  * <pre>
- * // To test that a template extracts the expected variables from the given string.
+ * // To test that a template extracts the expected variables from the given
+ * // string.
  * assertThat(Template.of("{{foo}}/{{bar}}")).satisfies(extracts("foo", "FOO", "bar", "BAR").whenGiven("FOO/BAR"));
  * </pre>
  */
 class TemplateTestUtil {
 
-    private final String rendered;
-    private final String[] varNameAndValues;
+	private final String rendered;
+	private final String[] varNameAndValues;
 
-    TemplateTestUtil(final String rendered, final String... varNameAndValues) {
-        assertThat(varNameAndValues.length).as("Must set names and values in pairs").isEven();
-        this.rendered = rendered;
-        this.varNameAndValues = varNameAndValues; // NOPMD ArrayIsStoredDirectly
-    }
+	TemplateTestUtil(final String rendered, final String... varNameAndValues) {
+		assertThat(varNameAndValues.length).as("Must set names and values in pairs").isEven();
+		this.rendered = rendered;
+		this.varNameAndValues = varNameAndValues; // NOPMD ArrayIsStoredDirectly
+	}
 
-    static public TemplateTestUtil withBindings(final String... varNameAndValues) {
-        return new TemplateTestUtil("", varNameAndValues);
-    }
+	static public TemplateTestUtil withBindings(final String... varNameAndValues) {
+		return new TemplateTestUtil("", varNameAndValues);
+	}
 
-    static public TemplateTestUtil withNoBindings() {
-        return new TemplateTestUtil("");
-    }
+	static public TemplateTestUtil withNoBindings() {
+		return new TemplateTestUtil("");
+	}
 
-    static public TemplateTestUtil withInput(final String rendered) {
-        return new TemplateTestUtil(rendered);
-    }
+	static public TemplateTestUtil withInput(final String rendered) {
+		return new TemplateTestUtil(rendered);
+	}
 
-    Condition<Template> rendersTo(final String rendered) {
-        return new TemplateTestUtil(rendered, this.varNameAndValues).testRender();
-    }
+	Condition<Template> rendersTo(final String rendered) {
+		return new TemplateTestUtil(rendered, this.varNameAndValues).testRender();
+	}
 
-    Condition<Template> extracts(final String... varNameAndValues) {
-        return new TemplateTestUtil(this.rendered, varNameAndValues).testExtract();
-    }
+	Condition<Template> extracts(final String... varNameAndValues) {
+		return new TemplateTestUtil(this.rendered, varNameAndValues).testExtract();
+	}
 
-    Condition<Template> extractsEmpty() {
-        return new TemplateTestUtil(this.rendered).testExtract();
-    }
+	Condition<Template> extractsEmpty() {
+		return new TemplateTestUtil(this.rendered).testExtract();
+	}
 
-    private Condition<Template> testRender() {
-        return new Condition<>(template -> {
-            final var instance = template.instance();
-            for (int i = 0; i < varNameAndValues.length; i += 2) {
-                final var value = varNameAndValues[i + 1];
-                instance.bindVariable(varNameAndValues[i], () -> value);
-            }
-            assertThat(instance.render()).isEqualTo(rendered);
-            // Failed tests are indicated by assertions, not by this return value.
-            return true;
-        }, "Renders to " + rendered);
-    }
+	Condition<Template> variableNotSet(String var) {
+		return new Condition<>(template -> {
+			assertThat(template.variablesSet()).doesNotContain(var);
+			return true;
+		}, String.format("Variable '%s' not set", var));
+	}
 
-    private Condition<Template> testExtract() {
-        return new Condition<>(template -> {
-            final var extractor = template.extractor();
-            final var extracted = extractor.extract(rendered);
-            final var found = new HashSet<String>();
-            for (int i = 0; i < varNameAndValues.length; i += 2) {
-                assertThat(extracted).containsEntry(varNameAndValues[i], varNameAndValues[i + 1]);
-                found.add(varNameAndValues[i]);
-            }
-            assertThat(extracted).containsOnlyKeys(found);
-            // Failed tests are indicated by assertions, not by this return value.
-            return true;
-        }, "Extracts " + rendered);
-    }
+	Condition<Template> noVariablesSet() {
+		return new Condition<>(template -> {
+			assertThat(template.variablesSet()).isEmpty();
+			return true;
+		}, "No variables are set");
+	}
+
+	private Condition<Template> testRender() {
+		return new Condition<>(template -> {
+			final var boundBuilder = template.boundBuilder();
+			for (int i = 0; i < varNameAndValues.length; i += 2) {
+				final var value = varNameAndValues[i + 1];
+				boundBuilder.bind(varNameAndValues[i], () -> value);
+			}
+			assertThat(boundBuilder.build().render()).isEqualTo(rendered);
+			// Failed tests are indicated by assertions, not by this return value.
+			return true;
+		}, "Renders to " + rendered);
+	}
+
+	private Condition<Template> testExtract() {
+		return new Condition<>(template -> {
+			final var extractor = template.extractor();
+			final var extracted = extractor.extract(rendered);
+			final var found = new HashSet<String>();
+			for (int i = 0; i < varNameAndValues.length; i += 2) {
+				assertThat(extracted).containsEntry(varNameAndValues[i], varNameAndValues[i + 1]);
+				found.add(varNameAndValues[i]);
+			}
+			assertThat(extracted).containsOnlyKeys(found);
+			// Failed tests are indicated by assertions, not by this return value.
+			return true;
+		}, "Extracts " + rendered);
+	}
 }
