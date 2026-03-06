@@ -1,4 +1,4 @@
-/// *
+///*
 // * Copyright 2025 Aiven Oy
 // *
 // * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,11 +16,10 @@
 //
 // package io.aiven.commons.kafka.connector.source.integration;
 //
-// import io.aiven.commons.kafka.connector.source.AbstractSourceRecord;
-// import io.aiven.commons.kafka.connector.source.AbstractSourceRecordIterator;
+//
+// import io.aiven.commons.kafka.connector.source.NativeSourceData;
 // import io.aiven.commons.kafka.connector.source.OffsetManager;
-// import
-/// io.aiven.commons.kafka.connector.source.testFixture.format.AvroTestDataFixture;
+// import io.aiven.commons.kafka.connector.source.testFixture.format.AvroTestDataFixture;
 // import io.aiven.commons.kafka.connector.source.transformer.Transformer;
 // import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 // import org.apache.kafka.connect.source.SourceTaskContext;
@@ -44,20 +43,14 @@
 // import static org.mockito.Mockito.mock;
 // import static org.mockito.Mockito.when;
 //
-/// **
-// * Tests that the AbstractSourceIterator functions correctly with the
-/// underlying
+///**
+// * Tests that the EvolvingSourceRecordIterator functions correctly with the underlying
 // * storage system.
 // *
 // * @param <K>
 // * the native key type.
 // */
-// public abstract class AbstractSourceIteratorIntegrationTest<K extends
-/// Comparable<K>, N, O extends OffsetManager.OffsetManagerEntry<O>, T extends
-/// AbstractSourceRecord<K, N, O, T>, I extends AbstractSourceRecordIterator<K,
-/// N, O, T>>
-// extends
-// AbstractSourceIntegrationBase<K, N, O, T> {
+// public abstract class AbstractSourceIteratorIntegrationTest<K extends Comparable<K>, N>  extends  AbstractSourceIntegrationBase<K, N> {
 //
 // /**
 // * Static value to flag that the task is not set.
@@ -67,6 +60,8 @@
 // protected AbstractSourceIteratorIntegrationTest() {
 // super();
 // }
+//
+// protected abstract NativeSourceData<K,N> getNativeSourceData();
 //
 // @Override
 // protected Duration getOffsetFlushInterval() {
@@ -170,7 +165,7 @@
 //
 // // write empty file object
 // write(topic, new byte[0], 3);
-// assertThat(getNativeStorage()).hasSize(1);
+// assertThat(getNativeInfo()).hasSize(1);
 //
 // final I sourceRecordIterator = getSourceRecordIterator(createConfig(topic,
 /// taskId, maxTasks, inputFormat),
@@ -202,7 +197,7 @@
 // expectedKeys.add(write(topic, testData2.getBytes(StandardCharsets.UTF_8),
 /// 1).getNativeKey());
 //
-// assertThat(getNativeStorage()).hasSize(4);
+// assertThat(getNativeInfo()).hasSize(4);
 //
 // final I sourceRecordIterator = getSourceRecordIterator(createConfig(topic,
 /// taskId, maxTasks, InputFormat.BYTES),
@@ -254,7 +249,7 @@
 // offsetKeys.add(write(topic, outputStream4, 2).getNativeKey());
 // offsetKeys.add(write(topic, outputStream5, 2).getNativeKey());
 //
-// assertThat(getNativeStorage()).hasSize(5);
+// assertThat(getNativeInfo()).hasSize(5);
 //
 // final I sourceRecordIterator = getSourceRecordIterator(configData,
 /// createOffsetManager(),
@@ -316,7 +311,7 @@
 // expectedKeys.add(write(topic, testData2.getBytes(StandardCharsets.UTF_8),
 /// 0).getNativeKey());
 //
-// assertThat(getNativeStorage()).hasSize(2);
+// assertThat(getNativeInfo()).hasSize(2);
 //
 // final I sourceRecordIterator = getSourceRecordIterator(configData,
 /// createOffsetManager(),
@@ -336,7 +331,7 @@
 // // write 3rd object
 // expectedKeys.add(write(topic, testData3.getBytes(StandardCharsets.UTF_8),
 /// 0).getNativeKey());
-// assertThat(getNativeStorage()).hasSize(3);
+// assertThat(getNativeInfo()).hasSize(3);
 //
 // assertThat(sourceRecordIterator).hasNext();
 // sourceRecord = sourceRecordIterator.next();

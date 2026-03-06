@@ -1,11 +1,11 @@
 /*
- * Copyright 2025 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -119,8 +119,8 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N> 
 	 * @return the list of {@link NativeInfo} implementations, one for each item in
 	 *         native storage.
 	 */
-	final protected List<? extends NativeInfo<K, N>> getNativeStorage() {
-		return getSourceStorage().getNativeStorage();
+	final protected List<? extends NativeInfo<K, N>> getNativeInfo() {
+		return getSourceStorage().getNativeInfo();
 	}
 
 	/**

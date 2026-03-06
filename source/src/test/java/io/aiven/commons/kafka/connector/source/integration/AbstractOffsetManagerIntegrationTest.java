@@ -1,11 +1,11 @@
 /*
- * Copyright 2025 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,6 @@ package io.aiven.commons.kafka.connector.source.integration;
 import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
-import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import io.aiven.commons.kafka.connector.source.transformer.ByteArrayTransformer;
 import io.aiven.commons.kafka.testkit.KafkaManager;
 import org.apache.kafka.connect.converters.ByteArrayConverter;
@@ -45,9 +44,7 @@ import static org.assertj.core.api.Fail.fail;
  * @param <N>
  *            the native object type
  */
-public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<K>, N>
-		extends
-			AbstractSourceIntegrationBase<K, N> {
+public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<K>, N> extends	AbstractSourceIntegrationBase<K, N> {
 
 	/**
 	 * Static to indicate that the TASK is not set.
@@ -107,7 +104,7 @@ public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<
 			kafkaManager.configureConnector(getConnectorName(), props);
 
 			// verify the records were written to storage.
-			waitForStorage(Duration.ofMinutes(2), () -> getNativeStorage().stream().map(NativeInfo::nativeKey).toList(),
+			waitForStorage(Duration.ofMinutes(2), () -> getNativeInfo().stream().map(NativeInfo::nativeKey).toList(),
 					expectedOffsetRecords.keySet().stream().map(SourceStorage.WriteResult::getNativeKey).toList());
 
 			// Poll messages from the Kafka topic and verify the consumed data

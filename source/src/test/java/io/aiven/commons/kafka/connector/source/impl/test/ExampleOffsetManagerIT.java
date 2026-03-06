@@ -22,11 +22,11 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
-public class ExampleOffsetManagerIT extends AbstractOffsetManagerIntegrationTest<String, ByteBuffer> {
+public class ExampleOffsetManagerIT extends AbstractOffsetManagerIntegrationTest<String, ExampleNativeItem> {
 	private static final Logger logger = LoggerFactory.getLogger(ExampleOffsetManagerIT.class);
 
 
-	private final SourceStorage<String, ByteBuffer> sourceStorage;
+	private final SourceStorage<String, ExampleNativeItem> sourceStorage;
 
 	public ExampleOffsetManagerIT() {
 		sourceStorage = new ExampleSourceStorage();
@@ -34,7 +34,7 @@ public class ExampleOffsetManagerIT extends AbstractOffsetManagerIntegrationTest
 	}
 
 	@Override
-	protected SourceStorage<String, ByteBuffer> getSourceStorage() {
+	protected SourceStorage<String, ExampleNativeItem> getSourceStorage() {
 		return sourceStorage;
 	}
 

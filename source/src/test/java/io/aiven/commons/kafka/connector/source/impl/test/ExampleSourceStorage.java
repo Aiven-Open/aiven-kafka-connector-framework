@@ -35,7 +35,7 @@ import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-public class ExampleSourceStorage implements SourceStorage<String, ByteBuffer> {
+public class ExampleSourceStorage implements SourceStorage<String, ExampleNativeItem> {
 	ExampleNativeClient client;
 
 	@Override
@@ -45,7 +45,7 @@ public class ExampleSourceStorage implements SourceStorage<String, ByteBuffer> {
 
 	@Override
 	public String createKey(String topic, int partition) {
-		return UUID.randomUUID().toString();
+		return String.format("%s-%s", System.currentTimeMillis(), UUID.randomUUID());
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class ExampleSourceStorage implements SourceStorage<String, ByteBuffer> {
 
 	@Override
 	public void createStorage() {
-		client = new ExampleNativeClient(true);
+		client = new ExampleNativeClient();
 	}
 
 	@Override
@@ -82,8 +82,8 @@ public class ExampleSourceStorage implements SourceStorage<String, ByteBuffer> {
 	}
 
 	@Override
-	public List<? extends NativeInfo<String, ByteBuffer>> getNativeStorage() {
-		return client.listObjects().stream().map(e -> new NativeInfo<String, ByteBuffer>(e.key(), e.data()))
+	public List<? extends NativeInfo<String, ExampleNativeItem>> getNativeInfo() {
+		return client.listObjects().stream().map(e -> new NativeInfo<String, ExampleNativeItem>(e.key(), e))
 				.collect(Collectors.toList());
 	}
 
