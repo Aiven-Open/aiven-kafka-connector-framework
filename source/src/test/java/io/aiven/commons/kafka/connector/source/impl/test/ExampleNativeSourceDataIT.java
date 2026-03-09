@@ -19,57 +19,58 @@ import java.util.stream.Stream;
 import static org.mockito.Mockito.mock;
 
 public class ExampleNativeSourceDataIT extends AbstractNativeSourceDataIntegrationTest<String, ExampleNativeItem> {
-    private final ExampleSourceStorage storage;
-    private final Map<String,String> properties = new HashMap<>();
-    private final SourceCommonConfig sourceConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), properties);
-    private final OffsetManager offsetManager = mock(OffsetManager.class);
+	private final ExampleSourceStorage storage;
+	private final Map<String, String> properties = new HashMap<>();
+	private final SourceCommonConfig sourceConfig = new SourceCommonConfig(
+			new SourceCommonConfig.SourceCommonConfigDef(), properties);
+	private final OffsetManager offsetManager = mock(OffsetManager.class);
 
-    public ExampleNativeSourceDataIT() {
-        storage = new ExampleSourceStorage();
-        storage.createStorage();
-    }
-    @Override
-    protected NativeSourceData<String> getNativeSourceData() {
-        return new NativeSourceData<String>(sourceConfig, offsetManager) {
-            @Override
-            public String getSourceName() {
-                return "ExampleSource";
-            }
+	public ExampleNativeSourceDataIT() {
+		storage = new ExampleSourceStorage();
+		storage.createStorage();
+	}
+	@Override
+	protected NativeSourceData<String> getNativeSourceData() {
+		return new NativeSourceData<String>(sourceConfig, offsetManager) {
+			@Override
+			public String getSourceName() {
+				return "ExampleSource";
+			}
 
-            @Override
-            protected Stream<? extends AbstractSourceNativeInfo<String, ?>> getNativeItemStream(String offset) {
-                return storage.client.listObjects(offset).stream().map(ExampleSourceNativeInfo::new);
-            }
+			@Override
+			protected Stream<? extends AbstractSourceNativeInfo<String, ?>> getNativeItemStream(String offset) {
+				return storage.client.listObjects(offset).stream().map(ExampleSourceNativeInfo::new);
+			}
 
-            @Override
-            public OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Map<String, Object> data) {
-                return new ExampleOffsetManagerEntry(data);
-            }
+			@Override
+			public OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Map<String, Object> data) {
+				return new ExampleOffsetManagerEntry(data);
+			}
 
-            @Override
-            protected OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Context context) {
-                return new ExampleOffsetManagerEntry((String) context.getNativeKey(), "grouping1");
-            }
+			@Override
+			protected OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Context context) {
+				return new ExampleOffsetManagerEntry((String) context.getNativeKey(), "grouping1");
+			}
 
-            @Override
-            protected Optional<KeySerde<String>> getNativeKeySerde() {
-                return Optional.of(KeySerde.STRING_SERDE);
-            }
+			@Override
+			protected Optional<KeySerde<String>> getNativeKeySerde() {
+				return Optional.of(KeySerde.STRING_SERDE);
+			}
 
-            @Override
-            protected OffsetManager.OffsetManagerKey getOffsetManagerKey(String nativeKey) {
-                return new ExampleOffsetManagerEntry(nativeKey, "grouping1").getManagerKey();
-            }
-        };
-    }
+			@Override
+			protected OffsetManager.OffsetManagerKey getOffsetManagerKey(String nativeKey) {
+				return new ExampleOffsetManagerEntry(nativeKey, "grouping1").getManagerKey();
+			}
+		};
+	}
 
-    @Override
-    protected SourceStorage<String, ExampleNativeItem> getSourceStorage() {
-        return storage;
-    }
+	@Override
+	protected SourceStorage<String, ExampleNativeItem> getSourceStorage() {
+		return storage;
+	}
 
-    @Override
-    protected Logger getLogger() {
-        return null;
-    }
+	@Override
+	protected Logger getLogger() {
+		return null;
+	}
 }

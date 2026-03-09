@@ -17,9 +17,7 @@ package io.aiven.commons.kafka.connector.source.impl;
 
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
-import org.apache.kafka.common.config.Config;
 import org.apache.kafka.common.config.ConfigDef;
-import org.apache.kafka.connect.connector.Connector;
 import org.apache.kafka.connect.connector.Task;
 import org.apache.kafka.connect.source.SourceConnector;
 

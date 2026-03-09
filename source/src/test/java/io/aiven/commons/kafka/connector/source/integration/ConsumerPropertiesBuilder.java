@@ -37,7 +37,7 @@ public final class ConsumerPropertiesBuilder {
 	 *
 	 * @param bootstrapServers
 	 *            the bootstrap server to talk to.
-
+	 * 
 	 */
 	public ConsumerPropertiesBuilder(final String bootstrapServers) {
 		props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);

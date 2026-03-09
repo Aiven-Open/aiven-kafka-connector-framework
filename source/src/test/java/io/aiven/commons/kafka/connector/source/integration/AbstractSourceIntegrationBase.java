@@ -183,8 +183,9 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N> 
 	 * @throws InterruptedException
 	 *             on interrupted thread.
 	 */
-	final protected KafkaManager setupKafka() throws IOException, ExecutionException, InterruptedException {
-		return setupKafka(false);
+	final protected KafkaManager setupKafka(Map<String, String> configOverrides)
+			throws IOException, ExecutionException, InterruptedException {
+		return setupKafka(false, configOverrides);
 	}
 
 	/**
@@ -200,8 +201,9 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N> 
 	 * @throws IOException
 	 *             on IO error.
 	 */
-	final protected KafkaManager setupKafka(final boolean forceRestart) throws IOException {
-		return setupKafka(forceRestart, getConnectorClass());
+	final protected KafkaManager setupKafka(final boolean forceRestart, Map<String, String> configOverrides)
+			throws IOException {
+		return setupKafka(forceRestart, getConnectorClass(), configOverrides);
 	}
 
 	/**
@@ -301,6 +303,25 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N> 
 		 *            the maximum time to wait for the messages to arrive.
 		 * @return A list of values returned.
 		 */
+		public List<byte[]> consumeByteMessages(final String topic, final int expectedMessageCount,
+				final Duration timeout) {
+			return consumeMessages(topic, consumerPropertiesBuilder(), expectedMessageCount, timeout,
+					ByteArrayDeserializer.class, ByteArrayDeserializer.class).map(ConsumerRecord::value).toList();
+		}
+
+		/**
+		 * Read the data from the topic as byte array key and byte value. Each value is
+		 * converted into a string and returned in the result. If the expected number of
+		 * messages is not read in the allotted time the test fails.
+		 *
+		 * @param topic
+		 *            the topic to red.
+		 * @param expectedMessageCount
+		 *            the expected number of messages.
+		 * @param timeout
+		 *            the maximum time to wait for the messages to arrive.
+		 * @return A list of values returned.
+		 */
 		public List<String> consumeStringMessages(final String topic, final int expectedMessageCount,
 				final Duration timeout) {
 			return consumeMessages(topic, consumerPropertiesBuilder(), expectedMessageCount, timeout,
@@ -375,9 +396,11 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N> 
 				final ConsumerPropertiesBuilder consumerPropertiesBuilder, final int expectedMessageCount,
 				final Duration timeout, final Class<? extends Deserializer<X>> keyClass,
 				final Class<? extends Deserializer<V>> valueClass) {
+			System.out.println("Consuming messages from topic: " + topic);
 			try (KafkaConsumer<X, V> consumer = new KafkaConsumer<>(
 					consumerPropertiesBuilder.keyDeserializer(keyClass).valueDeserializer(valueClass).build())) {
 				consumer.subscribe(Collections.singletonList(topic));
+				System.out.println(consumer.subscription());
 				final List<ConsumerRecord<X, V>> recordValues = new ArrayList<>();
 				await().atMost(timeout).pollInterval(Duration.ofSeconds(1)).untilAsserted(() -> {
 					assertThat(consumeRecordsInProgress(consumer, recordValues)).hasSize(expectedMessageCount);

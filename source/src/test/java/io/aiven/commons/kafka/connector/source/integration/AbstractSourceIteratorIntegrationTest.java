@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright 2025 Aiven Oy
 // *
 // * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,8 @@
 //
 // import io.aiven.commons.kafka.connector.source.NativeSourceData;
 // import io.aiven.commons.kafka.connector.source.OffsetManager;
-// import io.aiven.commons.kafka.connector.source.testFixture.format.AvroTestDataFixture;
+// import
+/// io.aiven.commons.kafka.connector.source.testFixture.format.AvroTestDataFixture;
 // import io.aiven.commons.kafka.connector.source.transformer.Transformer;
 // import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 // import org.apache.kafka.connect.source.SourceTaskContext;
@@ -43,14 +44,16 @@
 // import static org.mockito.Mockito.mock;
 // import static org.mockito.Mockito.when;
 //
-///**
-// * Tests that the EvolvingSourceRecordIterator functions correctly with the underlying
+/// **
+// * Tests that the EvolvingSourceRecordIterator functions correctly with the
+/// underlying
 // * storage system.
 // *
 // * @param <K>
 // * the native key type.
 // */
-// public abstract class AbstractSourceIteratorIntegrationTest<K extends Comparable<K>, N>  extends  AbstractSourceIntegrationBase<K, N> {
+// public abstract class AbstractSourceIteratorIntegrationTest<K extends
+/// Comparable<K>, N> extends AbstractSourceIntegrationBase<K, N> {
 //
 // /**
 // * Static value to flag that the task is not set.

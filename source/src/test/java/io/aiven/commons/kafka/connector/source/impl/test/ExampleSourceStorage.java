@@ -22,12 +22,9 @@ import io.aiven.commons.kafka.connector.source.impl.ExampleSourceConnector;
 import io.aiven.commons.kafka.connector.source.integration.SourceStorage;
 import io.aiven.commons.kafka.connector.source.transformer.TransformerRegistry;
 import org.apache.commons.io.function.IOSupplier;
-import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.connect.connector.Connector;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

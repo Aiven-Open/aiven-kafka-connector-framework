@@ -15,16 +15,13 @@
  */
 package io.aiven.commons.kafka.connector.source.impl.test;
 
-import io.aiven.commons.kafka.connector.source.integration.AbstractOffsetManagerIntegrationTest;
+import io.aiven.commons.kafka.connector.source.AbstractOffsetManagerIntegrationTest;
 import io.aiven.commons.kafka.connector.source.integration.SourceStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
-
 public class ExampleOffsetManagerIT extends AbstractOffsetManagerIntegrationTest<String, ExampleNativeItem> {
 	private static final Logger logger = LoggerFactory.getLogger(ExampleOffsetManagerIT.class);
-
 
 	private final SourceStorage<String, ExampleNativeItem> sourceStorage;
 

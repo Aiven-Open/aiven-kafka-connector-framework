@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.integration;
+package io.aiven.commons.kafka.connector.source;
 
 import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
+import io.aiven.commons.kafka.connector.source.integration.AbstractSourceIntegrationBase;
+import io.aiven.commons.kafka.connector.source.integration.SourceStorage;
 import io.aiven.commons.kafka.connector.source.transformer.ByteArrayTransformer;
 import io.aiven.commons.kafka.testkit.KafkaManager;
 import org.apache.kafka.connect.converters.ByteArrayConverter;
+import org.apache.kafka.connect.runtime.ConnectorConfig;
+import org.apache.kafka.connect.storage.StringConverter;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -44,12 +50,24 @@ import static org.assertj.core.api.Fail.fail;
  * @param <N>
  *            the native object type
  */
-public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<K>, N> extends	AbstractSourceIntegrationBase<K, N> {
+public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<K>, N>
+		extends
+			AbstractSourceIntegrationBase<K, N> {
 
 	/**
 	 * Static to indicate that the TASK is not set.
 	 */
 	private static final int TASK_NOT_SET = -1;
+
+	@BeforeEach
+	void createStorage() {
+		getSourceStorage().createStorage();
+	}
+
+	@AfterEach
+	void removeStorage() {
+		getSourceStorage().removeStorage();
+	}
 
 	/**
 	 * Tests offset manager ability to read data from the Kafka context by:
@@ -94,12 +112,16 @@ public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<
 		try {
 			// Start the Connector
 			Map<String, String> props = ConnectorCommonConfigFragment
-					.setter(createConfig(topic, ByteArrayTransformer.class)).keyConverter(ByteArrayConverter.class)
+					.setter(createConfig(topic, ByteArrayTransformer.class)).keyConverter(StringConverter.class)
 					.valueConverter(ByteArrayConverter.class).data();
 			SourceConfigFragment.setter(props).transformerClass(ByteArrayTransformer.class);
 
-			final KafkaManager kafkaManager = setupKafka();
-			kafkaManager.createTopic(topic);
+			Map<String, String> configOverrides = new HashMap<>();
+			configOverrides.put(ConnectorConfig.KEY_CONVERTER_CLASS_CONFIG, null);
+
+			final KafkaManager kafkaManager = setupKafka(configOverrides);
+			// kafkaManager.createTopic(topic);
+			kafkaManager.createTopics(List.of(topic), 1, (short) 1);
 			// starts the connector here.
 			kafkaManager.configureConnector(getConnectorName(), props);
 
@@ -131,5 +153,10 @@ public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<
 		} finally {
 			deleteConnector();
 		}
+	}
+
+	@Override
+	protected Duration getOffsetFlushInterval() {
+		return Duration.ofSeconds(1);
 	}
 }
