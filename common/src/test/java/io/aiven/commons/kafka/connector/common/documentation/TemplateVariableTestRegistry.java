@@ -24,6 +24,7 @@ public class TemplateVariableTestRegistry implements Supplier<TemplateVariableRe
 	/**
 	 * A registry of the standard variables used in a Sink connector.
 	 */
+	@Override
 	public TemplateVariableRegistry get() {
 
 		return TemplateVariableRegistry.builder().add(TemplateVariable.KEY).add(TemplateVariable.TOPIC)
