@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,9 +23,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import io.aiven.commons.collections.RingBuffer;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
+import io.aiven.commons.kafka.connector.source.lookback.Lookback;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import io.aiven.commons.kafka.connector.source.transformer.Transformer;
 import org.apache.commons.lang3.ObjectUtils;
@@ -69,12 +69,12 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	private final Transformer transformer;
 
 	/**
-	 * The ring buffer which contains recently processed native item keys, this is
-	 * used during a restart to skip keys that are known to have been processed
-	 * while still accounting for the possibility that slower writing to storage may
-	 * have introduced newer keys.
+	 * The Lookback which contains recently processed native item key(s), this is
+	 * used during a restart to skip keys that are known to have been processed.
 	 */
-	private final RingBuffer<K> ringBuffer;
+	private Lookback<K> lookback;
+
+	private int maxDetectedClientStream;
 
 	/**
 	 * Constructor
@@ -86,7 +86,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	 */
 	protected NativeSourceData(final SourceCommonConfig sourceConfig, final OffsetManager offsetManager) {
 		this.sourceConfig = sourceConfig;
-		this.ringBuffer = new RingBuffer<>(sourceConfig.getRingBufferSize());
+		this.lookback = Lookback.ofSize(sourceConfig.getRingBufferSize());
 		this.offsetManager = offsetManager;
 		this.transformer = sourceConfig.getTransformer();
 		this.startKey = sourceConfig.getNativeStartKey() != null
@@ -134,25 +134,6 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	protected abstract OffsetManager.OffsetManagerEntry createOffsetManagerEntry(final Context context);
 
 	/**
-	 * Converts a source native info into an evolving record while filtering out
-	 * records that have already been processed (are in the ringBuffer).
-	 *
-	 * @param sourceNativeInfo
-	 *            the source native info to convert
-	 * @return a valid Evolving Source Record or an empty optional.
-	 */
-	private Optional<EvolvingSourceRecord> nativeConverter(final AbstractSourceNativeInfo<K, ?> sourceNativeInfo) {
-		if (!ringBuffer.contains(sourceNativeInfo.nativeKey())) {
-			final Context context = overrideContextTopic(sourceNativeInfo.getContext());
-			OffsetManager.OffsetManagerEntry offsetManagerEntry = createOffsetManagerEntry(context);
-			offsetManagerEntry = offsetManager.getEntryData(offsetManagerEntry.getManagerKey())
-					.map(this::createOffsetManagerEntry).orElse(offsetManagerEntry);
-			return Optional.of(new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context));
-		}
-		return Optional.empty();
-	}
-
-	/**
 	 * Sets the target topic in the context if the target topic is set in the
 	 * configuration.
 	 *
@@ -188,17 +169,44 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	 * @return an Iterator on EvolvingSourceRecords.
 	 */
 	final Iterator<EvolvingSourceRecord> getIterator(final Predicate<Context> isCorrectTask) {
-		return getNativeItemStream(ObjectUtils.getIfNull(ringBuffer.getNextEjected(), () -> {
-
+		K key = ObjectUtils.getIfNull(lookback.get(), () -> {
 			LOGGER.info("{} set, no alternative present in buffer will begin consuming from {}",
 					SourceConfigFragment.NATIVE_START_KEY, startKey);
 			return startKey;
-		})).map(this::nativeConverter).filter(osr -> osr.map(sr -> isCorrectTask.test(sr.getContext())).orElse(false))
-				.map(optT -> {
+		});
+		NativeInfoConverter converter = new NativeInfoConverter();
+		Iterator<EvolvingSourceRecord> iter = getNativeItemStream(key).map(converter::convert)
+				.filter(osr -> osr.map(sr -> isCorrectTask.test(sr.getContext())).orElse(false)).map(optT -> {
 					EvolvingSourceRecord sourceRecord = optT.get();
 					lastSeenNativeKey = (K) sourceRecord.getNativeKey();
 					return sourceRecord;
 				}).iterator();
+		return new Iterator<EvolvingSourceRecord>() {
+			@Override
+			public boolean hasNext() {
+				if (!iter.hasNext()) {
+					// adjust the lookback size if necessary. Lookback must contain (at most) 1 less
+					// than the maximum number
+					// of items returned from by the native source.
+					if (maxDetectedClientStream < converter.getRecordCount()) {
+						maxDetectedClientStream = converter.getRecordCount();
+						if (maxDetectedClientStream <= lookback.size()) {
+							lookback = lookback.resize(maxDetectedClientStream - 1);
+						} else if (maxDetectedClientStream > lookback.size() + 1
+								&& maxDetectedClientStream <= sourceConfig.getRingBufferSize()) {
+							lookback = lookback.resize(maxDetectedClientStream);
+						}
+					}
+					return false;
+				}
+				return true;
+			}
+
+			@Override
+			public EvolvingSourceRecord next() {
+				return iter.next();
+			}
+		};
 	}
 
 	/**
@@ -244,7 +252,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	void recordNativeKeyFinished() {
 		if (lastSeenNativeKey != null) {
 			// update the buffer to contain this new objectKey
-			ringBuffer.add(lastSeenNativeKey);
+			lookback.add(lastSeenNativeKey);
 			// Remove the last seen from the offset manager as the file has been completely
 			// processed.
 			offsetManager.removeEntry(getOffsetManagerKey(lastSeenNativeKey));
@@ -267,6 +275,28 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 			final EvolvingSourceRecord result = new EvolvingSourceRecord(sourceRecord);
 			result.setValueData(valueData);
 			return result;
+		}
+	}
+
+	private class NativeInfoConverter {
+		private int recordCount;
+		NativeInfoConverter() {
+		}
+
+		Optional<EvolvingSourceRecord> convert(final AbstractSourceNativeInfo<K, ?> sourceNativeInfo) {
+			++recordCount;
+			if (!lookback.contains(sourceNativeInfo.nativeKey())) {
+				final Context context = overrideContextTopic(sourceNativeInfo.getContext());
+				OffsetManager.OffsetManagerEntry offsetManagerEntry = createOffsetManagerEntry(context);
+				offsetManagerEntry = offsetManager.getEntryData(offsetManagerEntry.getManagerKey())
+						.map(NativeSourceData.this::createOffsetManagerEntry).orElse(offsetManagerEntry);
+				return Optional.of(new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context));
+			}
+			return Optional.empty();
+		}
+
+		int getRecordCount() {
+			return recordCount;
 		}
 	}
 }
