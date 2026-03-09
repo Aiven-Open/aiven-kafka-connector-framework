@@ -128,7 +128,6 @@ public final class TemplateParser {
 	 *            the template variable registry.
 	 * @return The parsed template object.
 	 */
-	@SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
 	public static Template parse(final String templatePattern, final TemplateVariableRegistry registry) {
 		LOGGER.debug("Parse template: {}", templatePattern);
 		Context context = new Context(null, templatePattern, registry);
