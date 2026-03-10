@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,10 +18,12 @@ package io.aiven.commons.kafka.connector.source.impl;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
+import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeClient;
 import io.aiven.commons.kafka.connector.source.task.Context;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -56,6 +58,11 @@ public class ExampleNativeSourceData extends NativeSourceData<String> {
 	}
 
 	@Override
+	protected Optional<KeySerde<String>> getNativeKeySerde() {
+		return Optional.of(KeySerde.STRING_SERDE);
+	}
+
+	@Override
 	protected OffsetManager.OffsetManagerKey getOffsetManagerKey(String nativeKey) {
 		return new ExampleOffsetManagerEntry(nativeKey, "Group1").getManagerKey();
 	}
@@ -64,14 +71,5 @@ public class ExampleNativeSourceData extends NativeSourceData<String> {
 	public Stream<ExampleSourceNativeInfo> getNativeItemStream(String offset) {
 		// the offset is a String because it is the K type in NativeSourceData<K> above
 		return client.listObjects(offset).stream().map(ExampleSourceNativeInfo::new);
-	}
-
-	@Override
-	public String parseNativeKey(String keyString) {
-		// it is necessary to be able to present the Key as a string. This is the string
-		// representation of the K type in NativeSourceData<K> above.
-		// the return type is a String because that is the K type in
-		// NativeSourceData<K> above
-		return keyString;
 	}
 }

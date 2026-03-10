@@ -24,6 +24,7 @@ import io.aiven.commons.kafka.connector.source.task.Context;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -57,20 +58,12 @@ public class ExampleCsvSourceData extends NativeSourceData<String> {
 		return new ExampleOffsetManagerEntry((String) context.getNativeKey(), "Group1");
 	}
 
-	/**
-	 * extracts the native Key from the string representation.
-	 *
-	 * @param keyString
-	 *            the keyString.
-	 * @return The native Key.
-	 */
 	@Override
-	protected String parseNativeKey(String keyString) {
-		return "";
+	protected Optional<KeySerde<String>> getNativeKeySerde() {
+		return Optional.empty();
 	}
 
 	@Override
-
 	protected OffsetManager.OffsetManagerKey getOffsetManagerKey(String nativeKey) {
 		return new ExampleOffsetManagerEntry(nativeKey, "Group1").getManagerKey();
 	}

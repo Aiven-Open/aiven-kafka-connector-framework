@@ -17,7 +17,7 @@
 package io.aiven.commons.kafka.connector.source.transformer;
 
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
-import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
+import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
 import org.apache.kafka.connect.data.SchemaAndValue;

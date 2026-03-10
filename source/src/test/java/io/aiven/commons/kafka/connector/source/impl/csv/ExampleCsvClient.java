@@ -16,7 +16,7 @@
 
 package io.aiven.commons.kafka.connector.source.impl.csv;
 
-import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
+import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.testFixture.format.CsvTestDataFixture;
 
 import java.io.IOException;

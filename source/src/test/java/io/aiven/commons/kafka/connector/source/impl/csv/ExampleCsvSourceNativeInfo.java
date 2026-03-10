@@ -18,7 +18,7 @@ package io.aiven.commons.kafka.connector.source.impl.csv;
 
 import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.source.AbstractSourceNativeInfo;
-import io.aiven.commons.kafka.connector.source.impl.ExampleNativeItem;
+import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.task.Context;
 
 import java.io.ByteArrayInputStream;
