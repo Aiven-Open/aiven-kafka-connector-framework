@@ -36,6 +36,10 @@
 
   <dependencies>
     <dependency>
+      <groupId>io.confluent</groupId>
+      <artifactId>kafka-connect-avro-converter</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-config</artifactId>
     </dependency>

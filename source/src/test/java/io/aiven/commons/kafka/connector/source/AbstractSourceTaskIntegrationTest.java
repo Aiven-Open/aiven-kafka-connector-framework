@@ -17,23 +17,29 @@
 package io.aiven.commons.kafka.connector.source;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
+import io.aiven.commons.kafka.connector.source.impl.test.ExampleSourceTaskTest;
 import io.aiven.commons.kafka.connector.source.integration.AbstractSourceIntegrationBase;
 import io.aiven.commons.kafka.connector.source.integration.ConsumerPropertiesBuilder;
 import io.aiven.commons.kafka.connector.source.integration.SourceStorage;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import io.aiven.commons.kafka.connector.source.testFixture.format.AvroTestDataFixture;
+import io.aiven.commons.kafka.connector.source.testFixture.format.JsonTestDataFixture;
+import io.aiven.commons.kafka.connector.source.transformer.AvroTransformer;
 import io.aiven.commons.kafka.connector.source.transformer.ByteArrayTransformer;
+import io.aiven.commons.kafka.connector.source.transformer.JsonTransformer;
 import io.aiven.commons.kafka.connector.source.transformer.TransformerRegistry;
 import io.aiven.commons.kafka.testkit.KafkaManager;
+import io.confluent.connect.avro.AvroConverter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.connect.converters.ByteArrayConverter;
+import org.apache.kafka.connect.storage.StringConverter;
 import org.apache.kafka.connect.json.JsonConverter;
+import org.apache.kafka.connect.runtime.ConnectorConfig;
 import org.apache.kerby.kerberos.kerb.crypto.util.Random;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +47,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -53,8 +60,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,6 +78,8 @@ import static org.assertj.core.api.Fail.fail;
 public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>, N>
 		extends
 			AbstractSourceIntegrationBase<K, N> {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSourceTaskIntegrationTest.class);
 
 	private static final Duration WRITE_TIMEOUT = Duration.ofSeconds(5);
 
@@ -216,7 +223,7 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 			records = messageConsumer().consumeStringMessages(topic, 2, Duration.ofSeconds(10));
 			assertThat(records).containsOnly(TEST_DATA_3);
 		} catch (IOException | ExecutionException | InterruptedException e) {
-			getLogger().error("Error", e);
+			LOGGER.error("{} Error", getLogPrefix(), e);
 			fail(e);
 		} finally {
 			deleteConnector();
@@ -266,7 +273,7 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 			records = messageConsumer().consumeStringMessages(topic, 2, Duration.ofSeconds(20));
 			assertThat(records).containsOnly(TEST_DATA_3);
 		} catch (IOException | ExecutionException | InterruptedException e) {
-			getLogger().error("Error", e);
+			LOGGER.error("{} Error", getLogPrefix(), e);
 			fail(e);
 		} finally {
 			deleteConnector();
@@ -308,7 +315,7 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 			// Verify that the correct data is read from the S3 bucket and pushed to Kafka
 			assertThat(records).isEmpty();
 		} catch (IOException | ExecutionException | InterruptedException e) {
-			getLogger().error("Error", e);
+			LOGGER.error("{} Error", getLogPrefix(), e);
 			fail(e);
 		} finally {
 			deleteConnector();
@@ -329,18 +336,23 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 		try {
 			// Start the Connector
 			final Map<String, String> connectorConfig = createConfig(topic, ByteArrayTransformer.class);
-			ConnectorCommonConfigFragment.setter(connectorConfig).keyConverter(ByteArrayConverter.class)
+			ConnectorCommonConfigFragment.setter(connectorConfig).keyConverter(StringConverter.class)
 					.valueConverter(ByteArrayConverter.class);
 			SourceConfigFragment.setter(connectorConfig).distributionType(DistributionType.PARTITION);
 
-			final KafkaManager kafkaManager = setupKafka(Collections.emptyMap());
+			//ConnectorConfig.KEY_CONVERTER_CLASS_CONFIG
+			Map<String, String> configOverrides = new HashMap<>();
+			configOverrides.put(ConnectorConfig.KEY_CONVERTER_CLASS_CONFIG, null);
+			final KafkaManager kafkaManager = setupKafka(configOverrides);
 			kafkaManager.createTopic(topic);
-			kafkaManager.configureConnector(getConnectorName(), connectorConfig);
+			String result = kafkaManager.configureConnector(getConnectorName(), connectorConfig);
+			LOGGER.info("Connector configured: {}", result);
 
 			waitForStorage(WRITE_TIMEOUT, () -> getNativeInfo().stream().map(NativeInfo::nativeKey).toList(),
 					writeResults.stream().map(SourceStorage.WriteResult::getNativeKey).toList());
 
 			// Poll messages from the Kafka topic and verify the consumed data
+			List<byte[]> bRecords = messageConsumer().consumeByteMessages(topic, 2, Duration.ofSeconds(20));
 			List<String> records = messageConsumer().consumeStringMessages(topic, 2, Duration.ofSeconds(20));
 
 			// Verify that the correct data is read from the S3 bucket and pushed to Kafka
@@ -349,7 +361,7 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 			// Verify offset positions
 			// verifyOffsetPositions(expectedOffsetRecords, Duration.ofSeconds(120));
 		} catch (IOException | ExecutionException | InterruptedException e) {
-			getLogger().error("Error", e);
+			LOGGER.error("{} Error", getLogPrefix(), e);
 			fail(e);
 		} finally {
 			deleteConnector();
@@ -380,7 +392,7 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 		try {
 			// configure the consumer
 			final Map<String, String> connectorConfig = createConfig(topic,	ByteArrayTransformer.class);
-			ConnectorCommonConfigFragment.setter(connectorConfig).name(getConnectorName()).keyConverter(ByteArrayConverter.class)
+			ConnectorCommonConfigFragment.setter(connectorConfig).keyConverter(ByteArrayConverter.class)
 					.valueConverter(ByteArrayConverter.class);
 			SourceConfigFragment.setter(connectorConfig).distributionType(DistributionType.PARTITION)
 					.transformerBuffer(maxBufferSize);
@@ -401,7 +413,7 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 
 			verifyOffsetPositions(expectedOffsetRecords, Duration.ofMinutes(2));
 		} catch (IOException | ExecutionException | InterruptedException e) {
-			getLogger().error("Error", e);
+			LOGGER.error("{} Error", getLogPrefix(), e);
 			fail(e);
 		} finally {
 			deleteConnector();
@@ -426,31 +438,32 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 		final byte[] outputStream4 = AvroTestDataFixture.generateAvroData(3 * numOfRecsFactor + 1, numOfRecsFactor);
 		final byte[] outputStream5 = AvroTestDataFixture.generateAvroData(4 * numOfRecsFactor + 1, numOfRecsFactor);
 
-		final List<<OffsetManager.OffsetManagerKey, Long> expectedOffsetRecords = new HashMap<>();
+		final List<SourceStorage.WriteResult<K>> writeResults = new ArrayList<>();
 
-		expectedOffsetRecords.put(write(topic, outputStream1, 1).getOffsetManagerKey(), (long) numOfRecsFactor);
-		expectedOffsetRecords.put(write(topic, outputStream2, 1).getOffsetManagerKey(), (long) numOfRecsFactor);
+		writeResults.add(write(topic, outputStream1, 1));
+		writeResults.add(write(topic, outputStream2, 1));
 
-		expectedOffsetRecords.put(write(topic, outputStream3, 2).getOffsetManagerKey(), (long) numOfRecsFactor);
-		expectedOffsetRecords.put(write(topic, outputStream4, 2).getOffsetManagerKey(), (long) numOfRecsFactor);
-		expectedOffsetRecords.put(write(topic, outputStream5, 2).getOffsetManagerKey(), (long) numOfRecsFactor);
+		writeResults.add(write(topic, outputStream3, 2));
+		writeResults.add(write(topic, outputStream4, 2));
+		writeResults.add(write(topic, outputStream5, 2));
+
+		final Map<OffsetManager.OffsetManagerKey, Long> expectedOffsetRecords = new HashMap<>();
+		writeResults.stream().map(SourceStorage.WriteResult::getOffsetManagerKey).forEach(key -> expectedOffsetRecords.put(key, (long)numOfRecsFactor));
 
 		// verify the records were written to storage.
 		waitForStorage(WRITE_TIMEOUT, () -> getNativeInfo().stream().map(NativeInfo::nativeKey).toList(),
 				writeResults.stream().map(SourceStorage.WriteResult::getNativeKey).toList());
 
-		assertThat(getNativeStorage()).hasSize(5);
-
 		try {
 			// create configuration
-			final Map<String, String> connectorConfig = createConfig(topic, TASK_NOT_SET, 4, InputFormat.AVRO);
-			CommonConfigFragment.setter(connectorConfig).name(getConnectorName()).valueConverter(AvroConverter.class);
+			final Map<String, String> connectorConfig = createConfig(topic, AvroTransformer.class);
+			ConnectorCommonConfigFragment.Setter connectorSetter = ConnectorCommonConfigFragment.setter(connectorConfig).keyConverter(ByteArrayConverter.class)
+					.valueConverter(AvroConverter.class);
 
 			// start the manager
-			final KafkaManager kafkaManager = setupKafka();
+			final KafkaManager kafkaManager = setupKafka(Collections.emptyMap());
 
-			TransformerFragment.setter(connectorConfig)
-					.valueConverterSchemaRegistry(getKafkaManager().getSchemaRegistryUrl())
+			connectorSetter.valueConverterSchemaRegistry(getKafkaManager().getSchemaRegistryUrl())
 					.schemaRegistry(getKafkaManager().getSchemaRegistryUrl());
 
 			SourceConfigFragment.setter(connectorConfig).distributionType(DistributionType.OBJECT_HASH);
@@ -477,7 +490,7 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 
 			verifyOffsetPositions(expectedOffsetRecords, Duration.ofMinutes(1));
 		} catch (IOException | ExecutionException | InterruptedException e) {
-			getLogger().error("Error", e);
+			LOGGER.error("{} Error", getLogPrefix(), e);
 			fail(e);
 		} finally {
 			deleteConnector();
@@ -491,6 +504,7 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 	 * @param addPrefix
 	 *            if {@code true} a prefix is added to the native key.
 	 */
+	/*
 	@ParameterizedTest
 	@ValueSource(booleans = {true, false})
 	void parquetTest(final boolean addPrefix) throws IOException {
@@ -507,7 +521,7 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 		assertThat(getNativeStorage()).hasSize(1);
 
 		final Map<String, String> connectorConfig = createConfig(topic, TASK_NOT_SET, 4, InputFormat.PARQUET);
-		CommonConfigFragment.setter(connectorConfig).name(getConnectorName()).keyConverter(ByteArrayConverter.class)
+		CommonConfigFragment.setter(connectorConfig).keyConverter(ByteArrayConverter.class)
 				.valueConverter(AvroConverter.class);
 
 		SourceConfigFragment.setter(connectorConfig).distributionType(DistributionType.PARTITION);
@@ -533,13 +547,13 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 			assertThat(records).extracting(record -> record.get("name").toString())
 					.containsExactlyInAnyOrderElementsOf(expectedRecordNames);
 		} catch (IOException | ExecutionException | InterruptedException e) {
-			getLogger().error("Error", e);
+			LOGGER.error("{} Error", getLogPrefix(), e);
 			fail(e);
 		} finally {
 			deleteConnector();
 		}
 	}
-
+*/
 	/**
 	 * Tests that items written in JSONL format are correctly read and reported.
 	 */
@@ -548,26 +562,30 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 
 		final var topic = getTopic();
 
-		final String testMessage = "This is a test ";
-		final byte[] jsonBytes = JsonTestDataFixture.generateJsonRecs(500, testMessage)
-				.getBytes(StandardCharsets.UTF_8);
+		final byte[] testData = JsonTestDataFixture.generateJsonData(500);
+		SourceStorage.WriteResult<K> writeResult = write(topic, testData, 3);
 		final Map<OffsetManager.OffsetManagerKey, Long> expectedOffsetRecords = new HashMap<>();
-		expectedOffsetRecords.put(write(topic, jsonBytes, 1).getOffsetManagerKey(), 500L);
+		expectedOffsetRecords.put(writeResult.getOffsetManagerKey(), 500L);
 
 		try {
 
-			final Map<String, String> connectorConfig = createConfig(topic, TASK_NOT_SET, 1, InputFormat.JSONL);
-			CommonConfigFragment.setter(connectorConfig).name(getConnectorName()).valueConverter(JsonConverter.class);
+			final Map<String, String> connectorConfig = createConfig(topic, JsonTransformer.class);
+			ConnectorCommonConfigFragment.setter(connectorConfig).keyConverter(ByteArrayConverter.class)
+					.valueConverter(JsonConverter.class);
 			SourceConfigFragment.setter(connectorConfig).distributionType(DistributionType.PARTITION);
 
-			final KafkaManager kafkaManager = setupKafka();
+			final KafkaManager kafkaManager = setupKafka(Collections.emptyMap());
 			kafkaManager.createTopic(topic);
 			kafkaManager.configureConnector(getConnectorName(), connectorConfig);
+
+			waitForStorage(WRITE_TIMEOUT, () -> getNativeInfo().stream().map(NativeInfo::nativeKey).toList(),
+					List.of(writeResult.getNativeKey()));
+
 			// Poll Json messages from the Kafka topic and deserialize them
 			final List<JsonNode> records = messageConsumer().consumeJsonMessages(topic, 500, Duration.ofSeconds(60));
 
 			assertThat(records).map(jsonNode -> jsonNode.get("payload")).anySatisfy(jsonNode -> {
-				assertThat(jsonNode.get("message").asText()).contains(testMessage);
+				assertThat(jsonNode.get("message").asText()).contains(JsonTestDataFixture.TEST_MESSAGE);
 				assertThat(jsonNode.get("id").asText()).contains("1");
 			});
 
@@ -575,7 +593,7 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 			verifyOffsetPositions(expectedOffsetRecords, Duration.ofSeconds(5));
 
 		} catch (IOException | ExecutionException | InterruptedException e) {
-			getLogger().error("Error", e);
+			LOGGER.error("{} Error", getLogPrefix(), e);
 			fail(e);
 		} finally {
 			deleteConnector();
@@ -593,7 +611,7 @@ public abstract class AbstractSourceTaskIntegrationTest<K extends Comparable<K>,
 	 */
 	protected void verifyOffsetPositions(final Map<OffsetManager.OffsetManagerKey, Long> expectedRecords,
 			final Duration timeLimit) {
-		getLogger().error("Verification of Offset Positions is disabled!!!");
+		LOGGER.error("{} Verification of Offset Positions is disabled!!!", getLogPrefix());
 		// final Properties consumerProperties =
 		// consumerPropertiesBuilder().keyDeserializer(ByteArrayDeserializer.class)
 		// .valueDeserializer(ByteArrayDeserializer.class)

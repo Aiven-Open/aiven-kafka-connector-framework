@@ -69,8 +69,4 @@ public class ExampleNativeSourceDataIT extends AbstractNativeSourceDataIntegrati
 		return storage;
 	}
 
-	@Override
-	protected Logger getLogger() {
-		return null;
-	}
 }

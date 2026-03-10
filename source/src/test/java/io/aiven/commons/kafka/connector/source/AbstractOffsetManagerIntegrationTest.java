@@ -29,6 +29,8 @@ import org.apache.kafka.connect.storage.StringConverter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -54,6 +56,7 @@ public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<
 		extends
 			AbstractSourceIntegrationBase<K, N> {
 
+	private static Logger LOGGER = LoggerFactory.getLogger(AbstractOffsetManagerIntegrationTest.class);
 	/**
 	 * Static to indicate that the TASK is not set.
 	 */
@@ -100,13 +103,9 @@ public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<
 
 		final Map<SourceStorage.WriteResult<K>, Long> expectedOffsetRecords = new HashMap<>();
 		// write 4 objects
-
 		expectedOffsetRecords.put(write(topic, testData1.getBytes(StandardCharsets.UTF_8), 0), 1L);
-
 		expectedOffsetRecords.put(write(topic, testData2.getBytes(StandardCharsets.UTF_8), 0), 1L);
-
 		expectedOffsetRecords.put(write(topic, testData1.getBytes(StandardCharsets.UTF_8), 1), 1L);
-
 		expectedOffsetRecords.put(write(topic, testData2.getBytes(StandardCharsets.UTF_8), 1), 1L);
 
 		try {
@@ -137,9 +136,9 @@ public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<
 
 			SourceConfigFragment.setter(props).ringBufferSize(0);
 
-			getLogger().info(">>>>> RESTARTING");
+			LOGGER.info(">>>>> {} RESTARTING", getLogPrefix());
 			kafkaManager.configureConnector(getConnectorName(), props);
-			getLogger().info(">>>>> RESTARTED");
+			LOGGER.info(">>>>> {} RESTARTED", getLogPrefix());
 
 			expectedOffsetRecords.put(write(topic, testData3.getBytes(StandardCharsets.UTF_8), 1), 1L);
 
@@ -148,7 +147,7 @@ public abstract class AbstractOffsetManagerIntegrationTest<K extends Comparable<
 			assertThat(records).containsOnly(testData3);
 
 		} catch (IOException | ExecutionException | InterruptedException e) {
-			getLogger().error("Error", e);
+			LOGGER.error("{} Error", getLogPrefix(), e);
 			fail(e);
 		} finally {
 			deleteConnector();

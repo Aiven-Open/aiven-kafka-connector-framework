@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ExampleOffsetManagerIT extends AbstractOffsetManagerIntegrationTest<String, ExampleNativeItem> {
-	private static final Logger logger = LoggerFactory.getLogger(ExampleOffsetManagerIT.class);
 
 	private final SourceStorage<String, ExampleNativeItem> sourceStorage;
 
@@ -35,8 +34,4 @@ public class ExampleOffsetManagerIT extends AbstractOffsetManagerIntegrationTest
 		return sourceStorage;
 	}
 
-	@Override
-	protected Logger getLogger() {
-		return logger;
-	}
 }

@@ -72,6 +72,10 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N> 
 	protected AbstractSourceIntegrationBase() {
 	}
 
+	protected String getLogPrefix() {
+		return String.format("%s %s: ", this.getClass().getSimpleName(), this.getConnectorName());
+	}
+
 	/**
 	 * Create the SourceStorage. Should create the source storage once and then
 	 * return it.
@@ -79,13 +83,6 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N> 
 	 * @return the current SourceStorage object.
 	 */
 	abstract protected SourceStorage<K, N> getSourceStorage();
-
-	/**
-	 * Gets logger for the test class
-	 *
-	 * @return the logger for the concrete implementation.
-	 */
-	abstract protected Logger getLogger();
 
 	/**
 	 * Creates the native key.
