@@ -1,11 +1,11 @@
 /*
- * Copyright 2024-2025 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.timing.AbortTrigger;
@@ -104,8 +105,6 @@ public abstract class AbstractSourceTask extends SourceTask {
 	private final Backoff pollBackoff;
 
 	private Iterator<SourceRecord> sourceRecordIterator;
-
-	private EvolvingSourceRecordIterator nativeIterator;
 
 	/**
 	 * Constructor.
@@ -199,8 +198,7 @@ public abstract class AbstractSourceTask extends SourceTask {
 		final SourceCommonConfig config = configure(props, offsetManager);
 		maxPollRecords = config.getMaxPollRecords();
 		queue = new LinkedBlockingQueue<>(maxPollRecords * 2);
-		nativeIterator = getIterator(config);
-		final Iterator<SourceRecord> inner = IteratorUtils.transformedIterator(nativeIterator,
+		final Iterator<SourceRecord> inner = IteratorUtils.transformedIterator(getIterator(config),
 				r -> r.getSourceRecord(config.getErrorsTolerance(), offsetManager));
 		sourceRecordIterator = IteratorUtils.filteredIterator(inner, Objects::nonNull);
 		implemtationPollingThread.start();
@@ -257,6 +255,10 @@ public abstract class AbstractSourceTask extends SourceTask {
 
 			if (getLogger().isDebugEnabled()) {
 				getLogger().debug("Poll() returning {} SourceRecords.", results == null ? null : results.size());
+				if (results != null) {
+					getLogger().debug(results.stream().map(r -> String.format("topic: %s partition: %s key: %s",
+							r.topic(), r.kafkaPartition(), r.key())).collect(Collectors.joining("\n")));
+				}
 			}
 
 			return results;

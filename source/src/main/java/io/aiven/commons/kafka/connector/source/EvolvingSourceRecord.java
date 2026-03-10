@@ -1,11 +1,11 @@
 /*
- * Copyright 2024 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 
 /**
- * An abstract source record as retrieved from the storage layer.
+ * An evolving source record initially retrieved from the storage layer.
  */
-final public class EvolvingSourceRecord {
+public final class EvolvingSourceRecord {
 	/** the key for the source record */
 	private SchemaAndValue keyData;
 	/** The value for the source record. */

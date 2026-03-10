@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Aiven Oy
+ * Copyright 2026 Aiven Oy
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,8 +89,9 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 		this.lookback = Lookback.ofSize(sourceConfig.getRingBufferSize());
 		this.offsetManager = offsetManager;
 		this.transformer = sourceConfig.getTransformer();
-		this.startKey = sourceConfig.getNativeStartKey() != null
-				? parseNativeKey(sourceConfig.getNativeStartKey())
+		Optional<KeySerde<K>> serde = getNativeKeySerde();
+		this.startKey = sourceConfig.getNativeStartKey() != null && serde.isPresent()
+				? serde.get().fromString(sourceConfig.getNativeStartKey())
 				: null;
 	}
 
@@ -125,7 +126,21 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	public abstract OffsetManager.OffsetManagerEntry createOffsetManagerEntry(final Map<String, Object> data);
 
 	/**
-	 * Creates an offset manager entry from a context.
+	 * Creates an offset manager entry from a context. The OffsetManagerEntry
+	 * implementation must meet the contract:
+	 *
+	 * <pre>{@code
+	 *   K key = ...
+	 *   OffsetManagerEntry entry = createOffsetManagerEntry(context);
+	 *   OffsetManagerEntry emtry2 = createOffsetManagerEntry(entry1.getProperties());
+	 *   entry2.getProperties() is element for element equal to entry1.getProperties()
+	 *
+	 *   also
+	 *
+	 *   OffsetManagerKey k = entry.getManagerKey()
+	 *   OffsetManagerKey k2 = entry2.getManagerKey()
+	 *   k2.partitionMap() is element for element equal to k.partitionMap()
+	 *   } </pre>
 	 *
 	 * @param context
 	 *            the context to create the offset manager from.
@@ -181,13 +196,17 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 					lastSeenNativeKey = (K) sourceRecord.getNativeKey();
 					return sourceRecord;
 				}).iterator();
-		return new Iterator<EvolvingSourceRecord>() {
+		return new Iterator<>() {
 			@Override
 			public boolean hasNext() {
 				if (!iter.hasNext()) {
-					// adjust the lookback size if necessary. Lookback must contain (at most) 1 less
-					// than the maximum number
-					// of items returned from by the native source.
+					// at the end of processing an object from storage ensure that the lookback is
+					// sized correctly.
+					// we have to use +/- 1 because some native sources return the query key and
+					// some return only
+					// records greater than the query key. Also, the lookback must be 1 record
+					// smaller than the maximum
+					// returned, or we will not make progress.
 					if (maxDetectedClientStream < converter.getRecordCount()) {
 						maxDetectedClientStream = converter.getRecordCount();
 						if (maxDetectedClientStream <= lookback.size()) {
@@ -223,16 +242,23 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	}
 
 	/**
-	 * extracts the native Key from the string representation.
+	 * Returns a KeySerde for the native keys. If native key serialization to String
+	 * is not supported the method must return an empty Optional.
 	 *
-	 * @param keyString
-	 *            the keyString.
-	 * @return The native Key.
+	 * @return an Optional KeySerde for this system.
 	 */
-	protected abstract K parseNativeKey(final String keyString);
+	protected abstract Optional<KeySerde<K>> getNativeKeySerde();
 
 	/**
-	 * Creates an offset manager key for the native key.
+	 * Creates an offset manager key for the native key. The OffsetManagerKey
+	 * implementation must meet the contract:
+	 *
+	 * <pre>{@code
+	 *   K key = ...
+	 *   OffsetManagerKey k = getOffsetManagerKey(key);
+	 *   OffsetManagerKey k2 = getOffsetManagerKey(key);
+	 *   k2.partitionMap() is element for element equal to k.partitionMap()
+	 *   } </pre>
 	 *
 	 * @param nativeKey
 	 *            THe native key to create an offset manager key for.
@@ -246,10 +272,10 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 	}
 
 	/**
-	 * Updates the ring buffer with the last native key processed and removes the
+	 * Updates the lookback with the last native key processed and removes the
 	 * lastSeenNative key from the local copy of the offsetManager data.
 	 */
-	void recordNativeKeyFinished() {
+	final void recordNativeKeyFinished() {
 		if (lastSeenNativeKey != null) {
 			// update the buffer to contain this new objectKey
 			lookback.add(lastSeenNativeKey);
@@ -298,5 +324,53 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 		int getRecordCount() {
 			return recordCount;
 		}
+	}
+
+	/**
+	 * A serializer / deserializer pair for a native key. The implementation must
+	 * meet the contract:
+	 *
+	 * <pre>{@code
+	 *   K k = ...
+	 *   k.compareTo(KeySerde.fromString(KeySerde.toString(k))) == 0
+	 *   } </pre>
+	 *
+	 * @param <K>
+	 *            The native key type.
+	 */
+	public interface KeySerde<K> {
+		/**
+		 * Many storage implementations use String keys. This implementation is to
+		 * support those.
+		 */
+		KeySerde<String> STRING_SERDE = new KeySerde<>() {
+			@Override
+			public String toString(String nativeKey) {
+				return nativeKey;
+			}
+
+			@Override
+			public String fromString(String nativeKeyString) {
+				return nativeKeyString;
+			}
+		};
+
+		/**
+		 * Creates a parsable string representation of a native key.
+		 *
+		 * @param nativeKey
+		 *            the native key.
+		 * @return the string representation.
+		 */
+		String toString(K nativeKey);
+
+		/**
+		 * Creates a native key from a parsable string representation.
+		 *
+		 * @param nativeKeyString
+		 *            the parsable string representation.
+		 * @return the native key.
+		 */
+		K fromString(String nativeKeyString);
 	}
 }
