@@ -15,6 +15,8 @@
  */
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import org.apache.kafka.common.config.ConfigDef;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,6 +61,16 @@ public class TransformerRegistry {
 	}
 
 	/**
+	 * Creates a configurtion validator that restricts input to the names of the
+	 * validators in this registry.
+	 * 
+	 * @return the Validator.
+	 */
+	public ConfigDef.Validator validator() {
+		return ConfigDef.ValidString.in(transformers.keySet().toArray(String[]::new));
+	}
+
+	/**
 	 * Gets the list of transformer info for this registry.
 	 * 
 	 * @return the list of TransformerInfo for transformers in this registry.
@@ -99,7 +111,7 @@ public class TransformerRegistry {
 	 *            true if the transformer requires/supports input stream.
 	 */
 	public record TransformerInfo(String commonName, Class<? extends Transformer> transformerClass,
-			boolean requiresInputStream) {
+			boolean requiresInputStream, String description) {
 	}
 
 	/**

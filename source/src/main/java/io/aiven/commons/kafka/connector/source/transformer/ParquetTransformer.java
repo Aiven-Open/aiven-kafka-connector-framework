@@ -50,7 +50,8 @@ public class ParquetTransformer extends InputStreamTransformer {
 	 * @return the registry information for this transformer.
 	 */
 	public static TransformerRegistry.TransformerInfo info() {
-		return new TransformerRegistry.TransformerInfo("Parquet", ParquetTransformer.class, true);
+		return new TransformerRegistry.TransformerInfo("Parquet", ParquetTransformer.class, true,
+				"Reads a Parquet file (input stream) and creates one Kafka record for each GenericRecord record in the file.");
 	}
 
 	private final AvroData avroData;
