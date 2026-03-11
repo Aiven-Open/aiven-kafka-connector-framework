@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 /**
- * Implementations of items provided by an external storage layer.  These implementations are used in testing
- * and in the examples of implementations of the abstract source classes.
+ * Implementations of items provided by an external storage layer. These
+ * implementations are used in testing and in the examples of implementations of
+ * the abstract source classes.
  */
 package io.aiven.commons.kafka.connector.source.impl.nativeProvided;
