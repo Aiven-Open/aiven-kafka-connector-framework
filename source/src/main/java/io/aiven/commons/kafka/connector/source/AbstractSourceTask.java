@@ -198,10 +198,27 @@ public abstract class AbstractSourceTask extends SourceTask {
 		final SourceCommonConfig config = configure(props, offsetManager);
 		maxPollRecords = config.getMaxPollRecords();
 		queue = new LinkedBlockingQueue<>(maxPollRecords * 2);
-		final Iterator<SourceRecord> inner = IteratorUtils.transformedIterator(getIterator(config),
-				r -> r.getSourceRecord(config.getErrorsTolerance(), offsetManager));
+		Iterator<EvolvingSourceRecord> esrIter = IteratorUtils.transformedIterator(getIterator(config), this::lastEvolution);
+		final Iterator<SourceRecord> inner = IteratorUtils.transformedIterator(esrIter, r -> r.getSourceRecord(config.getErrorsTolerance(), offsetManager));
 		sourceRecordIterator = IteratorUtils.filteredIterator(inner, Objects::nonNull);
 		implemtationPollingThread.start();
+	}
+
+	/**
+	 * An insertion point for the last evolution step in the EvolvingSourceRecord.  This method is called just before the
+	 * EvolvingSourceRecord is converted into a SourceRecord.  This is the last point to modify
+	 * <ul>
+	 *     <li>Key schema and/or value</li>
+	 *     <li>Value schema and/or value</li>
+	 *     <li>Offset manager entry</li>
+	 * </ul>
+	 * The default implementation makes no changes.
+	 *
+	 * @param evolvingSourceRecord the record to modify.
+	 * @return the modified record.
+	 */
+	protected EvolvingSourceRecord lastEvolution(EvolvingSourceRecord evolvingSourceRecord) {
+		return evolvingSourceRecord;
 	}
 
 	/**
