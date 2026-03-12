@@ -100,11 +100,15 @@ public final class EvolvingSourceRecord {
 	/**
 	 * Gets the input stream supplier.
 	 * 
+	 * @param compressionType
+	 *            The expected compression for the input stream. Resulting stream
+	 *            will be automatically decompressed.
 	 * @return the InputStream supplier.
 	 * @throws UnsupportedOperationException
 	 *             if the sourceNativeInfo does not support input stream.
 	 */
-	public IOSupplier<InputStream> getInputStream(CompressionType compressionType) throws UnsupportedOperationException {
+	public IOSupplier<InputStream> getInputStream(CompressionType compressionType)
+			throws UnsupportedOperationException {
 		return compressionType.decompress(sourceNativeInfo.getInputStreamSupplier());
 	}
 

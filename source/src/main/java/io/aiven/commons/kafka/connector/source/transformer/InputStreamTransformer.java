@@ -44,9 +44,10 @@ import static io.aiven.commons.kafka.connector.source.transformer.TransformerInf
  * This implementation of Transformer assumes that the SourceRecord supports
  * returning an inputStream.
  *
- * Developers should use this class when the format being transformed supports reading 1 internal record from the
- * stream at a time.  If this is not the case it is more efficient to write a transformer that directly implements
- * generate records.
+ * Developers should use this class when the format being transformed supports
+ * reading 1 internal record from the stream at a time. If this is not the case
+ * it is more efficient to write a transformer that directly implements generate
+ * records.
  *
  */
 public abstract class InputStreamTransformer extends Transformer {
@@ -57,6 +58,8 @@ public abstract class InputStreamTransformer extends Transformer {
 	 * 
 	 * @param config
 	 *            The SourceCommonsConfig implementation.
+	 * @param info
+	 *            The TransformerInfo for this transformer.
 	 */
 	protected InputStreamTransformer(SourceCommonConfig config, TransformerInfo info) {
 		super(config, info);
@@ -70,8 +73,9 @@ public abstract class InputStreamTransformer extends Transformer {
 	 */
 	@Override
 	public Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord) {
-		IOSupplier<InputStream> inputStreamSupplier = info.allFeatures(FEATURE_INTERNAL_COMPRESSION) ? sourceRecord.getInputStream(CompressionType.NONE) :
-				sourceRecord.getInputStream(config.getCompressionType());
+		IOSupplier<InputStream> inputStreamSupplier = info.allFeatures(FEATURE_INTERNAL_COMPRESSION)
+				? sourceRecord.getInputStream(CompressionType.NONE)
+				: sourceRecord.getInputStream(config.getCompressionType());
 		final StreamSpliterator spliterator = createSpliterator(inputStreamSupplier,
 				sourceRecord.estimateInputStreamLength(), sourceRecord.getContext());
 		return StreamSupport.stream(spliterator, false).onClose(spliterator::close).skip(sourceRecord.getRecordCount());

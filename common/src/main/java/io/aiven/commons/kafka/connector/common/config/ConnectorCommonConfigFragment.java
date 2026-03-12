@@ -155,13 +155,12 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 												"If not set the key converter schema registry will be enabled if the %s parameter enabled.",
 												SCHEMA_REGISTRY_ENABLE))
 						.since(siBuilder.version("1.0.0").build()).build())
-		.define(ExtendedConfigKey.builder(DATA_COMPRESSION_TYPE)
-				.group(COMMON_GROUP).orderInGroup(++connectorCommon)
-				.validator(EnumValidator.caseInsensitive(CompressionType.class))
-				.defaultValue(CompressionType.NONE.name())
-				.documentation(
-						"The compression to use to read/write data streams from the data storage.  Note: different backends define the data stream differently.  Please check the documentation")
-				.since(siBuilder.version("1.0.0").build()).build());
+				.define(ExtendedConfigKey.builder(DATA_COMPRESSION_TYPE).group(COMMON_GROUP)
+						.orderInGroup(++connectorCommon).validator(EnumValidator.caseInsensitive(CompressionType.class))
+						.defaultValue(CompressionType.NONE.name())
+						.documentation(
+								"The compression to use to read/write data streams from the data storage.  Note: different backends define the data stream differently.  Please check the documentation")
+						.since(siBuilder.version("1.0.0").build()).build());
 
 		return configDef;
 	}
@@ -253,6 +252,11 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 		super.validate(configMap);
 	}
 
+	/**
+	 * Gets the compression type expected for I/O to storage.
+	 * 
+	 * @return the compression type expected for I/O to storage.
+	 */
 	public CompressionType getCompressionType() {
 		return CompressionType.forName(getString(DATA_COMPRESSION_TYPE).toUpperCase(Locale.ROOT));
 	}
@@ -430,6 +434,13 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 			return setValue(KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE, enableRegistry);
 		}
 
+		/**
+		 * Sets the compression type expected for I/O to storage.
+		 * 
+		 * @param compressionType
+		 *            the compression type expected for I/O to storage.
+		 * @return this
+		 */
 		public Setter compressionType(CompressionType compressionType) {
 			return setValue(DATA_COMPRESSION_TYPE, compressionType.name());
 		}

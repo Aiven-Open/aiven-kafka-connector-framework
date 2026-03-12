@@ -29,19 +29,14 @@ import io.aiven.commons.kafka.connector.source.testFixture.format.CsvTestDataFix
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -96,7 +91,6 @@ final class CsvTransformerTest extends IORecordTransformerTest {
 	protected Function<Object, String> messageExtractor() {
 		return sv -> ((Map) sv).get("value").toString();
 	}
-
 
 	private EvolvingSourceRecord createEvolvingSourceRecord(String nativeItem) {
 		final ExampleSourceNativeInfo exp = new ExampleSourceNativeInfo(

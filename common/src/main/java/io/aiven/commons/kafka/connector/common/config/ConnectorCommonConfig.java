@@ -113,6 +113,11 @@ public class ConnectorCommonConfig extends CommonConfig {
 		return connectorConfigFragment.isKeyConverterRegistryEnabled();
 	}
 
+	/**
+	 * Gets the compression type expected for I/O to storage.
+	 * 
+	 * @return the compression type expected for I/O to storage.
+	 */
 	final public CompressionType getCompressionType() {
 		return connectorConfigFragment.getCompressionType();
 	}

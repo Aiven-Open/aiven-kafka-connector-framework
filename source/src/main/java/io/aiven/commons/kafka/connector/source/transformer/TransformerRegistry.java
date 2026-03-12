@@ -18,10 +18,8 @@ package io.aiven.commons.kafka.connector.source.transformer;
 import org.apache.kafka.common.config.ConfigDef;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -82,7 +80,9 @@ public class TransformerRegistry {
 
 	/**
 	 * Gets the list of transformer info that have any of the feature flags
-	 * @param featureFlags one or more features flags "or"ed together.
+	 * 
+	 * @param featureFlags
+	 *            one or more features flags "or"ed together.
 	 * @return the list of TransformerInfo that contain any of the feature flags.
 	 */
 	public List<TransformerInfo> anyFeature(int featureFlags) {
@@ -90,8 +90,11 @@ public class TransformerRegistry {
 	}
 
 	/**
-	 * Gets the list of transformer info for this registry that have all the specified feature flags
-	 * @param featureFlags one or more features flags "or"ed together.
+	 * Gets the list of transformer info for this registry that have all the
+	 * specified feature flags
+	 * 
+	 * @param featureFlags
+	 *            one or more features flags "or"ed together.
 	 * @return the list of TransformerInfo that contain all of the feature flags.
 	 */
 	public List<TransformerInfo> allFeatures(int featureFlags) {
@@ -110,8 +113,8 @@ public class TransformerRegistry {
 	}
 
 	/**
-	 * Gets a TransformerInfo for the specific name.
-	 * The TransformerInfo with the first matching name is returned.  If multiple names match the string the first
+	 * Gets a TransformerInfo for the specific name. The TransformerInfo with the
+	 * first matching name is returned. If multiple names match the string the first
 	 * lexically sorted one will be returned.
 	 *
 	 *
@@ -120,8 +123,8 @@ public class TransformerRegistry {
 	 * @return the TransformerInfo or {@code null} if not found.
 	 */
 	public TransformerInfo getIgnoreCase(String name) {
-		return transformers.entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(name))
-				.map(e -> e.getValue()).findAny().orElse(null);
+		return transformers.entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(name)).map(e -> e.getValue())
+				.findAny().orElse(null);
 	}
 
 	/**
