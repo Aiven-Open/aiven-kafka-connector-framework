@@ -43,8 +43,8 @@ public class JsonTransformer extends InputStreamTransformer {
 	 * 
 	 * @return the registry information for this transformer.
 	 */
-	public static TransformerRegistry.TransformerInfo info() {
-		return new TransformerRegistry.TransformerInfo("JSONL", JsonTransformer.class, true,
+	public static TransformerInfo info() {
+		return new TransformerInfo("JSONL", JsonTransformer.class, TransformerInfo.FEATURE_NONE,
 				"Parses the input stream as a collection of JSON objects separated by end-of-line characters or the end of the input.  Produces a Kafka record for each JSON object.");
 	}
 
@@ -59,7 +59,7 @@ public class JsonTransformer extends InputStreamTransformer {
 	 *            the SourceCommonConfig instance to use.
 	 */
 	public JsonTransformer(final SourceCommonConfig config) {
-		super(config);
+		super(config, info());
 		jsonConverter = new JsonConverter();
 		jsonConverter.configure(Map.of("schemas.enable", "false"), false);
 	}

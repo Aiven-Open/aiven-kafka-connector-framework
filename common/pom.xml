@@ -41,6 +41,11 @@
     </dependency>
     <dependency>
       <groupId>io.aiven.commons</groupId>
+      <artifactId>io</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
       <artifactId>collections</artifactId>
       <version>0.0.1-SNAPSHOT</version>
       <scope>compile</scope>
@@ -58,6 +63,10 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-text</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
     </dependency>
   </dependencies>
   <build>

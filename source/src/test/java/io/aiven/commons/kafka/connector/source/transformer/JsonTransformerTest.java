@@ -16,6 +16,8 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.io.compression.CompressionType;
+import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.testFixture.format.JsonTestDataFixture;
@@ -31,9 +33,11 @@ import java.util.function.Function;
 final class JsonTransformerTest extends IORecordTransformerTest {
 
 	@Override
-	protected Transformer setupTransformer() {
+	protected Transformer setupTransformer(CompressionType compressionType) {
 		Map<String, String> props = new HashMap<>();
 		SourceConfigFragment.setter(props).transformerCache(100);
+		ConnectorCommonConfigFragment.setter(props).compressionType(compressionType);
+
 		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
 				props);
 		return new JsonTransformer(sourceCommonConfig);

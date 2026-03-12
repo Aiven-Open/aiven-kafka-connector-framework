@@ -32,15 +32,20 @@ import java.util.stream.Stream;
 public abstract class Transformer implements AutoCloseable {
 	/** The source configuration for the Kafka task. */
 	protected final SourceCommonConfig config;
+	/** The info for this Transformer */
+	protected final TransformerInfo info;
 
 	/**
 	 * Constructor.
 	 * 
 	 * @param config
 	 *            The configuration for the source connector.
+	 * @param info
+	 *            The TransformerInfo for this transformer.
 	 */
-	protected Transformer(SourceCommonConfig config) {
+	protected Transformer(SourceCommonConfig config, TransformerInfo info) {
 		this.config = config;
+		this.info = info;
 	}
 	/**
 	 * Gets a stream of SchemaAndValue records from the input stream.

@@ -15,6 +15,7 @@
  */
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.io.compression.CompressionType;
 import io.aiven.commons.kafka.connector.source.AbstractSourceNativeInfo;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeItem;
@@ -49,7 +50,7 @@ public abstract class IOTransformerTest {
 	 *
 	 * @return a configured Transformer.
 	 */
-	protected abstract Transformer setupTransformer();
+	protected abstract Transformer setupTransformer(CompressionType compressionType);
 
 	/**
 	 * Generate one buffer for the transformer to read. This must be a valid data
@@ -77,12 +78,17 @@ public abstract class IOTransformerTest {
 
 	@BeforeEach
 	final void setUp() {
-		transformer = setupTransformer();
+		transformer = setupTransformer(CompressionType.NONE);
 	}
 
 	@AfterEach
 	final void teardown() throws Exception {
 		transformer.close();
+	}
+
+	@Test
+	void verifyInfo() {
+		assertThat(transformer.info.transformerClass()).isEqualTo(transformer.getClass());
 	}
 
 	/**

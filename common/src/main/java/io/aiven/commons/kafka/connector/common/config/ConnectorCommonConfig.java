@@ -18,6 +18,7 @@
  */
 package io.aiven.commons.kafka.connector.common.config;
 
+import io.aiven.commons.io.compression.CompressionType;
 import io.aiven.commons.kafka.config.CommonConfig;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 
@@ -110,5 +111,14 @@ public class ConnectorCommonConfig extends CommonConfig {
 	 */
 	final public boolean isKeyConverterRegistryEnabled() {
 		return connectorConfigFragment.isKeyConverterRegistryEnabled();
+	}
+
+	/**
+	 * Gets the compression type expected for I/O to storage.
+	 * 
+	 * @return the compression type expected for I/O to storage.
+	 */
+	final public CompressionType getCompressionType() {
+		return connectorConfigFragment.getCompressionType();
 	}
 }

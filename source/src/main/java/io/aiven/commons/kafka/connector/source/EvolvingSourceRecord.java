@@ -16,6 +16,7 @@
 
 package io.aiven.commons.kafka.connector.source;
 
+import io.aiven.commons.io.compression.CompressionType;
 import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.errors.ConnectException;
@@ -99,12 +100,16 @@ public final class EvolvingSourceRecord {
 	/**
 	 * Gets the input stream supplier.
 	 * 
+	 * @param compressionType
+	 *            The expected compression for the input stream. Resulting stream
+	 *            will be automatically decompressed.
 	 * @return the InputStream supplier.
 	 * @throws UnsupportedOperationException
 	 *             if the sourceNativeInfo does not support input stream.
 	 */
-	public IOSupplier<InputStream> getInputStream() throws UnsupportedOperationException {
-		return sourceNativeInfo.getInputStreamSupplier();
+	public IOSupplier<InputStream> getInputStream(CompressionType compressionType)
+			throws UnsupportedOperationException {
+		return compressionType.decompress(sourceNativeInfo.getInputStreamSupplier());
 	}
 
 	/**

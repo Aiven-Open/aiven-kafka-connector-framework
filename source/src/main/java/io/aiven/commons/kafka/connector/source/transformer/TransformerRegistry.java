@@ -20,7 +20,6 @@ import org.apache.kafka.common.config.ConfigDef;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -63,7 +62,7 @@ public class TransformerRegistry {
 	/**
 	 * Creates a validator that restricts input to the transformer names in this
 	 * registry.
-	 * 
+	 *
 	 * @return the Validator.
 	 */
 	public ConfigDef.Validator validator() {
@@ -80,14 +79,52 @@ public class TransformerRegistry {
 	}
 
 	/**
-	 * Gets the Transformer info for the specific name.
+	 * Gets the list of transformer info that have any of the feature flags
+	 * 
+	 * @param featureFlags
+	 *            one or more features flags "or"ed together.
+	 * @return the list of TransformerInfo that contain any of the feature flags.
+	 */
+	public List<TransformerInfo> anyFeature(int featureFlags) {
+		return transformers.values().stream().filter(ti -> ti.anyFeatures(featureFlags)).toList();
+	}
+
+	/**
+	 * Gets the list of transformer info for this registry that have all the
+	 * specified feature flags
+	 * 
+	 * @param featureFlags
+	 *            one or more features flags "or"ed together.
+	 * @return the list of TransformerInfo that contain all of the feature flags.
+	 */
+	public List<TransformerInfo> allFeatures(int featureFlags) {
+		return transformers.values().stream().filter(ti -> ti.allFeatures(featureFlags)).toList();
+	}
+
+	/**
+	 * Gets the TransformerInfo for the specific name.
 	 * 
 	 * @param name
 	 *            the name of the transformer.
 	 * @return the TransformerInfo or {@code null} if not found.
 	 */
 	public TransformerInfo get(String name) {
-		return transformers.get(name.toUpperCase(Locale.ROOT));
+		return transformers.get(name);
+	}
+
+	/**
+	 * Gets a TransformerInfo for the specific name. The TransformerInfo with the
+	 * first matching name is returned. If multiple names match the string the first
+	 * lexically sorted one will be returned.
+	 *
+	 *
+	 * @param name
+	 *            the name of the transformer.
+	 * @return the TransformerInfo or {@code null} if not found.
+	 */
+	public TransformerInfo getIgnoreCase(String name) {
+		return transformers.entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(name)).map(e -> e.getValue())
+				.findFirst().orElse(null);
 	}
 
 	/**
@@ -101,20 +138,6 @@ public class TransformerRegistry {
 	}
 
 	/**
-	 * The TransformerInfo record
-	 * 
-	 * @param commonName
-	 *            the common name for the class.
-	 * @param transformerClass
-	 *            the class.
-	 * @param requiresInputStream
-	 *            true if the transformer requires/supports input stream.
-	 */
-	public record TransformerInfo(String commonName, Class<? extends Transformer> transformerClass,
-			boolean requiresInputStream, String description) {
-	}
-
-	/**
 	 * A TransformerRegistry builder.
 	 */
 	public static class Builder {
@@ -122,14 +145,16 @@ public class TransformerRegistry {
 		private final Map<String, TransformerInfo> transformers = new HashMap<>();
 
 		/**
-		 * Adds a TransformerInfo to the builder.
+		 * Adds one or more TransformerInfo records to the builder.
 		 * 
-		 * @param info
-		 *            the info to add.
+		 * @param infos
+		 *            the TransformerInfo records to add.
 		 * @return this
 		 */
-		public Builder add(TransformerInfo info) {
-			transformers.put(info.commonName.toUpperCase(Locale.ROOT), info);
+		public Builder add(TransformerInfo... infos) {
+			for (TransformerInfo info : infos) {
+				transformers.put(info.commonName(), info);
+			}
 			return this;
 		}
 
