@@ -159,10 +159,10 @@ public class TransformerRegistry {
 		private final Map<String, TransformerInfo> transformers = new HashMap<>();
 
 		/**
-		 * Adds a TransformerInfo to the builder.
+		 * Adds one or more TransformerInfo records to the builder.
 		 * 
 		 * @param infos
-		 *            the info to add.
+		 *            the TransformerInfo records to add.
 		 * @return this
 		 */
 		public Builder add(TransformerInfo... infos) {
