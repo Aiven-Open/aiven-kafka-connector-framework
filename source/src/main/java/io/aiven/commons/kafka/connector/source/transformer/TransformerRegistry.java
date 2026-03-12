@@ -61,7 +61,8 @@ public class TransformerRegistry {
 	}
 
 	/**
-	 * Creates a validator that restricts input to the transformer names in this registry.
+	 * Creates a validator that restricts input to the transformer names in this
+	 * registry.
 	 * 
 	 * @return the Validator.
 	 */
