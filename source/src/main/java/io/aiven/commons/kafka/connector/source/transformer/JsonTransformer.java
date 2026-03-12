@@ -44,7 +44,8 @@ public class JsonTransformer extends InputStreamTransformer {
 	 * @return the registry information for this transformer.
 	 */
 	public static TransformerRegistry.TransformerInfo info() {
-		return new TransformerRegistry.TransformerInfo("JSON", JsonTransformer.class, true);
+		return new TransformerRegistry.TransformerInfo("JSONL", JsonTransformer.class, true,
+				"Parses the input stream as a collection of JSON objects separated by end-of-line characters or the end of the input.  Produces a Kafka record for each JSON object.");
 	}
 
 	private final JsonConverter jsonConverter;
