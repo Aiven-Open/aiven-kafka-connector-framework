@@ -31,10 +31,14 @@ public class TransformerRegistryTest {
 			new TransformerInfo("feat3", Transformer.class, FEATURE1 | FEATURE2, "oooo two features"),
 			new TransformerInfo("feat4", Transformer.class, 4, "A feature not defined with a constant"),
 			new TransformerInfo("private", Transformer.class, PRIVATE_FEATURE1, "The private feature"),
-			new TransformerInfo("private + 1", Transformer.class, PRIVATE_FEATURE1 | FEATURE1, "private feature and then some"),
-			new TransformerInfo("private + 2", Transformer.class, PRIVATE_FEATURE1 | FEATURE2, "private featuer and the some different."),
-			new TransformerInfo("private + 3", Transformer.class, PRIVATE_FEATURE1 | FEATURE1 | FEATURE2, "private feature and then some more"),
-			new TransformerInfo("private + 4", Transformer.class, PRIVATE_FEATURE1 | 4, "private feature and then our undefined  feature")};
+			new TransformerInfo("private + 1", Transformer.class, PRIVATE_FEATURE1 | FEATURE1,
+					"private feature and then some"),
+			new TransformerInfo("private + 2", Transformer.class, PRIVATE_FEATURE1 | FEATURE2,
+					"private featuer and the some different."),
+			new TransformerInfo("private + 3", Transformer.class, PRIVATE_FEATURE1 | FEATURE1 | FEATURE2,
+					"private feature and then some more"),
+			new TransformerInfo("private + 4", Transformer.class, PRIVATE_FEATURE1 | 4,
+					"private feature and then our undefined  feature")};
 
 	private TransformerRegistry underTest = TransformerRegistry.builder().add(infos).build();
 
@@ -44,7 +48,9 @@ public class TransformerRegistryTest {
 		assertThat(underTest.get("missing")).isNull();
 		assertThat(underTest.get("No features")).isNull();
 		TransformerRegistry registry2 = TransformerRegistry.builder().add(underTest)
-				.add(new TransformerInfo("No features", Transformer.class, TransformerInfo.FEATURE_NONE, "Name with a capital letter")).build();
+				.add(new TransformerInfo("No features", Transformer.class, TransformerInfo.FEATURE_NONE,
+						"Name with a capital letter"))
+				.build();
 		assertThat(registry2.get("No features")).isNotNull();
 
 	}
@@ -56,7 +62,9 @@ public class TransformerRegistryTest {
 		assertThat(underTest.getIgnoreCase("No features")).isNotNull();
 
 		TransformerRegistry registry2 = TransformerRegistry.builder().add(underTest)
-				.add(new TransformerInfo("No features", Transformer.class, TransformerInfo.FEATURE_NONE, "Name with a capital letter")).build();
+				.add(new TransformerInfo("No features", Transformer.class, TransformerInfo.FEATURE_NONE,
+						"Name with a capital letter"))
+				.build();
 		assertThat(registry2.getIgnoreCase("no features")).isNotNull();
 		assertThat(registry2.getIgnoreCase("missing")).isNull();
 		assertThat(registry2.getIgnoreCase("No features")).isNotNull();
