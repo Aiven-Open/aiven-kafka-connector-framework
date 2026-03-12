@@ -33,7 +33,7 @@ public class TransformerInfoTest {
 			"private + 1, 16777217, true, false, true", "private + 2, 16777218, false, true, true",
 			"private + 3, 16777219, true, true, true", "private + 4 , 16777220, false, false, true",})
 	public void anyFeatures(String name, int flag, boolean f1, boolean f2, boolean f3) {
-		underTest = new TransformerInfo(name, Transformer.class, flag);
+		underTest = new TransformerInfo(name, Transformer.class, flag, "anyFeatures test");
 		assertThat(underTest.anyFeatures(FEATURE1)).as("f1").isEqualTo(f1);
 		assertThat(underTest.anyFeatures(FEATURE2)).as("f2").isEqualTo(f2);
 		assertThat(underTest.anyFeatures(PRIVATE_FEATURE1)).as("private").isEqualTo(f3);
@@ -50,7 +50,7 @@ public class TransformerInfoTest {
 			"private + 1, 16777217, true, false, true", "private + 2, 16777218, false, true, true",
 			"private + 3, 16777219, true, true, true", "private + 4 , 16777220, false, false, true",})
 	public void allFeatures(String name, int flag, boolean f1, boolean f2, boolean f3) {
-		underTest = new TransformerInfo(name, Transformer.class, flag);
+		underTest = new TransformerInfo(name, Transformer.class, flag, "allFeatures test");
 		assertThat(underTest.allFeatures(FEATURE1)).as("f1").isEqualTo(f1);
 		assertThat(underTest.allFeatures(FEATURE2)).as("f2").isEqualTo(f2);
 		assertThat(underTest.allFeatures(PRIVATE_FEATURE1)).as("private").isEqualTo(f3);
@@ -65,7 +65,7 @@ public class TransformerInfoTest {
 	@CsvSource({"no features, 0", "feat1, 1", "feat2, 2", "feat3, 3", "feat4, 4", "private, 16777216",
 			"private, 16777217", "private, 16777218", "private, 16777219", "private, 16777220",})
 	public void noFeatures(String name, int flag) {
-		underTest = new TransformerInfo(name, Transformer.class, flag);
+		underTest = new TransformerInfo(name, Transformer.class, flag, "noFeatures test");
 		assertThat(underTest.noFeatures()).isEqualTo(flag == 0);
 	}
 }

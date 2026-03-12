@@ -50,8 +50,8 @@ public class ByteArrayTransformer extends InputStreamTransformer {
 	 * 
 	 * @return the registry information for this transformer.
 	 */
-	public static TransformerRegistry.TransformerInfo info() {
-		return new TransformerRegistry.TransformerInfo("Bytes", ByteArrayTransformer.class, TransformerInfo.FEATURE_NONE,
+	public static TransformerInfo info() {
+		return new TransformerInfo("Bytes", ByteArrayTransformer.class, TransformerInfo.FEATURE_NONE,
 				"Passes the input stream bytes as Kafka records.  Will split the input stream into multiple records if the"
 						+ " number of bytes exceeds the specified maximum buffer size.");
 	}

@@ -75,8 +75,8 @@ public class CsvTransformer extends Transformer {
 	 * 
 	 * @return the registry information for this transformer.
 	 */
-	public static TransformerRegistry.TransformerInfo info() {
-		return new TransformerRegistry.TransformerInfo("CSV", CsvTransformer.class, TransformerInfo.FEATURE_NONE,
+	public static TransformerInfo info() {
+		return new TransformerInfo("CSV", CsvTransformer.class, TransformerInfo.FEATURE_NONE,
 				"Parses the input bytes as a collection of comma-separated-value records.  Returns one Kafka record for each CSV record as defined in RFC4180.  Records are separated by end-of-line characters.");
 	}
 

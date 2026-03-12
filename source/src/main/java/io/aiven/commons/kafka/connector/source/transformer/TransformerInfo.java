@@ -24,8 +24,10 @@ package io.aiven.commons.kafka.connector.source.transformer;
  *            the Transformer class.
  * @param featureFlags
  *            A set of feature flags "or"ed together.
+ * @param description A description of this transformer.
  */
-public record TransformerInfo(String commonName, Class<? extends Transformer> transformerClass, int featureFlags) {
+public record TransformerInfo(String commonName, Class<? extends Transformer> transformerClass, int featureFlags,
+							  String description) {
 	/**
 	 * Feature flag signifying: No additional features. Used in constructor. Should
 	 * not be used for test lack of features. Use {@link #noFeatures()} instead.

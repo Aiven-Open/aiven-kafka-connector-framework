@@ -124,7 +124,7 @@ public class TransformerRegistry {
 	 */
 	public TransformerInfo getIgnoreCase(String name) {
 		return transformers.entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase(name)).map(e -> e.getValue())
-				.findAny().orElse(null);
+				.findFirst().orElse(null);
 	}
 
 	/**
@@ -135,20 +135,6 @@ public class TransformerRegistry {
 	 */
 	public TransformerInfo any() {
 		return transformers.values().stream().findAny().orElse(null);
-	}
-
-	/**
-	 * The TransformerInfo record
-	 * 
-	 * @param commonName
-	 *            the common name for the class.
-	 * @param transformerClass
-	 *            the class.
-	 * @param requiresInputStream
-	 *            true if the transformer requires/supports input stream.
-	 */
-	public record TransformerInfo(String commonName, Class<? extends Transformer> transformerClass,
-			boolean requiresInputStream, String description) {
 	}
 
 	/**

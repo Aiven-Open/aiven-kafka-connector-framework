@@ -25,16 +25,16 @@ public class TransformerRegistryTest {
 	private static int PRIVATE_FEATURE1 = 1 << (TransformerInfo.PRIVATE_FEATURE_SHIFT + 0);
 
 	private TransformerInfo[] infos = {
-			new TransformerInfo("no features", Transformer.class, TransformerInfo.FEATURE_NONE),
-			new TransformerInfo("feat1", Transformer.class, FEATURE1),
-			new TransformerInfo("feat2", Transformer.class, FEATURE2),
-			new TransformerInfo("feat3", Transformer.class, FEATURE1 | FEATURE2),
-			new TransformerInfo("feat4", Transformer.class, 4),
-			new TransformerInfo("private", Transformer.class, PRIVATE_FEATURE1),
-			new TransformerInfo("private + 1", Transformer.class, PRIVATE_FEATURE1 | FEATURE1),
-			new TransformerInfo("private + 2", Transformer.class, PRIVATE_FEATURE1 | FEATURE2),
-			new TransformerInfo("private + 3", Transformer.class, PRIVATE_FEATURE1 | FEATURE1 | FEATURE2),
-			new TransformerInfo("private + 4", Transformer.class, PRIVATE_FEATURE1 | 4)};
+			new TransformerInfo("no features", Transformer.class, TransformerInfo.FEATURE_NONE, "mo features"),
+			new TransformerInfo("feat1", Transformer.class, FEATURE1, "the first feature"),
+			new TransformerInfo("feat2", Transformer.class, FEATURE2, "the second feature"),
+			new TransformerInfo("feat3", Transformer.class, FEATURE1 | FEATURE2, "oooo two features"),
+			new TransformerInfo("feat4", Transformer.class, 4, "A feature not defined with a constant"),
+			new TransformerInfo("private", Transformer.class, PRIVATE_FEATURE1, "The private feature"),
+			new TransformerInfo("private + 1", Transformer.class, PRIVATE_FEATURE1 | FEATURE1, "private feature and then some"),
+			new TransformerInfo("private + 2", Transformer.class, PRIVATE_FEATURE1 | FEATURE2, "private featuer and the some different."),
+			new TransformerInfo("private + 3", Transformer.class, PRIVATE_FEATURE1 | FEATURE1 | FEATURE2, "private feature and then some more"),
+			new TransformerInfo("private + 4", Transformer.class, PRIVATE_FEATURE1 | 4, "private feature and then our undefined  feature")};
 
 	private TransformerRegistry underTest = TransformerRegistry.builder().add(infos).build();
 
@@ -43,6 +43,10 @@ public class TransformerRegistryTest {
 		assertThat(underTest.get("no features")).isNotNull();
 		assertThat(underTest.get("missing")).isNull();
 		assertThat(underTest.get("No features")).isNull();
+		TransformerRegistry registry2 = TransformerRegistry.builder().add(underTest)
+				.add(new TransformerInfo("No features", Transformer.class, TransformerInfo.FEATURE_NONE, "Name with a capital letter")).build();
+		assertThat(registry2.get("No features")).isNotNull();
+
 	}
 
 	@Test
@@ -52,14 +56,14 @@ public class TransformerRegistryTest {
 		assertThat(underTest.getIgnoreCase("No features")).isNotNull();
 
 		TransformerRegistry registry2 = TransformerRegistry.builder().add(underTest)
-				.add(new TransformerInfo("no features", Transformer.class, TransformerInfo.FEATURE_NONE)).build();
+				.add(new TransformerInfo("No features", Transformer.class, TransformerInfo.FEATURE_NONE, "Name with a capital letter")).build();
 		assertThat(registry2.getIgnoreCase("no features")).isNotNull();
 		assertThat(registry2.getIgnoreCase("missing")).isNull();
 		assertThat(registry2.getIgnoreCase("No features")).isNotNull();
 
-		assertThat(registry2.getIgnoreCase("no features").commonName()).isEqualTo("no features");
-		assertThat(registry2.getIgnoreCase("No features").commonName()).isEqualTo("no features");
-
+		assertThat(registry2.getIgnoreCase("no features").commonName()).isEqualTo("No features");
+		assertThat(registry2.getIgnoreCase("No features").commonName()).isEqualTo("No features");
+		assertThat(registry2.getIgnoreCase("no Features").commonName()).isEqualTo("No features");
 	}
 
 	@Test
