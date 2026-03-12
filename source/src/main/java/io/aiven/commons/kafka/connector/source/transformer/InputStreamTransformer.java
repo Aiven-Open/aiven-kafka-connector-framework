@@ -16,6 +16,7 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.io.compression.CompressionType;
 import io.aiven.commons.kafka.connector.source.AbstractSourceNativeInfo;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -31,6 +32,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static io.aiven.commons.kafka.connector.source.transformer.TransformerInfo.FEATURE_INTERNAL_COMPRESSION;
+
 /**
  * Extracts data from the EvolvingSourceRecord to a Key SchemaAndValue object
  * and a stream of SchemaAndValue objects for the values.
@@ -40,6 +43,10 @@ import java.util.stream.StreamSupport;
  *
  * This implementation of Transformer assumes that the SourceRecord supports
  * returning an inputStream.
+ *
+ * Developers should use this class when the format being transformed supports reading 1 internal record from the
+ * stream at a time.  If this is not the case it is more efficient to write a transformer that directly implements
+ * generate records.
  *
  */
 public abstract class InputStreamTransformer extends Transformer {
@@ -51,8 +58,8 @@ public abstract class InputStreamTransformer extends Transformer {
 	 * @param config
 	 *            The SourceCommonsConfig implementation.
 	 */
-	protected InputStreamTransformer(SourceCommonConfig config) {
-		super(config);
+	protected InputStreamTransformer(SourceCommonConfig config, TransformerInfo info) {
+		super(config, info);
 	}
 	/**
 	 * Gets a stream of SchemaAndValue records from the input stream.
@@ -63,8 +70,9 @@ public abstract class InputStreamTransformer extends Transformer {
 	 */
 	@Override
 	public Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord) {
-
-		final StreamSpliterator spliterator = createSpliterator(sourceRecord.getInputStream(),
+		IOSupplier<InputStream> inputStreamSupplier = info.allFeatures(FEATURE_INTERNAL_COMPRESSION) ? sourceRecord.getInputStream(CompressionType.NONE) :
+				sourceRecord.getInputStream(config.getCompressionType());
+		final StreamSpliterator spliterator = createSpliterator(inputStreamSupplier,
 				sourceRecord.estimateInputStreamLength(), sourceRecord.getContext());
 		return StreamSupport.stream(spliterator, false).onClose(spliterator::close).skip(sourceRecord.getRecordCount());
 	}

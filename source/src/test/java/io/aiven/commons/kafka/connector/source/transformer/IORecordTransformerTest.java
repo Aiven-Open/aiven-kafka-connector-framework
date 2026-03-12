@@ -16,6 +16,7 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.io.compression.CompressionType;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
@@ -23,7 +24,9 @@ import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -140,5 +143,31 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
 		final Stream<SchemaAndValue> records = transformer.generateRecords(evolvingSourceRecord);
 
 		assertThat(records).isEmpty();
+	}
+
+	@Test
+	final void testReadCompressedData() throws Exception {
+		if (transformer.info.allFeatures(TransformerInfo.FEATURE_INTERNAL_COMPRESSION)) {
+			return;
+		}
+		transformer = setupTransformer(CompressionType.GZIP);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (OutputStream out = CompressionType.GZIP.compress(baos)) {
+			out.write(generateData(25));
+		}
+		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", baos.toByteArray());
+
+		final EvolvingSourceRecord evolvingSourceRecord = createExampleSourceRecord(
+				new ExampleSourceNativeInfo(nativeItem));
+
+		final List<String> expected = new ArrayList<>();
+		for (int i = 0; i < 25; i++) {
+			expected.add(generatedMessagePrefix() + i);
+		}
+
+		final Stream<SchemaAndValue> records = transformer.generateRecords(evolvingSourceRecord);
+
+		assertThat(records).extracting(SchemaAndValue::value).extracting(messageExtractor())
+				.containsExactlyElementsOf(expected);
 	}
 }

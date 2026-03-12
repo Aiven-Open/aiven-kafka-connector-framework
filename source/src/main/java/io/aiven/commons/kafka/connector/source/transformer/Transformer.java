@@ -32,6 +32,8 @@ import java.util.stream.Stream;
 public abstract class Transformer implements AutoCloseable {
 	/** The source configuration for the Kafka task. */
 	protected final SourceCommonConfig config;
+	/** The info for this Transformer */
+	protected final TransformerInfo info;
 
 	/**
 	 * Constructor.
@@ -39,8 +41,9 @@ public abstract class Transformer implements AutoCloseable {
 	 * @param config
 	 *            The configuration for the source connector.
 	 */
-	protected Transformer(SourceCommonConfig config) {
+	protected Transformer(SourceCommonConfig config, TransformerInfo info) {
 		this.config = config;
+		this.info = info;
 	}
 	/**
 	 * Gets a stream of SchemaAndValue records from the input stream.
@@ -51,6 +54,7 @@ public abstract class Transformer implements AutoCloseable {
 	 * @return the stream of values for Kafka SourceRecords.
 	 */
 	public abstract Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord);
+
 
 	/**
 	 * Convert the native key into a Schema and Value for Kafka.

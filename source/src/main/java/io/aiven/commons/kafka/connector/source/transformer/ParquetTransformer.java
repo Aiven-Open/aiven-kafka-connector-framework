@@ -50,7 +50,7 @@ public class ParquetTransformer extends InputStreamTransformer {
 	 * @return the registry information for this transformer.
 	 */
 	public static TransformerRegistry.TransformerInfo info() {
-		return new TransformerRegistry.TransformerInfo("Parquet", ParquetTransformer.class, true,
+		return new TransformerRegistry.TransformerInfo("Parquet", ParquetTransformer.class, TransformerInfo.FEATURE_INTERNAL_COMPRESSION,
 				"Accepts a Parquet file-formatted input stream and creates one Kafka record for every Avro datum encountered.");
 	}
 
@@ -65,7 +65,7 @@ public class ParquetTransformer extends InputStreamTransformer {
 	 *            the configuration for the connector.
 	 */
 	public ParquetTransformer(final SourceCommonConfig config) {
-		super(config);
+		super(config, info());
 		this.avroData = new AvroData(config.getTransformerCacheSize());
 	}
 

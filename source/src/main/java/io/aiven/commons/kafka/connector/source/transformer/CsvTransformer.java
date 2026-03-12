@@ -27,6 +27,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,6 +60,7 @@ import java.util.stream.Stream;
  *      "https://www.ietf.org/archive/id/draft-shafranovich-rfc4180-bis-03.html">RFC-4180</a>
  */
 public class CsvTransformer extends Transformer {
+	private static final Logger LOGGER = LoggerFactory.getLogger(CsvTransformer.class);
 	/** The schema builder */
 	private SchemaBuilder valueSchema;
 	/** The configured CSV parser */
@@ -73,7 +76,7 @@ public class CsvTransformer extends Transformer {
 	 * @return the registry information for this transformer.
 	 */
 	public static TransformerRegistry.TransformerInfo info() {
-		return new TransformerRegistry.TransformerInfo("CSV", CsvTransformer.class, true,
+		return new TransformerRegistry.TransformerInfo("CSV", CsvTransformer.class, TransformerInfo.FEATURE_NONE,
 				"Parses the input bytes as a collection of comma-separated-value records.  Returns one Kafka record for each CSV record as defined in RFC4180.  Records are separated by end-of-line characters.");
 	}
 
@@ -84,7 +87,7 @@ public class CsvTransformer extends Transformer {
 	 *            The configuration for the source connector.
 	 */
 	public CsvTransformer(SourceCommonConfig config) {
-		super(config);
+		super(config, info());
 		CSVFormat.Builder builder = CSVFormat.RFC4180.builder();
 		if (config.isCsvTransformerHeaderEnabled()) {
 			builder.setHeader().setSkipHeaderRecord(true);
@@ -114,12 +117,12 @@ public class CsvTransformer extends Transformer {
 	 */
 	@Override
 	public Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord) {
-
-		try (InputStream inputStream = sourceRecord.getInputStream().get()) {
+		try (InputStream inputStream = sourceRecord.getInputStream(config.getCompressionType()).get()) {
 			return getRecords(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).stream()
 					.skip(sourceRecord.getRecordCount()).map(this::toConnectData);
 		} catch (IOException e) {
-			throw new RuntimeException("Unable to read input stram for " + sourceRecord.getNativeKey(), e);
+			LOGGER.error("Error trying to generate data: {}", e.getMessage(), e);
+			return Stream.empty();
 		}
 
 	}

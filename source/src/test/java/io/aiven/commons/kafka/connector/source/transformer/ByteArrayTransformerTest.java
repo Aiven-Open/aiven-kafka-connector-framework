@@ -16,6 +16,8 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.io.compression.CompressionType;
+import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
@@ -50,8 +52,8 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
 		return ByteArrayDataFixture.generateByteData(4096);
 	}
 	@Override
-	protected Transformer setupTransformer() {
-		return setupTransformer(BUFFER_SIZE);
+	protected Transformer setupTransformer(CompressionType compressionType) {
+		return setupTransformer(compressionType, BUFFER_SIZE);
 	}
 
 	/**
@@ -61,10 +63,11 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
 	 *            the buffer size for the transformer.
 	 * @return the configured transformer.
 	 */
-	private Transformer setupTransformer(int bufferSize) {
+	private Transformer setupTransformer(CompressionType compressionType, int bufferSize) {
 		Map<String, String> props = new HashMap<>();
-		SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
-		setter.transformerBuffer(bufferSize);
+		SourceConfigFragment.setter(props).transformerBuffer(bufferSize);
+		ConnectorCommonConfigFragment.setter(props).compressionType(compressionType);
+
 		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
 				props);
 		return new ByteArrayTransformer(sourceCommonConfig);
@@ -138,7 +141,7 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
 		transformer.close();
 		int bufferSize = bufferFactorCount * BUFFER_SIZE;
 		int byteCount = BUFFER_SIZE * 10;
-		transformer = setupTransformer(bufferSize);
+		transformer = setupTransformer(CompressionType.NONE, bufferSize);
 
 		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
 				ByteArrayDataFixture.generateByteData(byteCount));

@@ -18,17 +18,20 @@
  */
 package io.aiven.commons.kafka.connector.common.config;
 
+import io.aiven.commons.io.compression.CompressionType;
 import io.aiven.commons.kafka.config.CommonConfig;
 import io.aiven.commons.kafka.config.ExtendedConfigKey;
 import io.aiven.commons.kafka.config.SinceInfo;
 import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
 import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
+import io.aiven.commons.kafka.config.validator.EnumValidator;
 import io.aiven.commons.kafka.config.validator.UrlValidator;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigValue;
 
 import java.net.URI;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -65,6 +68,10 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 	 * is set.
 	 */
 	static final String KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE = "key.converter.schema.registry.enable";
+	/**
+	 * The compression used for data I/O to/from the backend.
+	 */
+	static final String DATA_COMPRESSION_TYPE = "data.compression.type";
 
 	/**
 	 * Creates a Setter for this fragment.
@@ -147,7 +154,14 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 										+ String.format(
 												"If not set the key converter schema registry will be enabled if the %s parameter enabled.",
 												SCHEMA_REGISTRY_ENABLE))
-						.since(siBuilder.version("1.0.0").build()).build());
+						.since(siBuilder.version("1.0.0").build()).build())
+		.define(ExtendedConfigKey.builder(DATA_COMPRESSION_TYPE)
+				.group(COMMON_GROUP).orderInGroup(++connectorCommon)
+				.validator(EnumValidator.caseInsensitive(CompressionType.class))
+				.defaultValue(CompressionType.NONE.name())
+				.documentation(
+						"The compression to use to read/write data streams from the data storage.  Note: different backends define the data stream differently.  Please check the documentation")
+				.since(siBuilder.version("1.0.0").build()).build());
 
 		return configDef;
 	}
@@ -237,6 +251,10 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 							SCHEMA_REGISTRY_URL));
 		}
 		super.validate(configMap);
+	}
+
+	public CompressionType getCompressionType() {
+		return CompressionType.forName(getString(DATA_COMPRESSION_TYPE).toUpperCase(Locale.ROOT));
 	}
 
 	/**
@@ -410,6 +428,10 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
 		 */
 		public Setter enableKeyConverterRegistry(boolean enableRegistry) {
 			return setValue(KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE, enableRegistry);
+		}
+
+		public Setter compressionType(CompressionType compressionType) {
+			return setValue(DATA_COMPRESSION_TYPE, compressionType.name());
 		}
 	}
 }

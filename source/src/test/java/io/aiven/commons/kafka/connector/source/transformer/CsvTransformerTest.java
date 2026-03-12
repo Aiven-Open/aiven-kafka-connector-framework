@@ -16,6 +16,8 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
+import io.aiven.commons.io.compression.CompressionType;
+import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
@@ -43,15 +45,22 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-final class CsvTransformerTest {
+final class CsvTransformerTest extends IORecordTransformerTest {
 
 	private CsvTransformer transformer;
 
-	private CsvTransformer setupTransformer() {
+	@Override
+	protected CsvTransformer setupTransformer(CompressionType compressionType) {
 		Map<String, String> props = new HashMap<>();
+		ConnectorCommonConfigFragment.setter(props).compressionType(compressionType);
 		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
 				props);
 		return new CsvTransformer(sourceCommonConfig);
+	}
+
+	@Override
+	protected byte[] generateOneBuffer() throws IOException {
+		return generateData(1);
 	}
 
 	/**
@@ -59,8 +68,8 @@ final class CsvTransformerTest {
 	 *
 	 * @return the string prefix for the data messages.
 	 */
-
-	private String generatedMessagePrefix() {
+	@Override
+	protected String generatedMessagePrefix() {
 		return CsvTestDataFixture.MESSAGE_PREFIX;
 	}
 
@@ -73,9 +82,9 @@ final class CsvTransformerTest {
 	 * @throws IOException
 	 *             on error.
 	 */
-
-	private String generateData(int numberOfRecords) throws IOException {
-		return CsvTestDataFixture.generateCsvRecords(numberOfRecords);
+	@Override
+	protected byte[] generateData(int numberOfRecords) throws IOException {
+		return CsvTestDataFixture.generateCsvRecords(numberOfRecords).getBytes(StandardCharsets.UTF_8);
 	}
 
 	/**
@@ -84,89 +93,16 @@ final class CsvTransformerTest {
 	 *
 	 * @return the message to extract.
 	 */
-	private Function<Object, String> messageExtractor() {
+	protected Function<Object, String> messageExtractor() {
 		return sv -> ((Map) sv).get("value").toString();
 	}
 
-	@BeforeEach
-	void setUp() {
-		transformer = setupTransformer();
-	}
-
-	@AfterEach
-	void teardown() throws Exception {
-		transformer.close();
-	}
-
-	@Test
-	void testReadRecordsInvalidData() throws IOException {
-		final String nativeItem = "A-bad-data-block";
-
-		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
-		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
-		final List<Object> recs = records.collect(Collectors.toList());
-		assertThat(recs).isEmpty();
-	}
-
-	@Test
-	void testReadData() throws Exception {
-		final String nativeItem = generateData(25);
-
-		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
-
-		final List<String> expected = new ArrayList<>();
-		for (int i = 0; i < 25; i++) {
-			expected.add(generatedMessagePrefix() + i);
-		}
-
-		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
-		assertThat(records).extracting(SchemaAndValue::value).extracting(messageExtractor())
-				.containsExactlyElementsOf(expected);
-	}
-
-	@Test
-	void testReadRecordsSkipFew() throws Exception {
-		final String nativeItem = generateData(20);
-
-		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
-		// skip 5 records -- we have to set the record after the read because the
-		// getOffsetManagerEntry() creates a defensive copy
-		final ExampleOffsetManagerEntry entry = (ExampleOffsetManagerEntry) sourceRecord.getOffsetManagerEntry();
-		entry.setRecordCount(5);
-		sourceRecord.setOffsetManagerEntry(entry);
-
-		final List<String> expected = new ArrayList<>();
-		for (int i = 5; i < 20; i++) {
-			expected.add(generatedMessagePrefix() + i);
-		}
-		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
-
-		assertThat(records).extracting(SchemaAndValue::value).extracting(messageExtractor())
-				.containsExactlyElementsOf(expected);
-	}
 
 	private EvolvingSourceRecord createEvolvingSourceRecord(String nativeItem) {
 		final ExampleSourceNativeInfo exp = new ExampleSourceNativeInfo(
 				new ExampleNativeItem(nativeItem, nativeItem.getBytes(StandardCharsets.UTF_8)));
 		return new EvolvingSourceRecord(exp, new ExampleOffsetManagerEntry(nativeItem, "group1"),
 				new Context(nativeItem));
-	}
-
-	@Test
-	void testReadRecordsSkipMoreRecordsThanExist() throws Exception {
-		final String nativeItem = generateData(20);
-
-		final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
-		// skip 25 records -- we have to set the record after the read because the
-		// getOffsetManagerEntry() creates a defensive copy
-		final ExampleOffsetManagerEntry entry = (ExampleOffsetManagerEntry) sourceRecord.getOffsetManagerEntry();
-		entry.setRecordCount(25);
-		sourceRecord.setOffsetManagerEntry(entry);
-
-		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
-
-		assertThat(records).isEmpty();
-
 	}
 
 	@Test

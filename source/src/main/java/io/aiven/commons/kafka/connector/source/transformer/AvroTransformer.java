@@ -44,7 +44,7 @@ public class AvroTransformer extends InputStreamTransformer {
 	 * @return the registry information for this transformer.
 	 */
 	public static TransformerRegistry.TransformerInfo info() {
-		return new TransformerRegistry.TransformerInfo("Avro", AvroTransformer.class, true,
+		return new TransformerRegistry.TransformerInfo("Avro", AvroTransformer.class, TransformerInfo.FEATURE_NONE,
 				"Accepts an Avro file-formatted input stream and creates one Kafka record for every Avro datum encountered.");
 	}
 
@@ -59,7 +59,7 @@ public class AvroTransformer extends InputStreamTransformer {
 	 *            The configuration for this connector.
 	 */
 	public AvroTransformer(final SourceCommonConfig config) {
-		super(config);
+		super(config, info());
 		this.avroData = new AvroData(config.getTransformerCacheSize());
 	}
 
