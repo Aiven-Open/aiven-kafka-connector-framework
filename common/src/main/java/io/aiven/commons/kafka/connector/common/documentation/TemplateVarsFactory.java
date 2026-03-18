@@ -33,6 +33,12 @@ import java.util.function.Supplier;
 @ValidScope({"application"})
 public class TemplateVarsFactory {
 	/**
+	 * default constructor
+	 */
+	public TemplateVarsFactory() {
+		// do nothing
+	}
+	/**
 	 * Constructs the TemplateVariableRegistry for the named class that will create
 	 * an instance of TemplateVariableRegistry.
 	 * 

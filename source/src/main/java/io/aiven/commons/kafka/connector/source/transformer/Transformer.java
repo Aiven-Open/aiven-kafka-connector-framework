@@ -58,14 +58,17 @@ public abstract class Transformer implements AutoCloseable {
 	public abstract Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord);
 
 	/**
-	 * Convert the native key into a Schema and Value for Kafka.
+	 * Convert the native key into a Schema and Value for Kafka. By default, we will
+	 * use the toString() method to get the key
 	 * 
 	 * @param evolvingSourceRecord
 	 *            the abstract source record to extract the keyData from.
 	 * 
 	 * @return a SchemaAndValue for the key.
 	 */
-	public abstract SchemaAndValue generateKeyData(final EvolvingSourceRecord evolvingSourceRecord);
+	public SchemaAndValue generateKeyData(final EvolvingSourceRecord evolvingSourceRecord) {
+		return SchemaAndValueFactory.createSchemaAndValue(evolvingSourceRecord.getNativeKey().toString());
+	}
 
 	@Override
 	public void close() throws Exception {

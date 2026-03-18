@@ -100,18 +100,6 @@ public abstract class InputStreamTransformer extends Transformer {
 			long streamLength, Context context);
 
 	/**
-	 * Convert the native key into a Schema and Value for Kafka.
-	 * 
-	 * @param evolvingSourceRecord
-	 *            the Abstract source record to extract the keyData from.
-	 * @return a SchemaAndValue for the key.
-	 */
-	@Override
-	public SchemaAndValue generateKeyData(final EvolvingSourceRecord evolvingSourceRecord) {
-		return SchemaAndValueFactory.createSchemaAndValue(evolvingSourceRecord.getNativeKey());
-	}
-
-	/**
 	 * A Spliterator that performs various checks on the opening/closing of the
 	 * input stream.
 	 */
