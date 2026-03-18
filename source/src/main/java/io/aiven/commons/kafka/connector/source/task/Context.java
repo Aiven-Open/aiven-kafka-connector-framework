@@ -35,14 +35,14 @@ public class Context {
 	private Long offset;
 
 	/** the native key that is being processed */
-	private final Object nativeKey;
+	private final Comparable<?> nativeKey;
 	/**
 	 * Constructor.
 	 * 
 	 * @param nativeKey
 	 *            The native key for the object being processed.
 	 */
-	public Context(Object nativeKey) {
+	public Context(Comparable<?> nativeKey) {
 		this.nativeKey = nativeKey;
 	}
 
@@ -99,12 +99,14 @@ public class Context {
 
 	/**
 	 * Get the native key as specified by this context.
-	 *
+	 * 
+	 * @param <T>
+	 *            the returned native key type.
 	 * @return the Optional storage key for the native object this context is
 	 *         associated with.
 	 */
-	public final Object getNativeKey() {
-		return nativeKey;
+	public final <T extends Comparable<T>> T getNativeKey() {
+		return (T) nativeKey;
 	}
 
 	/**

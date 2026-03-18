@@ -141,6 +141,10 @@ public class TransformerRegistry {
 	 * A TransformerRegistry builder.
 	 */
 	public static class Builder {
+
+		private Builder() {
+		}
+
 		/** The transformers */
 		private final Map<String, TransformerInfo> transformers = new HashMap<>();
 
