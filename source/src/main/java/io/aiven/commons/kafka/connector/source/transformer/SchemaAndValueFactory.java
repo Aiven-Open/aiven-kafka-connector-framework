@@ -39,6 +39,9 @@ public final class SchemaAndValueFactory {
 	private static final SchemaGenerator generator = new SchemaGenerator(
 			new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON).build());
 
+	/**
+	 * Default constructor
+	 */
 	private SchemaAndValueFactory() {
 		// do not instantiate.
 	}
