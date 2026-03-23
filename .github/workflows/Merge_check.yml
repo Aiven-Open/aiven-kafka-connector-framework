@@ -67,7 +67,7 @@ jobs:
         id: project
 
       - name: Build ${{ steps.project.outputs.version }}
-        run: mvn -e -B -V -ntp clean verify
+        run: mvn -e -B -V -ntp clean install
 
       - name: "Upload build failure reports"
         uses: actions/upload-artifact@v7
