@@ -85,7 +85,7 @@ jobs:
 
       - name: Build site
         if: ${{ matrix.java != 17 }}
-        run: mvn -e -B -V -ntp site
+        run: mvn -e -B -V -ntp site site:stage
 
 
 # only run Publish if all builds completed
