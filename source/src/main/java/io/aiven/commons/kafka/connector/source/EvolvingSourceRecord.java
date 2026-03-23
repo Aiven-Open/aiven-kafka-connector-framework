@@ -81,11 +81,12 @@ public final class EvolvingSourceRecord {
 
 	/**
 	 * Gets the AbstractNativeSource info from the constructor.
-	 * 
+	 *
+	 * @param <T> The class that extends AbstractSourceNativeInfo.
 	 * @return the AbstractNativeSource info from the constructor.
 	 */
-	public AbstractSourceNativeInfo<?, ?> getSourceNativeInfo() {
-		return sourceNativeInfo;
+	public <T extends AbstractSourceNativeInfo<?, ?>> T getSourceNativeInfo() {
+		return (T) sourceNativeInfo;
 	}
 
 	/**
