@@ -16,7 +16,7 @@
 
 package io.aiven.commons.kafka.connector.source.config;
 
-import io.aiven.commons.collections.Scale;
+import io.aiven.commons.util.collections.Scale;
 import io.aiven.commons.kafka.config.ExtendedConfigKey;
 import io.aiven.commons.kafka.config.SinceInfo;
 import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;

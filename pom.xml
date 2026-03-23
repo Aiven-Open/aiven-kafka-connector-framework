@@ -25,11 +25,11 @@
     <artifactId>aiven-commons</artifactId>
     <version>3-SNAPSHOT</version>
   </parent>
-  <artifactId>aiven-kafka-connector-framework</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <artifactId>framework-for-connectors</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Aiven Kafka Connector Framework</name>
+  <name>Aiven framework for connectors on Apache Kafka</name>
 
   <description>A collection of utilities and interfaces to simplify the building and homogenization
     of sink and source connector pairs.</description>

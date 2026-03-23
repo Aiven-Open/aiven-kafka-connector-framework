@@ -16,7 +16,7 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
-import io.aiven.commons.io.compression.CompressionType;
+import io.aiven.commons.util.io.compression.CompressionType;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;

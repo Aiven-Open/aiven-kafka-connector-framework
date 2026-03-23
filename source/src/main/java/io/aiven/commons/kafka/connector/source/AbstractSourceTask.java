@@ -27,11 +27,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
-import io.aiven.commons.timing.AbortTrigger;
-import io.aiven.commons.timing.Backoff;
-import io.aiven.commons.timing.BackoffConfig;
-import io.aiven.commons.timing.SupplierOfLong;
-import io.aiven.commons.timing.Timer;
+import io.aiven.commons.util.timing.AbortTrigger;
+import io.aiven.commons.util.timing.Backoff;
+import io.aiven.commons.util.timing.BackoffConfig;
+import io.aiven.commons.util.timing.SupplierOfLong;
+import io.aiven.commons.util.timing.Timer;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.source.SourceRecord;

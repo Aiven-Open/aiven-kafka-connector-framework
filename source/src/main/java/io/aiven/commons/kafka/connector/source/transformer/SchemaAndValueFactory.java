@@ -114,11 +114,11 @@ public final class SchemaAndValueFactory {
 				} else if (o instanceof BigDecimal bd) {
 					schemaBuilder.field(s,
 							SchemaBuilder.struct().name("BigDecimal").field("value", Schema.STRING_SCHEMA));
-					root.put(s, root.objectNode().put("value", bd.toString()));
+					root.set(s, root.objectNode().put("value", bd.toString()));
 				} else if (o instanceof BigInteger bi) {
 					schemaBuilder.field(s,
 							SchemaBuilder.struct().name("BigInteger").field("value", Schema.STRING_SCHEMA));
-					root.put(s, root.objectNode().put("value", bi.toString()));
+					root.set(s, root.objectNode().put("value", bi.toString()));
 				}
 			} else if (o instanceof String) {
 				schemaBuilder.field(s, Schema.STRING_SCHEMA);

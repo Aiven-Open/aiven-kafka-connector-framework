@@ -15,7 +15,7 @@
  */
 package io.aiven.commons.kafka.connector.source.lookback;
 
-import io.aiven.commons.collections.RingBuffer;
+import io.aiven.commons.util.collections.RingBuffer;
 
 /**
  * Lookback that uses a buffer to track the last N records.
