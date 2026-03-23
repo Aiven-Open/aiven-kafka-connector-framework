@@ -66,7 +66,7 @@ jobs:
       - name: Extract version info
         run: | 
           echo "version=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT;
-          echo "java_version=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT;
+          echo "java_version=$(mvn -q -Dexec.executable=echo -Dexec.args='${jdk.version}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT;
         id: project
 
       - name: Build ${{ steps.project.outputs.version }}
