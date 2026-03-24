@@ -31,10 +31,6 @@
   <description>A framework to make development of source connectors easier</description>
 
   <properties>
-    <!--    <apache.csv.version>1.14.1</apache.csv.version>-->
-    <!--    <apache.parquet.version>1.17.0</apache.parquet.version>-->
-    <!--    <apache.avro.version>1.12.1</apache.avro.version>-->
-    <!--    <apache.codec.version>1.21.0</apache.codec.version>-->
   </properties>
 
   <dependencies>
@@ -88,13 +84,11 @@
       <artifactId>commons-lang3</artifactId>
       <version>${commons.lang3.version}</version>
     </dependency>
-    <!-- csv commons -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-csv</artifactId>
       <version>${commons.csv.version}</version>
     </dependency>
-    <!-- Source: https://mvnrepository.com/artifact/commons-codec/commons-codec -->
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
