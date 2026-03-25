@@ -35,8 +35,9 @@ public class Buffer<K extends Comparable<K>> implements Lookback<K> {
 	 */
 	Buffer(int bufferSize) {
 		this.bufferSize = bufferSize;
-		ringBuffer = new RingBuffer<>(bufferSize);
+		ringBuffer = new RingBuffer<>(bufferSize, RingBuffer.DuplicateHandling.REJECT, Comparable::compareTo);
 	}
+
 	@Override
 	public void add(K key) {
 		ringBuffer.add(key);
