@@ -16,7 +16,7 @@
 
 package io.aiven.commons.kafka.connector.source;
 
-import io.aiven.commons.io.compression.CompressionType;
+import io.aiven.commons.util.io.compression.CompressionType;
 import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.errors.ConnectException;
@@ -82,7 +82,8 @@ public final class EvolvingSourceRecord {
 	/**
 	 * Gets the AbstractNativeSource info from the constructor.
 	 *
-	 * @param <T> The class that extends AbstractSourceNativeInfo.
+	 * @param <T>
+	 *            The class that extends AbstractSourceNativeInfo.
 	 * @return the AbstractNativeSource info from the constructor.
 	 */
 	public <T extends AbstractSourceNativeInfo<?, ?>> T getSourceNativeInfo() {

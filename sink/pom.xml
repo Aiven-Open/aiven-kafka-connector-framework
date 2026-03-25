@@ -21,13 +21,13 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.aiven.commons</groupId>
-    <artifactId>aiven-kafka-connector-framework</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>framework-for-connectors</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>kafka-sink-connector-framework</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
-  <name>Sink connector framework</name>
+  <artifactId>framework-for-sink-connectors</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <name>Aiven sink framework for connectors on Apache Kafka</name>
   <description>A framework to make development of source connectors easier</description>
 
   <properties></properties>

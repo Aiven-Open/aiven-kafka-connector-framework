@@ -20,7 +20,7 @@ import io.aiven.commons.kafka.connector.source.task.Context;
 
 import io.confluent.connect.avro.AvroData;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.commons.compress.utils.IOUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.parquet.avro.AvroParquetReader;

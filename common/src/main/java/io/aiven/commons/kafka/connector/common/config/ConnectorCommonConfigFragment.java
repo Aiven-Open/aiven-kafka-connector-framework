@@ -18,7 +18,7 @@
  */
 package io.aiven.commons.kafka.connector.common.config;
 
-import io.aiven.commons.io.compression.CompressionType;
+import io.aiven.commons.util.io.compression.CompressionType;
 import io.aiven.commons.kafka.config.CommonConfig;
 import io.aiven.commons.kafka.config.ExtendedConfigKey;
 import io.aiven.commons.kafka.config.SinceInfo;
