@@ -16,7 +16,7 @@
 
        SPDX-License-Identifier: Apache-2
 */
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class provides a transformer to take a List of CSVRecord generated from apache csv-commons
+ * This class provides a extractor to take a List of CSVRecord generated from apache csv-commons
  * and transforms that data into a SchemaAndValue Object usable by Connect to add messages to Kafka.
  *
  * <p>Assumptions:
@@ -55,8 +55,8 @@ import org.slf4j.LoggerFactory;
  * @see <a href=
  *     "https://www.ietf.org/archive/id/draft-shafranovich-rfc4180-bis-03.html">RFC-4180</a>
  */
-public class CsvTransformer extends Transformer {
-  private static final Logger LOGGER = LoggerFactory.getLogger(CsvTransformer.class);
+public class CsvExtractor extends Extractor {
+  private static final Logger LOGGER = LoggerFactory.getLogger(CsvExtractor.class);
 
   /** The schema builder */
   private SchemaBuilder valueSchema;
@@ -67,19 +67,19 @@ public class CsvTransformer extends Transformer {
   /** the configured format for the parser */
   private final CSVFormat csvFormat;
 
-  /** the list of headers for this Transformer */
+  /** the list of headers for this Extractor */
   private final List<String> headers;
 
   /**
-   * Gets the registry information for this transformer.
+   * Gets the registry information for this extractor.
    *
-   * @return the registry information for this transformer.
+   * @return the registry information for this extractor.
    */
-  public static TransformerInfo info() {
-    return new TransformerInfo(
+  public static ExtractorInfo info() {
+    return new ExtractorInfo(
         "CSV",
-        CsvTransformer.class,
-        TransformerInfo.FEATURE_NONE,
+        CsvExtractor.class,
+        ExtractorInfo.FEATURE_NONE,
         "Parses the input bytes as a collection of comma-separated-value records.  Returns one Kafka record for each CSV record as defined in RFC4180.  Records are separated by end-of-line characters.");
   }
 
@@ -88,13 +88,13 @@ public class CsvTransformer extends Transformer {
    *
    * @param config The configuration for the source connector.
    */
-  public CsvTransformer(SourceCommonConfig config) {
+  public CsvExtractor(SourceCommonConfig config) {
     super(config, info());
     CSVFormat.Builder builder = CSVFormat.RFC4180.builder();
-    if (config.isCsvTransformerHeaderEnabled()) {
+    if (config.isCsvExtractorHeaderEnabled()) {
       builder.setHeader().setSkipHeaderRecord(true);
     }
-    headers = config.getCsvTransformerHeader();
+    headers = config.getCsvExtractorHeader();
     csvFormat = builder.get();
   }
 

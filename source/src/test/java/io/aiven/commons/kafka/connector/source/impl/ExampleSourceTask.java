@@ -20,7 +20,8 @@ import io.aiven.commons.kafka.connector.source.EvolvingSourceRecordIterator;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
-import io.aiven.commons.kafka.connector.source.transformer.JsonTransformer;
+import io.aiven.commons.kafka.connector.source.extractor.JsonExtractor;
+
 import java.io.IOException;
 import java.util.Map;
 import org.apache.kafka.common.config.ConfigException;
@@ -39,7 +40,7 @@ public class ExampleSourceTask extends AbstractSourceTask {
   protected SourceCommonConfig configure(
       final Map<String, String> props, final OffsetManager offsetManager) {
     SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
-    setter.transformerClass(JsonTransformer.class);
+    setter.extractorClass(JsonExtractor.class);
     SourceCommonConfig result =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
     try {

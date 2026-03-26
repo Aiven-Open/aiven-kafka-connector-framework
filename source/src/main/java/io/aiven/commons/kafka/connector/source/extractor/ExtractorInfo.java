@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 /**
- * The Information about the transformer.
+ * The Information about the extractor.
  *
- * @param commonName the common name for the Transformer. Used in configurations.
- * @param transformerClass the Transformer class.
+ * @param commonName the common name for the Extractor. Used in configurations.
+ * @param extractorClass the Extractor class.
  * @param featureFlags A set of feature flags "or"ed together.
- * @param description A description of this transformer.
+ * @param description A description of this extractor.
  */
-public record TransformerInfo(
+public record ExtractorInfo(
     String commonName,
-    Class<? extends Transformer> transformerClass,
+    Class<? extends Extractor> extractorClass,
     int featureFlags,
     String description) {
   /**
@@ -34,40 +34,40 @@ public record TransformerInfo(
    */
   public static final int FEATURE_NONE = 0;
 
-  /** Feature flag signifying: Transformer handles compression internally. */
+  /** Feature flag signifying: Extractor handles compression internally. */
   public static final int FEATURE_INTERNAL_COMPRESSION = 1;
 
   /**
-   * Offset shift for private features. Transformers defined in other packages may define up to 8
+   * Offset shift for private features. Extractors defined in other packages may define up to 8
    * additional features numbered (0 - 7), The feature flags for those features should be calculated
    * as = {@code 1<<(PRIVATE_FEATURE_SHIFT + number)}
    */
   public static final int PRIVATE_FEATURE_SHIFT = 24;
 
   /**
-   * Determines if the transformer supports all the features.
+   * Determines if the extractor supports all the features.
    *
    * @param featureFlags one or more features "or"ed together.
-   * @return {@code true} if the transformer supports all the features.
+   * @return {@code true} if the extractor supports all the features.
    */
   public boolean allFeatures(int featureFlags) {
     return (featureFlags & this.featureFlags) == featureFlags;
   }
 
   /**
-   * Determines if the transformer supports any of the features.
+   * Determines if the extractor supports any of the features.
    *
    * @param featureFlags one or more features "or"ed together.
-   * @return {@code true} if the transformer supports any the features.
+   * @return {@code true} if the extractor supports any the features.
    */
   public boolean anyFeatures(int featureFlags) {
     return (featureFlags & this.featureFlags) != 0;
   }
 
   /**
-   * Determines if the transformer supports no additional features.
+   * Determines if the extractor supports no additional features.
    *
-   * @return {@code true} if the transformer does not support any additional features.
+   * @return {@code true} if the extractor does not support any additional features.
    */
   public boolean noFeatures() {
     return featureFlags == FEATURE_NONE;

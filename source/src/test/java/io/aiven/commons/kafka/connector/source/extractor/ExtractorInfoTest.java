@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-public class TransformerInfoTest {
+public class ExtractorInfoTest {
   private static int FEATURE1 = 1;
   private static int FEATURE2 = 1 << 1;
-  private static int PRIVATE_FEATURE1 = 1 << (TransformerInfo.PRIVATE_FEATURE_SHIFT + 0);
+  private static int PRIVATE_FEATURE1 = 1 << (ExtractorInfo.PRIVATE_FEATURE_SHIFT + 0);
 
-  private TransformerInfo underTest;
+  private ExtractorInfo underTest;
 
   @ParameterizedTest
   @CsvSource({
@@ -41,7 +41,7 @@ public class TransformerInfoTest {
     "private + 4 , 16777220, false, false, true",
   })
   public void anyFeatures(String name, int flag, boolean f1, boolean f2, boolean f3) {
-    underTest = new TransformerInfo(name, Transformer.class, flag, "anyFeatures test");
+    underTest = new ExtractorInfo(name, Extractor.class, flag, "anyFeatures test");
     assertThat(underTest.anyFeatures(FEATURE1)).as("f1").isEqualTo(f1);
     assertThat(underTest.anyFeatures(FEATURE2)).as("f2").isEqualTo(f2);
     assertThat(underTest.anyFeatures(PRIVATE_FEATURE1)).as("private").isEqualTo(f3);
@@ -71,7 +71,7 @@ public class TransformerInfoTest {
     "private + 4 , 16777220, false, false, true",
   })
   public void allFeatures(String name, int flag, boolean f1, boolean f2, boolean f3) {
-    underTest = new TransformerInfo(name, Transformer.class, flag, "allFeatures test");
+    underTest = new ExtractorInfo(name, Extractor.class, flag, "allFeatures test");
     assertThat(underTest.allFeatures(FEATURE1)).as("f1").isEqualTo(f1);
     assertThat(underTest.allFeatures(FEATURE2)).as("f2").isEqualTo(f2);
     assertThat(underTest.allFeatures(PRIVATE_FEATURE1)).as("private").isEqualTo(f3);
@@ -101,7 +101,7 @@ public class TransformerInfoTest {
     "private, 16777220",
   })
   public void noFeatures(String name, int flag) {
-    underTest = new TransformerInfo(name, Transformer.class, flag, "noFeatures test");
+    underTest = new ExtractorInfo(name, Extractor.class, flag, "noFeatures test");
     assertThat(underTest.noFeatures()).isEqualTo(flag == 0);
   }
 }

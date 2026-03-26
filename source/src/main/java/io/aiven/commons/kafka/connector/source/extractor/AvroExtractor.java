@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.task.Context;
@@ -32,33 +32,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Transforms a stream of Avro records into individual kafka messages, one per record. */
-public class AvroTransformer extends InputStreamTransformer {
+public class AvroExtractor extends InputStreamExtractor {
 
   /**
-   * Gets the registry information for this transformer.
+   * Gets the registry information for this extractor.
    *
-   * @return the registry information for this transformer.
+   * @return the registry information for this extractor.
    */
-  public static TransformerInfo info() {
-    return new TransformerInfo(
+  public static ExtractorInfo info() {
+    return new ExtractorInfo(
         "Avro",
-        AvroTransformer.class,
-        TransformerInfo.FEATURE_NONE,
+        AvroExtractor.class,
+        ExtractorInfo.FEATURE_NONE,
         "Accepts an Avro file-formatted input stream and creates one Kafka record for every Avro datum encountered.");
   }
 
   private final AvroData avroData;
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(AvroTransformer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AvroExtractor.class);
 
   /**
-   * Constructs the AvroTransformer.
+   * Constructs the AvroExtractor.
    *
    * @param config The configuration for this connector.
    */
-  public AvroTransformer(final SourceCommonConfig config) {
+  public AvroExtractor(final SourceCommonConfig config) {
     super(config, info());
-    this.avroData = new AvroData(config.getTransformerCacheSize());
+    this.avroData = new AvroData(config.getExtractorCacheSize());
   }
 
   @Override

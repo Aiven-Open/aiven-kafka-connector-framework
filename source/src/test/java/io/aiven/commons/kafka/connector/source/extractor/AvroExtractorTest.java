@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -27,17 +27,17 @@ import java.util.Map;
 import java.util.function.Function;
 import org.apache.kafka.connect.data.Struct;
 
-/** The AVRO transformer test */
-final class AvroTransformerTest extends IORecordTransformerTest {
+/** The AVRO extractor test */
+final class AvroExtractorTest extends IORecordExtractorTest {
 
   @Override
-  protected Transformer setupTransformer(CompressionType compressionType) {
+  protected Extractor setupExtractor(CompressionType compressionType) {
     Map<String, String> props = new HashMap<>();
-    SourceConfigFragment.setter(props).transformerCache(100);
+    SourceConfigFragment.setter(props).extractorCache(100);
     ConnectorCommonConfigFragment.setter(props).compressionType(compressionType);
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    return new AvroTransformer(sourceCommonConfig);
+    return new AvroExtractor(sourceCommonConfig);
   }
 
   @Override

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
-import static io.aiven.commons.kafka.connector.source.transformer.TransformerInfo.FEATURE_INTERNAL_COMPRESSION;
+import static io.aiven.commons.kafka.connector.source.extractor.ExtractorInfo.FEATURE_INTERNAL_COMPRESSION;
 
 import io.aiven.commons.kafka.connector.source.AbstractSourceNativeInfo;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
@@ -40,22 +40,22 @@ import org.slf4j.Logger;
  * <p>This class is used within the EvolvingSourceRecordIterator to convert the EvolvingSourceRecord
  * into one or more Kafka source records.
  *
- * <p>This implementation of Transformer assumes that the SourceRecord supports returning an
+ * <p>This implementation of Extractor assumes that the SourceRecord supports returning an
  * inputStream.
  *
  * <p>Developers should use this class when the format being transformed supports reading 1 internal
  * record from the stream at a time. If this is not the case it is more efficient to write a
- * transformer that directly implements generate records.
+ * extractor that directly implements generate records.
  */
-public abstract class InputStreamTransformer extends Transformer {
+public abstract class InputStreamExtractor extends Extractor {
 
   /**
-   * Constructs a transformer that processes an input stream rather than a stream of objects.
+   * Constructs a extractor that processes an input stream rather than a stream of objects.
    *
    * @param config The SourceCommonsConfig implementation.
-   * @param info The TransformerInfo for this transformer.
+   * @param info The ExtractorInfo for this extractor.
    */
-  protected InputStreamTransformer(SourceCommonConfig config, TransformerInfo info) {
+  protected InputStreamExtractor(SourceCommonConfig config, ExtractorInfo info) {
     super(config, info);
   }
 
@@ -82,7 +82,7 @@ public abstract class InputStreamTransformer extends Transformer {
   }
 
   /**
-   * Creates the stream spliterator for this transformer.
+   * Creates the stream spliterator for this extractor.
    *
    * @param inputStreamIOSupplier the input stream supplier.
    * @param streamLength the length of the input stream, which id defined in the
@@ -101,7 +101,7 @@ public abstract class InputStreamTransformer extends Transformer {
     private final IOSupplier<InputStream> inputStreamIOSupplier;
 
     /**
-     * The logger to be used by all instances of this class. This will be the Transformer logger.
+     * The logger to be used by all instances of this class. This will be the Extractor logger.
      */
     protected final Logger logger;
 

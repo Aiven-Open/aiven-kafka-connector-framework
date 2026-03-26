@@ -23,8 +23,8 @@ import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.config.validator.ScaleValidator;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
-import io.aiven.commons.kafka.connector.source.transformer.ByteArrayTransformer;
-import io.aiven.commons.kafka.connector.source.transformer.Transformer;
+import io.aiven.commons.kafka.connector.source.extractor.ByteArrayExtractor;
+import io.aiven.commons.kafka.connector.source.extractor.Extractor;
 import io.aiven.commons.util.collections.Scale;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -51,11 +51,11 @@ public final class SourceConfigFragment extends ConfigFragment {
   /** The name of the native start key property. Visible for use in logging */
   public static final String NATIVE_START_KEY = "native.start.key";
 
-  private static final String TRANSFORMER_CLASS = "transformer.class";
-  private static final String TRANSFORMER_BUFFER = "transformer.buffer";
-  private static final String TRANSFORMER_CACHE = "transformer.cache.size";
-  private static final String CSV_TRANSFORMER_HEADERS_ENABLED = "transformer.csv.headers.enabled";
-  private static final String CSV_TRANSFORMER_HEADERS = "transformer.csv.headers";
+  private static final String EXTRACTOR_CLASS = "extractor.class";
+  private static final String EXTRACTOR_BUFFER = "extractor.buffer";
+  private static final String EXTRACTOR_CACHE_SIZE = "extractor.cache.size";
+  private static final String EXTRACTOR_CSV_HEADERS_ENABLED = "extractor.csv.headers.enabled";
+  private static final String EXTRACTOR_CSV_HEADERS = "extractor.csv.headers";
 
   /**
    * Creates a Setter for this fragment.
@@ -141,34 +141,34 @@ public final class SourceConfigFragment extends ConfigFragment {
                 .since(siBuilder.version("1.0.0").build())
                 .build())
         .define(
-            ExtendedConfigKey.builder(TRANSFORMER_CLASS)
+            ExtendedConfigKey.builder(EXTRACTOR_CLASS)
                 .type(ConfigDef.Type.CLASS)
-                .defaultValue(ByteArrayTransformer.class)
-                .validator(new TransformerValidator())
-                .documentation("Defines the class for the Transformer")
+                .defaultValue(ByteArrayExtractor.class)
+                .validator(new ExtractorValidator())
+                .documentation("Defines the class for the Extractor")
                 .internalConfig(true)
                 .since(siBuilder.version("1.0.0").build())
                 .build())
         .define(
-            ExtendedConfigKey.builder(TRANSFORMER_BUFFER)
+            ExtendedConfigKey.builder(EXTRACTOR_BUFFER)
                 .type(ConfigDef.Type.INT)
                 .defaultValue(4096)
                 .validator(ScaleValidator.between(4096, Integer.MAX_VALUE, Scale.IEC))
                 .documentation(
-                    "Defines the size in bytes of the transformer buffer used when reading buffered input streams.")
+                    "Defines the size in bytes of the extractor buffer used when reading buffered input streams.")
                 .since(siBuilder.version("1.0.0").build())
                 .build())
         .define(
-            ExtendedConfigKey.builder(TRANSFORMER_CACHE)
+            ExtendedConfigKey.builder(EXTRACTOR_CACHE_SIZE)
                 .type(ConfigDef.Type.INT)
                 .defaultValue(500)
                 .validator(ScaleValidator.between(100, Integer.MAX_VALUE, Scale.IEC))
                 .documentation(
-                    "Defines the size in bytes of the transformer cache used when processing Avro based input like Avro or Parquet streams.")
+                    "Defines the size in bytes of the extractor cache used when processing Avro based input like Avro or Parquet streams.")
                 .since(siBuilder.version("1.0.0").build())
                 .build())
         .define(
-            ExtendedConfigKey.builder(CSV_TRANSFORMER_HEADERS_ENABLED)
+            ExtendedConfigKey.builder(EXTRACTOR_CSV_HEADERS_ENABLED)
                 .type(ConfigDef.Type.BOOLEAN)
                 .defaultValue("true")
                 .validator(
@@ -181,14 +181,14 @@ public final class SourceConfigFragment extends ConfigFragment {
                         },
                         ConfigDef.CaseInsensitiveValidString.in("true", "false")::toString))
                 .documentation(
-                    "Only valid if CSV Transformer is used. If 'true' the first line of the CSV will be a header line describing all the columns. If 'false' no header line is provided and columns will be defined as 'field0' through 'fieldN'.")
+                    "Only valid if CSV Extractor is used. If 'true' the first line of the CSV will be a header line describing all the columns. If 'false' no header line is provided and columns will be defined as 'field0' through 'fieldN'.")
                 .since(siBuilder.version("1.0.0").build())
                 .build())
         .define(
-            ExtendedConfigKey.builder(CSV_TRANSFORMER_HEADERS)
+            ExtendedConfigKey.builder(EXTRACTOR_CSV_HEADERS)
                 .type(ConfigDef.Type.LIST)
                 .documentation(
-                    "Only valid if CSV Transformer is used. A comma separated list of the field names for CVS records.  Rows with more fields than there are headers will be assigned 'fieldN' names")
+                    "Only valid if CSV Extractor is used. A comma separated list of the field names for CVS records.  Rows with more fields than there are headers will be assigned 'fieldN' names")
                 .since(siBuilder.version("1.0.0").build())
                 .build());
   }
@@ -239,22 +239,22 @@ public final class SourceConfigFragment extends ConfigFragment {
   }
 
   /**
-   * Gets the Transformer instance for this source.
+   * Gets the Extractor instance for this source.
    *
    * @param config the configuration for this source.
-   * @return the Transformer instance for this source.
+   * @return the Extractor instance for this source.
    */
-  public Transformer getTransformer(SourceCommonConfig config) {
-    Class<? extends Transformer> clazz;
-    Object klass = values().get(TRANSFORMER_CLASS);
+  public Extractor getExtractor(SourceCommonConfig config) {
+    Class<? extends Extractor> clazz;
+    Object klass = values().get(EXTRACTOR_CLASS);
     if (klass instanceof String) {
       try {
-        clazz = Utils.loadClass((String) klass, Transformer.class);
+        clazz = Utils.loadClass((String) klass, Extractor.class);
       } catch (ClassNotFoundException e) {
         throw new KafkaException("Class " + klass + " cannot be found", e);
       }
-    } else if (klass instanceof Class<?> && Transformer.class.isAssignableFrom((Class<?>) klass)) {
-      clazz = (Class<? extends Transformer>) klass;
+    } else if (klass instanceof Class<?> && Extractor.class.isAssignableFrom((Class<?>) klass)) {
+      clazz = (Class<? extends Extractor>) klass;
     } else {
       throw new KafkaException(
           "Unexpected element of type "
@@ -272,23 +272,23 @@ public final class SourceConfigFragment extends ConfigFragment {
   }
 
   /**
-   * Gets the size, in bytes, of the transformer buffer in bytes. Only applies to transformers that
+   * Gets the size, in bytes, of the extractor buffer in bytes. Only applies to extractors that
    * create buffered input streams.
    *
-   * @return the size in bytes of the transformer buffer.
+   * @return the size in bytes of the extractor buffer.
    */
-  public int getTransformerBufferSize() {
-    return getInt(TRANSFORMER_BUFFER);
+  public int getExtractorBufferSize() {
+    return getInt(EXTRACTOR_BUFFER);
   }
 
   /**
-   * Gets the size, in bytes, of the transformer cache size in bytes. Only applies to transformers
+   * Gets the size, in bytes, of the extractor cache size in bytes. Only applies to extractors
    * that utilize caches like Avro or Parquet.
    *
-   * @return the size in bytes of the transformer buffer.
+   * @return the size in bytes of the extractor buffer.
    */
-  public int getTransformerCacheSize() {
-    return getInt(TRANSFORMER_CACHE);
+  public int getExtractorCacheSize() {
+    return getInt(EXTRACTOR_CACHE_SIZE);
   }
 
   /**
@@ -301,12 +301,12 @@ public final class SourceConfigFragment extends ConfigFragment {
   }
 
   /**
-   * Gets the CSV transformer header enable flag.
+   * Gets the CSV extractor header enable flag.
    *
    * @return {@code true} if headers should be parsed from CSV input, {@code false} otherwise.
    */
-  public Boolean isCsvTransformerHeaderEnabled() {
-    return getBoolean(CSV_TRANSFORMER_HEADERS_ENABLED);
+  public Boolean isCsvExtractorHeaderEnabled() {
+    return getBoolean(EXTRACTOR_CSV_HEADERS_ENABLED);
   }
 
   /**
@@ -314,8 +314,8 @@ public final class SourceConfigFragment extends ConfigFragment {
    *
    * @return the list of headers for the CSV input.
    */
-  public List<String> getCsvTransformerHeader() {
-    return getList(CSV_TRANSFORMER_HEADERS);
+  public List<String> getCsvExtractorHeader() {
+    return getList(EXTRACTOR_CSV_HEADERS);
   }
 
   /** The SourceConfigFragment setter. */
@@ -390,23 +390,23 @@ public final class SourceConfigFragment extends ConfigFragment {
     }
 
     /**
-     * Sets the transformer class for this source.
+     * Sets the extractor class for this source.
      *
-     * @param transformer the class of the Transformer for this souce.
-     * @return the transformer for this source.
+     * @param extractor the class of the Extractor for this source.
+     * @return the extractor for this source.
      */
-    public Setter transformerClass(final Class<? extends Transformer> transformer) {
-      return setValue(TRANSFORMER_CLASS, transformer);
+    public Setter extractorClass(final Class<? extends Extractor> extractor) {
+      return setValue(EXTRACTOR_CLASS, extractor);
     }
 
     /**
-     * Sets the transformer buffer size.
+     * Sets the extractor buffer size.
      *
      * @param bufferSize the buffer size in bytes.
      * @return this.
      */
-    public Setter transformerBuffer(final int bufferSize) {
-      return setValue(TRANSFORMER_BUFFER, bufferSize);
+    public Setter extractorBuffer(final int bufferSize) {
+      return setValue(EXTRACTOR_BUFFER, bufferSize);
     }
 
     /**
@@ -415,18 +415,18 @@ public final class SourceConfigFragment extends ConfigFragment {
      * @param cacheSize the cache size in bytes.
      * @return this
      */
-    public Setter transformerCache(final int cacheSize) {
-      return setValue(TRANSFORMER_CACHE, cacheSize);
+    public Setter extractorCache(final int cacheSize) {
+      return setValue(EXTRACTOR_CACHE_SIZE, cacheSize);
     }
 
     /**
-     * Sets the header flag for the CSV transformer.
+     * Sets the header flag for the CSV extractor.
      *
      * @param state the state for the header flag.
      * @return this
      */
-    public Setter csvTransformerHeadersEnabled(final boolean state) {
-      return setValue(CSV_TRANSFORMER_HEADERS_ENABLED, state);
+    public Setter csvExtractorHeadersEnabled(final boolean state) {
+      return setValue(EXTRACTOR_CSV_HEADERS_ENABLED, state);
     }
 
     /**
@@ -435,33 +435,33 @@ public final class SourceConfigFragment extends ConfigFragment {
      * @param headers the header names.
      * @return this
      */
-    public Setter csvTransformerHeaders(String headers) {
-      return setValue(CSV_TRANSFORMER_HEADERS, headers);
+    public Setter csvExtractorHeaders(String headers) {
+      return setValue(EXTRACTOR_CSV_HEADERS, headers);
     }
   }
 
-  private static class TransformerValidator implements ConfigDef.Validator {
+  private static class ExtractorValidator implements ConfigDef.Validator {
 
     @Override
     public void ensureValid(String name, Object value) {
       if (value == null) {
-        throw new ConfigException("Transformer class may not be null");
+        throw new ConfigException("Extractor class may not be null");
       }
       try {
         Class<?> clazz =
             value instanceof Class<?> ? (Class<?>) value : Class.forName(value.toString());
-        if (!Transformer.class.isAssignableFrom(clazz)) {
-          throw new ConfigException("Transformer class in configuration must extend Transformer");
+        if (!Extractor.class.isAssignableFrom(clazz)) {
+          throw new ConfigException("Extractor class in configuration must extend Extractor");
         }
       } catch (ClassNotFoundException e) {
         throw new ConfigException(
-            "Transformer class specified in configuration not found: {}", e.getMessage());
+            "Extractor class specified in configuration not found: {}", e.getMessage());
       }
     }
 
     @Override
     public String toString() {
-      return String.format("A class that extends %s.", Transformer.class.getCanonicalName());
+      return String.format("A class that extends %s.", Extractor.class.getCanonicalName());
     }
   }
 }
