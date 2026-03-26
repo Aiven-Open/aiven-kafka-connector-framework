@@ -92,6 +92,7 @@ class TemplateTestUtil {
     return new Condition<>(
         template -> {
           final var boundBuilder = template.boundBuilder();
+          assertThat(varNameAndValues.length).as("Must set names and values in pairs").isEven();
           for (int i = 0; i < varNameAndValues.length; i += 2) {
             final var value = varNameAndValues[i + 1];
             boundBuilder.bind(varNameAndValues[i], () -> value);
@@ -109,6 +110,7 @@ class TemplateTestUtil {
           final var extractor = template.extractor();
           final var extracted = extractor.extract(rendered);
           final var found = new HashSet<String>();
+          assertThat(varNameAndValues.length).as("Must set names and values in pairs").isEven();
           for (int i = 0; i < varNameAndValues.length; i += 2) {
             assertThat(extracted).containsEntry(varNameAndValues[i], varNameAndValues[i + 1]);
             found.add(varNameAndValues[i]);
