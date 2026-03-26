@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
@@ -31,44 +31,43 @@ import org.slf4j.LoggerFactory;
 
 // spotless:off
 /**
- * ByteArrayTransformer chunks an entire object into a maximum size specified by the
- * transformerBuffer {@link SourceConfigFragment.Setter#transformerBuffer(int)} configuration
- * option.
+ * ByteArrayExtractor chunks an entire object into a maximum size specified by the extractorBuffer
+ * {@link SourceConfigFragment.Setter#extractorBuffer(int)} configuration option.
  *
  * <p>If the configuration option specifies a buffer that is smaller than the length of the input
- * stream, the record will be split into multiple parts. When this happens the transformer makes no
+ * stream, the record will be split into multiple parts. When this happens the extractor makes no
  * guarantees for only once delivery or delivery order as those are dependant upon the Kafka
  * producer and remote consumer configurations. This class will produce the blocks in order and on
  * restart will send any blocks that were not acknowledged by Kafka.
  */
 // spotless:on
-public class ByteArrayTransformer extends InputStreamTransformer {
+public class ByteArrayExtractor extends InputStreamExtractor {
 
   /**
-   * Gets the registry information for this transformer.
+   * Gets the registry information for this extractor.
    *
-   * @return the registry information for this transformer.
+   * @return the registry information for this extractor.
    */
-  public static TransformerInfo info() {
-    return new TransformerInfo(
+  public static ExtractorInfo info() {
+    return new ExtractorInfo(
         "Bytes",
-        ByteArrayTransformer.class,
-        TransformerInfo.FEATURE_NONE,
+        ByteArrayExtractor.class,
+        ExtractorInfo.FEATURE_NONE,
         "Passes the input stream bytes as Kafka records.  Will split the input stream into multiple records if the"
             + " number of bytes exceeds the specified maximum buffer size.");
   }
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ByteArrayTransformer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ByteArrayExtractor.class);
   private final int maxBufferSize;
 
   /**
-   * Constructs a ByteArray transformer using the values from the config.
+   * Constructs a ByteArray extractor using the values from the config.
    *
    * @param config the configuration to use.
    */
-  public ByteArrayTransformer(SourceCommonConfig config) {
+  public ByteArrayExtractor(SourceCommonConfig config) {
     super(config, info());
-    maxBufferSize = config.getTransformerBufferSize();
+    maxBufferSize = config.getExtractorBufferSize();
   }
 
   @Override

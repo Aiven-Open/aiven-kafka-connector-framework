@@ -19,8 +19,8 @@ package io.aiven.commons.kafka.connector.source.config;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfig;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigDef;
+import io.aiven.commons.kafka.connector.source.extractor.Extractor;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
-import io.aiven.commons.kafka.connector.source.transformer.Transformer;
 import java.util.List;
 import java.util.Map;
 import org.apache.kafka.common.config.ConfigValue;
@@ -100,30 +100,30 @@ public class SourceCommonConfig extends ConnectorCommonConfig {
   }
 
   /**
-   * Gets the transformer defined for this source.
+   * Gets the extractor defined for this source.
    *
-   * @return the Transformer defined for this source.
+   * @return the Extractor defined for this source.
    */
-  public Transformer getTransformer() {
-    return sourceConfigFragment.getTransformer(this);
+  public Extractor getExtractor() {
+    return sourceConfigFragment.getExtractor(this);
   }
 
   /**
-   * Gets the size of the Transformer buffer if the transformer builds a buffered input stream.
+   * Gets the size of the Extractor buffer if the extractor builds a buffered input stream.
    *
-   * @return the size of the transformer buffer in bytes.
+   * @return the size of the extractor buffer in bytes.
    */
-  public int getTransformerBufferSize() {
-    return sourceConfigFragment.getTransformerBufferSize();
+  public int getExtractorBufferSize() {
+    return sourceConfigFragment.getExtractorBufferSize();
   }
 
   /**
-   * Gets the size of the Transformer cache if the transformer supports a cache.
+   * Gets the size of the Extractor cache if the extractor supports a cache.
    *
-   * @return the size of the transformer cache in bytes.
+   * @return the size of the extractor cache in bytes.
    */
-  public int getTransformerCacheSize() {
-    return sourceConfigFragment.getTransformerCacheSize();
+  public int getExtractorCacheSize() {
+    return sourceConfigFragment.getExtractorCacheSize();
   }
 
   /**
@@ -132,17 +132,17 @@ public class SourceCommonConfig extends ConnectorCommonConfig {
    * @return {@code true} if headers should be extracted from the CSV input, {@code false}
    *     otherwise.
    */
-  public boolean isCsvTransformerHeaderEnabled() {
-    return sourceConfigFragment.isCsvTransformerHeaderEnabled();
+  public boolean isCsvExtractorHeaderEnabled() {
+    return sourceConfigFragment.isCsvExtractorHeaderEnabled();
   }
 
   /**
-   * Gets the specified headers, if any, for the CSV transformer.
+   * Gets the specified headers, if any, for the CSV extractor.
    *
-   * @return list of headers specified for the CSV transformer.
+   * @return list of headers specified for the CSV extractor.
    */
-  public List<String> getCsvTransformerHeader() {
-    return sourceConfigFragment.getCsvTransformerHeader();
+  public List<String> getCsvExtractorHeader() {
+    return sourceConfigFragment.getCsvExtractorHeader();
   }
 
   /** The common source configuration definition. */

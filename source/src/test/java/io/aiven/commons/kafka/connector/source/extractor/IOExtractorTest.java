@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,22 +33,22 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** Base test for transformers that consume {@code IOSource<InputStream>} objects. */
-public abstract class IOTransformerTest {
+/** Base test for extractors that consume {@code IOSource<InputStream>} objects. */
+public abstract class IOExtractorTest {
 
-  /** The transformer under test. */
-  protected Transformer transformer;
+  /** The extractor under test. */
+  protected Extractor extractor;
 
   /**
-   * Setup the transformer for testing.
+   * Setup the extractor for testing.
    *
-   * @return a configured Transformer.
+   * @return a configured Extractor.
    */
-  protected abstract Transformer setupTransformer(CompressionType compressionType);
+  protected abstract Extractor setupExtractor(CompressionType compressionType);
 
   /**
-   * Generate one buffer for the transformer to read. This must be a valid data buffer for the
-   * Transformer under test.
+   * Generate one buffer for the extractor to read. This must be a valid data buffer for the
+   * Extractor under test.
    *
    * @return the buffer to read.
    * @throws IOException on generation error.
@@ -72,17 +72,17 @@ public abstract class IOTransformerTest {
 
   @BeforeEach
   final void setUp() {
-    transformer = setupTransformer(CompressionType.NONE);
+    extractor = setupExtractor(CompressionType.NONE);
   }
 
   @AfterEach
   final void teardown() throws Exception {
-    transformer.close();
+    extractor.close();
   }
 
   @Test
   void verifyInfo() {
-    assertThat(transformer.info.transformerClass()).isEqualTo(transformer.getClass());
+    assertThat(extractor.info.extractorClass()).isEqualTo(extractor.getClass());
   }
 
   /**
@@ -95,8 +95,8 @@ public abstract class IOTransformerTest {
 
   /**
    * Verifies that output records that are extracted from the data can be skipped. For example a
-   * JSONL transformer returns one record for every line in the JSONL structure. The transformer
-   * must be able to start returning output from some point after the start of the structure
+   * JSONL extractor returns one record for every line in the JSONL structure. The extractor must be
+   * able to start returning output from some point after the start of the structure
    *
    * @throws Exception on error.
    */
@@ -114,7 +114,7 @@ public abstract class IOTransformerTest {
 
   /**
    * Verifies that an IOException thrown when the IOSupplier is retrieved does not cause the
-   * Transformer to abort.
+   * Extractor to abort.
    */
   @Test
   final void testIOExceptionDuringCreation() throws IOException {
@@ -129,14 +129,13 @@ public abstract class IOTransformerTest {
 
     final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(nativeSourceInfo);
 
-    final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+    final Stream<SchemaAndValue> records = extractor.generateRecords(sourceRecord);
 
     assertThat(records).isEmpty();
   }
 
   /**
-   * Verifies that an IOException during the InputStream read does not cause the Transformer to
-   * abort.
+   * Verifies that an IOException during the InputStream read does not cause the Extractor to abort.
    */
   @Test
   final void testIOExceptionDuringDataRead() throws IOException {
@@ -155,18 +154,18 @@ public abstract class IOTransformerTest {
         };
 
     final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(nativeSourceInfo);
-    final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+    final Stream<SchemaAndValue> records = extractor.generateRecords(sourceRecord);
     assertThat(records).isEmpty();
   }
 
-  /** Verifies that an empty InputStream does not cause Transformer failure. */
+  /** Verifies that an empty InputStream does not cause Extractor failure. */
   @Test
   final void testGetRecordsEmptyInputStream() throws IOException {
     final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey", new byte[0]);
     ExampleSourceNativeInfo nativeSourceInfo = new ExampleSourceNativeInfo(nativeItem);
     final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(nativeSourceInfo);
 
-    final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+    final Stream<SchemaAndValue> records = extractor.generateRecords(sourceRecord);
 
     assertThat(records).isEmpty();
   }
@@ -190,7 +189,7 @@ public abstract class IOTransformerTest {
         };
     final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(nativeSourceInfo);
 
-    final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+    final Stream<SchemaAndValue> records = extractor.generateRecords(sourceRecord);
 
     assertThat(records.count()).isGreaterThan(0);
     assertThat(ctsRef[0].closeCount).isGreaterThan(0);
@@ -216,7 +215,7 @@ public abstract class IOTransformerTest {
 
     final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(nativeSourceInfo);
 
-    final Iterator<SchemaAndValue> records = transformer.generateRecords(sourceRecord).iterator();
+    final Iterator<SchemaAndValue> records = extractor.generateRecords(sourceRecord).iterator();
     while (records.hasNext()) {
       records.next();
     }

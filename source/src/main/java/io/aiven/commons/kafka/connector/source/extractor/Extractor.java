@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -26,20 +26,20 @@ import org.apache.kafka.connect.data.SchemaAndValue;
  * SchemaAndValue objects for the values. This class is used within the EvolvingSourceRecordIterator
  * to convert the abstract source record into one or more Kafka source records.
  */
-public abstract class Transformer implements AutoCloseable {
+public abstract class Extractor implements AutoCloseable {
   /** The source configuration for the Kafka task. */
   protected final SourceCommonConfig config;
 
-  /** The info for this Transformer */
-  protected final TransformerInfo info;
+  /** The info for this Extractor */
+  protected final ExtractorInfo info;
 
   /**
    * Constructor.
    *
    * @param config The configuration for the source connector.
-   * @param info The TransformerInfo for this transformer.
+   * @param info The ExtractorInfo for this extractor.
    */
-  protected Transformer(SourceCommonConfig config, TransformerInfo info) {
+  protected Extractor(SourceCommonConfig config, ExtractorInfo info) {
     this.config = config;
     this.info = info;
   }

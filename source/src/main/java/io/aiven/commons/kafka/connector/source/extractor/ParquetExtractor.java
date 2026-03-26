@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.task.Context;
@@ -37,36 +37,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A Transformer that converts an input stream from a Parquet file into individual kafka messages,
- * one per record.
+ * A Extractor that converts an input stream from a Parquet file into individual kafka messages, one
+ * per record.
  */
-public class ParquetTransformer extends InputStreamTransformer {
+public class ParquetExtractor extends InputStreamExtractor {
 
   /**
-   * Gets the registry information for this transformer.
+   * Gets the registry information for this extractor.
    *
-   * @return the registry information for this transformer.
+   * @return the registry information for this extractor.
    */
-  public static TransformerInfo info() {
-    return new TransformerInfo(
+  public static ExtractorInfo info() {
+    return new ExtractorInfo(
         "Parquet",
-        ParquetTransformer.class,
-        TransformerInfo.FEATURE_INTERNAL_COMPRESSION,
+        ParquetExtractor.class,
+        ExtractorInfo.FEATURE_INTERNAL_COMPRESSION,
         "Accepts a Parquet file-formatted input stream and creates one Kafka record for every Avro datum encountered.");
   }
 
   private final AvroData avroData;
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ParquetTransformer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ParquetExtractor.class);
 
   /**
-   * Constructs a ParquetTransformer using the values from the configuration.
+   * Constructs a ParquetExtractor using the values from the configuration.
    *
    * @param config the configuration for the connector.
    */
-  public ParquetTransformer(final SourceCommonConfig config) {
+  public ParquetExtractor(final SourceCommonConfig config) {
     super(config, info());
-    this.avroData = new AvroData(config.getTransformerCacheSize());
+    this.avroData = new AvroData(config.getExtractorCacheSize());
   }
 
   @Override

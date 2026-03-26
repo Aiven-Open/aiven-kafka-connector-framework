@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -26,18 +26,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-/** Tests the JSON Transformer */
-final class JsonTransformerTest extends IORecordTransformerTest {
+/** Tests the JSON Extractor */
+final class JsonExtractorTest extends IORecordExtractorTest {
 
   @Override
-  protected Transformer setupTransformer(CompressionType compressionType) {
+  protected Extractor setupExtractor(CompressionType compressionType) {
     Map<String, String> props = new HashMap<>();
-    SourceConfigFragment.setter(props).transformerCache(100);
+    SourceConfigFragment.setter(props).extractorCache(100);
     ConnectorCommonConfigFragment.setter(props).compressionType(compressionType);
 
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    return new JsonTransformer(sourceCommonConfig);
+    return new JsonExtractor(sourceCommonConfig);
   }
 
   @Override

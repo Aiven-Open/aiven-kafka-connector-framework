@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.task.Context;
@@ -33,31 +33,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Transforms an input stream into a number of Jason records. */
-public class JsonTransformer extends InputStreamTransformer {
+public class JsonExtractor extends InputStreamExtractor {
 
   /**
-   * Gets the registry information for this transformer.
+   * Gets the registry information for this extractor.
    *
-   * @return the registry information for this transformer.
+   * @return the registry information for this extractor.
    */
-  public static TransformerInfo info() {
-    return new TransformerInfo(
+  public static ExtractorInfo info() {
+    return new ExtractorInfo(
         "JSONL",
-        JsonTransformer.class,
-        TransformerInfo.FEATURE_NONE,
+        JsonExtractor.class,
+        ExtractorInfo.FEATURE_NONE,
         "Parses the input stream as a collection of JSON objects separated by end-of-line characters or the end of the input.  Produces a Kafka record for each JSON object.");
   }
 
   private final JsonConverter jsonConverter;
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(JsonTransformer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JsonExtractor.class);
 
   /**
-   * Constructs the JSON Transformer with the specified config.
+   * Constructs the JSON Extractor with the specified config.
    *
    * @param config the SourceCommonConfig instance to use.
    */
-  public JsonTransformer(final SourceCommonConfig config) {
+  public JsonExtractor(final SourceCommonConfig config) {
     super(config, info());
     jsonConverter = new JsonConverter();
     jsonConverter.configure(Map.of("schemas.enable", "false"), false);

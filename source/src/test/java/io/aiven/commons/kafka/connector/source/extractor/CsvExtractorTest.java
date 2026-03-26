@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,17 +39,17 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.junit.jupiter.api.Test;
 
-final class CsvTransformerTest extends IORecordTransformerTest {
+final class CsvExtractorTest extends IORecordExtractorTest {
 
-  private CsvTransformer transformer;
+  private CsvExtractor extractor;
 
   @Override
-  protected CsvTransformer setupTransformer(CompressionType compressionType) {
+  protected CsvExtractor setupExtractor(CompressionType compressionType) {
     Map<String, String> props = new HashMap<>();
     ConnectorCommonConfigFragment.setter(props).compressionType(compressionType);
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    return new CsvTransformer(sourceCommonConfig);
+    return new CsvExtractor(sourceCommonConfig);
   }
 
   @Override
@@ -68,7 +68,7 @@ final class CsvTransformerTest extends IORecordTransformerTest {
   }
 
   /**
-   * Get the test data in the format for the Transformer.
+   * Get the test data in the format for the Extractor.
    *
    * @param numberOfRecords the number of records in the test data.
    * @return a byte array containing the data.
@@ -99,14 +99,14 @@ final class CsvTransformerTest extends IORecordTransformerTest {
   @Test
   void noHeaderTest() throws Exception {
     Map<String, String> props = new HashMap<>();
-    SourceConfigFragment.setter(props).csvTransformerHeadersEnabled(false);
+    SourceConfigFragment.setter(props).csvExtractorHeadersEnabled(false);
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    transformer = new CsvTransformer(sourceCommonConfig);
+    extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem = CsvTestDataFixture.generateCsvRecord(1, "hi");
     final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
-    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+    final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
     assertThat(records.size()).isEqualTo(1);
     Schema schema = records.get(0).schema();
     List<Field> fields = schema.fields();
@@ -124,14 +124,14 @@ final class CsvTransformerTest extends IORecordTransformerTest {
   @Test
   void shortRowTest() throws Exception {
     Map<String, String> props = new HashMap<>();
-    SourceConfigFragment.setter(props).csvTransformerHeadersEnabled(false);
+    SourceConfigFragment.setter(props).csvExtractorHeadersEnabled(false);
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    transformer = new CsvTransformer(sourceCommonConfig);
+    extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem = CsvTestDataFixture.generateCsvRecord(1, "hi") + "\n2,bye";
     final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
-    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+    final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
     assertThat(records.size()).isEqualTo(2);
     Schema schema = records.get(1).schema();
     List<Field> fields = schema.fields();
@@ -149,10 +149,10 @@ final class CsvTransformerTest extends IORecordTransformerTest {
   @Test
   void longRowTest() throws Exception {
     Map<String, String> props = new HashMap<>();
-    SourceConfigFragment.setter(props).csvTransformerHeadersEnabled(false);
+    SourceConfigFragment.setter(props).csvExtractorHeadersEnabled(false);
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    transformer = new CsvTransformer(sourceCommonConfig);
+    extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
         CsvTestDataFixture.generateCsvRecord(1, "hi")
             + "\n"
@@ -160,7 +160,7 @@ final class CsvTransformerTest extends IORecordTransformerTest {
             + ",more data";
     final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
-    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+    final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
     assertThat(records.size()).isEqualTo(2);
     Schema schema = records.get(1).schema();
     List<Field> fields = schema.fields();
@@ -180,10 +180,10 @@ final class CsvTransformerTest extends IORecordTransformerTest {
   @Test
   void longRowWithHeadersTest() throws Exception {
     Map<String, String> props = new HashMap<>();
-    SourceConfigFragment.setter(props).csvTransformerHeadersEnabled(true);
+    SourceConfigFragment.setter(props).csvExtractorHeadersEnabled(true);
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    transformer = new CsvTransformer(sourceCommonConfig);
+    extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
         CsvTestDataFixture.MSG_HEADER
             + "\n"
@@ -193,7 +193,7 @@ final class CsvTransformerTest extends IORecordTransformerTest {
             + ",more data";
     final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
-    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+    final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
     assertThat(records.size()).isEqualTo(2);
     Schema schema = records.get(1).schema();
     List<Field> fields = schema.fields();
@@ -213,14 +213,14 @@ final class CsvTransformerTest extends IORecordTransformerTest {
   @Test
   void tooManyHeadersTest() throws Exception {
     Map<String, String> props = new HashMap<>();
-    SourceConfigFragment.setter(props).csvTransformerHeaders("one, two, three, four");
+    SourceConfigFragment.setter(props).csvExtractorHeaders("one, two, three, four");
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    transformer = new CsvTransformer(sourceCommonConfig);
+    extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem = CsvTestDataFixture.generateCsvRecords(1);
     final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
-    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+    final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
     assertThat(records.size()).isEqualTo(1);
     Schema schema = records.get(0).schema();
     List<Field> fields = schema.fields();
@@ -240,17 +240,17 @@ final class CsvTransformerTest extends IORecordTransformerTest {
   @Test
   void tooFewHeadersTest() throws Exception {
     Map<String, String> props = new HashMap<>();
-    SourceConfigFragment.setter(props).csvTransformerHeaders("one, two");
+    SourceConfigFragment.setter(props).csvExtractorHeaders("one, two");
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    transformer = new CsvTransformer(sourceCommonConfig);
+    extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
         CsvTestDataFixture.generateCsvRecords(1)
             + CsvTestDataFixture.generateCsvRecord(2, "bye")
             + ",more data";
     final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
-    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+    final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
     assertThat(records.size()).isEqualTo(2);
     Schema schema = records.get(0).schema();
     List<Field> fields = schema.fields();
@@ -278,16 +278,16 @@ final class CsvTransformerTest extends IORecordTransformerTest {
   void tooManyHeadersNonParsedTest() throws Exception {
     Map<String, String> props = new HashMap<>();
     SourceConfigFragment.setter(props)
-        .csvTransformerHeaders("one, two, three, four")
-        .csvTransformerHeadersEnabled(false);
+        .csvExtractorHeaders("one, two, three, four")
+        .csvExtractorHeadersEnabled(false);
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    transformer = new CsvTransformer(sourceCommonConfig);
+    extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
         CsvTestDataFixture.generateCsvRecord(0, CsvTestDataFixture.TEST_MESSAGE);
     final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
-    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+    final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
     assertThat(records.size()).isEqualTo(1);
     Schema schema = records.get(0).schema();
     List<Field> fields = schema.fields();
@@ -308,11 +308,11 @@ final class CsvTransformerTest extends IORecordTransformerTest {
   void tooFewHeadersNoneParsedTest() throws Exception {
     Map<String, String> props = new HashMap<>();
     SourceConfigFragment.setter(props)
-        .csvTransformerHeaders("one, two")
-        .csvTransformerHeadersEnabled(false);
+        .csvExtractorHeaders("one, two")
+        .csvExtractorHeadersEnabled(false);
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    transformer = new CsvTransformer(sourceCommonConfig);
+    extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
         CsvTestDataFixture.generateCsvRecord(0, CsvTestDataFixture.TEST_MESSAGE)
             + "\n"
@@ -320,7 +320,7 @@ final class CsvTransformerTest extends IORecordTransformerTest {
             + ",more data";
     final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
 
-    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+    final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
     assertThat(records.size()).isEqualTo(2);
     Schema schema = records.get(0).schema();
     List<Field> fields = schema.fields();

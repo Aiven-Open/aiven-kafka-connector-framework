@@ -18,9 +18,9 @@ package io.aiven.commons.kafka.connector.source;
 
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
+import io.aiven.commons.kafka.connector.source.extractor.Extractor;
 import io.aiven.commons.kafka.connector.source.lookback.Lookback;
 import io.aiven.commons.kafka.connector.source.task.Context;
-import io.aiven.commons.kafka.connector.source.transformer.Transformer;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -53,8 +53,8 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
   /** The source common config */
   private final SourceCommonConfig sourceConfig;
 
-  /** The transformer to use. */
-  private final Transformer transformer;
+  /** The extractor to use. */
+  private final Extractor extractor;
 
   /**
    * The Lookback which contains recently processed native item key(s), this is used during a
@@ -75,7 +75,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
     this.sourceConfig = sourceConfig;
     this.lookback = Lookback.ofSize(sourceConfig.getRingBufferSize());
     this.offsetManager = offsetManager;
-    this.transformer = sourceConfig.getTransformer();
+    this.extractor = sourceConfig.getExtractor();
     Optional<KeySerde<K>> serde = getNativeKeySerde();
     this.startKey =
         sourceConfig.getNativeStartKey() != null && serde.isPresent()
@@ -231,8 +231,8 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
    * @return a stream of T created from the input stream of the native item.
    */
   final Stream<EvolvingSourceRecord> transform(final EvolvingSourceRecord sourceRecord) {
-    sourceRecord.setKeyData(transformer.generateKeyData(sourceRecord));
-    return transformer.generateRecords(sourceRecord).map(new Mapper(sourceRecord));
+    sourceRecord.setKeyData(extractor.generateKeyData(sourceRecord));
+    return extractor.generateRecords(sourceRecord).map(new Mapper(sourceRecord));
   }
 
   /**
@@ -261,7 +261,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 
   @Override
   public void close() throws Exception {
-    transformer.close();
+    extractor.close();
   }
 
   /**
@@ -279,7 +279,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
   }
 
   /**
-   * Maps the data from the @{link Transformer} stream to an EvolvingSourceRecord given all the
+   * Maps the data from the @{link Extractor} stream to an EvolvingSourceRecord given all the
    * additional data required.
    *
    * <p>The record count in the source record is updated.

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,8 +37,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-/** The Byte array transformer test. */
-final class ByteArrayTransformerTest extends IOTransformerTest {
+/** The Byte array extractor test. */
+final class ByteArrayExtractorTest extends IOExtractorTest {
   /** The size of the buffer used in testing */
   private static final int BUFFER_SIZE = 4096;
 
@@ -51,24 +51,24 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
   }
 
   @Override
-  protected Transformer setupTransformer(CompressionType compressionType) {
-    return setupTransformer(compressionType, BUFFER_SIZE);
+  protected Extractor setupExtractor(CompressionType compressionType) {
+    return setupExtractor(compressionType, BUFFER_SIZE);
   }
 
   /**
-   * Sets up the transformer with the specified buffer size.
+   * Sets up the extractor with the specified buffer size.
    *
-   * @param bufferSize the buffer size for the transformer.
-   * @return the configured transformer.
+   * @param bufferSize the buffer size for the extractor.
+   * @return the configured extractor.
    */
-  private Transformer setupTransformer(CompressionType compressionType, int bufferSize) {
+  private Extractor setupExtractor(CompressionType compressionType, int bufferSize) {
     Map<String, String> props = new HashMap<>();
-    SourceConfigFragment.setter(props).transformerBuffer(bufferSize);
+    SourceConfigFragment.setter(props).extractorBuffer(bufferSize);
     ConnectorCommonConfigFragment.setter(props).compressionType(compressionType);
 
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-    return new ByteArrayTransformer(sourceCommonConfig);
+    return new ByteArrayExtractor(sourceCommonConfig);
   }
 
   @Override
@@ -78,7 +78,7 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
         new ExampleNativeItem("nativeKey", ByteArrayDataFixture.generateByteData(BUFFER_SIZE));
     final EvolvingSourceRecord sourceRecord =
         createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
-    final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+    final Stream<SchemaAndValue> records = extractor.generateRecords(sourceRecord);
 
     assertThat(records)
         .extracting(SchemaAndValue::value)
@@ -101,7 +101,7 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
     entry.setRecordCount(10);
     sourceRecord.setOffsetManagerEntry(entry);
 
-    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+    final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
     assertThat(records).hasSize(15);
     for (int i = 0; i < 15; i++) {
       assertThat(records.get(i).value())
@@ -126,7 +126,7 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
     entry.setRecordCount(25);
     sourceRecord.setOffsetManagerEntry(entry);
 
-    final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+    final Stream<SchemaAndValue> records = extractor.generateRecords(sourceRecord);
 
     assertThat(records).isEmpty();
   }
@@ -147,17 +147,17 @@ final class ByteArrayTransformerTest extends IOTransformerTest {
   })
   void testGetRecordsWithVariableMaxBufferSize(
       final int bufferFactorCount, final int numberOfExpectedRecords) throws Exception {
-    transformer.close();
+    extractor.close();
     int bufferSize = bufferFactorCount * BUFFER_SIZE;
     int byteCount = BUFFER_SIZE * 10;
-    transformer = setupTransformer(CompressionType.NONE, bufferSize);
+    extractor = setupExtractor(CompressionType.NONE, bufferSize);
 
     final ExampleNativeItem nativeItem =
         new ExampleNativeItem("nativeKey", ByteArrayDataFixture.generateByteData(byteCount));
     final EvolvingSourceRecord sourceRecord =
         createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
 
-    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+    final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
 
     assertThat(records).hasSize(numberOfExpectedRecords);
   }

@@ -17,19 +17,19 @@ package io.aiven.commons.kafka.connector.common.documentation;
 
 import io.aiven.commons.kafka.connector.common.templating.TemplateVariable;
 import io.aiven.commons.kafka.connector.common.templating.TemplateVariableRegistry;
-
 import java.util.function.Supplier;
 
 public class TemplateVariableTestRegistry implements Supplier<TemplateVariableRegistry> {
-	/**
-	 * A registry of the standard variables used in a Sink connector.
-	 */
-	@Override
-	public TemplateVariableRegistry get() {
+  /** A registry of the standard variables used in a Sink connector. */
+  @Override
+  public TemplateVariableRegistry get() {
 
-		return TemplateVariableRegistry.builder().add(TemplateVariable.KEY).add(TemplateVariable.TOPIC)
-				.add(TemplateVariable.PARTITION).add(TemplateVariable.START_OFFSET).add(TemplateVariable.TIMESTAMP)
-				.build();
-	}
-
+    return TemplateVariableRegistry.builder()
+        .add(TemplateVariable.KEY)
+        .add(TemplateVariable.TOPIC)
+        .add(TemplateVariable.PARTITION)
+        .add(TemplateVariable.START_OFFSET)
+        .add(TemplateVariable.TIMESTAMP)
+        .build();
+  }
 }

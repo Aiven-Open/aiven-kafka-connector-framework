@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.transformer;
+package io.aiven.commons.kafka.connector.source.extractor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,10 +37,10 @@ import org.apache.kafka.connect.data.SchemaAndValue;
 import org.junit.jupiter.api.Test;
 
 /**
- * Base test for transformers that provide consume {@code IOSource<InputStream>} objects and produce
+ * Base test for extractors that provide consume {@code IOSource<InputStream>} objects and produce
  * records.
  */
-public abstract class IORecordTransformerTest extends IOTransformerTest {
+public abstract class IORecordExtractorTest extends IOExtractorTest {
 
   /**
    * Get the string prefix for the data messages.
@@ -50,7 +50,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
   protected abstract String generatedMessagePrefix();
 
   /**
-   * Get the test data in the format for the Transformer.
+   * Get the test data in the format for the Extractor.
    *
    * @param numberOfRecords the number of recordds in the test data.
    * @return a byte array containing the data.
@@ -77,7 +77,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
     final EvolvingSourceRecord evolvingSourceRecord =
         createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
 
-    final Stream<SchemaAndValue> records = transformer.generateRecords(evolvingSourceRecord);
+    final Stream<SchemaAndValue> records = extractor.generateRecords(evolvingSourceRecord);
     final List<Object> recs = records.collect(Collectors.toList());
     assertThat(recs).isEmpty();
   }
@@ -94,7 +94,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
       expected.add(generatedMessagePrefix() + i);
     }
 
-    final Stream<SchemaAndValue> records = transformer.generateRecords(evolvingSourceRecord);
+    final Stream<SchemaAndValue> records = extractor.generateRecords(evolvingSourceRecord);
 
     assertThat(records)
         .extracting(SchemaAndValue::value)
@@ -119,7 +119,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
     for (int i = 5; i < 20; i++) {
       expected.add(generatedMessagePrefix() + i);
     }
-    final Stream<SchemaAndValue> records = transformer.generateRecords(evolvingSourceRecord);
+    final Stream<SchemaAndValue> records = extractor.generateRecords(evolvingSourceRecord);
 
     assertThat(records)
         .extracting(SchemaAndValue::value)
@@ -140,17 +140,17 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
     entry.setRecordCount(25);
     evolvingSourceRecord.setOffsetManagerEntry(entry);
 
-    final Stream<SchemaAndValue> records = transformer.generateRecords(evolvingSourceRecord);
+    final Stream<SchemaAndValue> records = extractor.generateRecords(evolvingSourceRecord);
 
     assertThat(records).isEmpty();
   }
 
   @Test
   final void testReadCompressedData() throws Exception {
-    if (transformer.info.allFeatures(TransformerInfo.FEATURE_INTERNAL_COMPRESSION)) {
+    if (extractor.info.allFeatures(ExtractorInfo.FEATURE_INTERNAL_COMPRESSION)) {
       return;
     }
-    transformer = setupTransformer(CompressionType.GZIP);
+    extractor = setupExtractor(CompressionType.GZIP);
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (OutputStream out = CompressionType.GZIP.compress(baos)) {
       out.write(generateData(25));
@@ -165,7 +165,7 @@ public abstract class IORecordTransformerTest extends IOTransformerTest {
       expected.add(generatedMessagePrefix() + i);
     }
 
-    final Stream<SchemaAndValue> records = transformer.generateRecords(evolvingSourceRecord);
+    final Stream<SchemaAndValue> records = extractor.generateRecords(evolvingSourceRecord);
 
     assertThat(records)
         .extracting(SchemaAndValue::value)
