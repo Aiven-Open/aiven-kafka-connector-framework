@@ -19,67 +19,66 @@ import io.aiven.commons.util.collections.RingBuffer;
 
 /**
  * Lookback that uses a buffer to track the last N records.
- * 
- * @param <K>
- *            the key type.
+ *
+ * @param <K> the key type.
  */
 public class Buffer<K extends Comparable<K>> implements Lookback<K> {
-	private int bufferSize;
-	private RingBuffer<K> ringBuffer;
+  private int bufferSize;
+  private RingBuffer<K> ringBuffer;
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param bufferSize
-	 *            the size of the buffer
-	 */
-	Buffer(int bufferSize) {
-		this.bufferSize = bufferSize;
-		ringBuffer = new RingBuffer<>(bufferSize, RingBuffer.DuplicateHandling.REJECT, Comparable::compareTo);
-	}
+  /**
+   * Constructor.
+   *
+   * @param bufferSize the size of the buffer
+   */
+  Buffer(int bufferSize) {
+    this.bufferSize = bufferSize;
+    ringBuffer =
+        new RingBuffer<>(bufferSize, RingBuffer.DuplicateHandling.REJECT, Comparable::compareTo);
+  }
 
-	@Override
-	public void add(K key) {
-		ringBuffer.add(key);
-	}
+  @Override
+  public void add(K key) {
+    ringBuffer.add(key);
+  }
 
-	@Override
-	public K get() {
-		return ringBuffer.head();
-	}
+  @Override
+  public K get() {
+    return ringBuffer.head();
+  }
 
-	@Override
-	public boolean contains(K key) {
-		return ringBuffer.contains(key);
-	}
+  @Override
+  public boolean contains(K key) {
+    return ringBuffer.contains(key);
+  }
 
-	@Override
-	public int size() {
-		return bufferSize;
-	}
+  @Override
+  public int size() {
+    return bufferSize;
+  }
 
-	@Override
-	public Lookback<K> resize(int size) {
-		if (bufferSize == size) {
-			return this;
-		}
-		if (size <= 0) {
-			return new None<>();
-		}
-		if (size == 1) {
-			LastKey<K> lookback = new LastKey<>();
-			lookback.add(ringBuffer.tail());
-			return lookback;
-		}
-		RingBuffer<K> newBuffer = new RingBuffer<>(size);
-		K key = ringBuffer.head();
-		while (key != null) {
-			newBuffer.add(key);
-			ringBuffer.remove(key);
-			key = ringBuffer.head();
-		}
-		ringBuffer = newBuffer;
-		bufferSize = size;
-		return this;
-	}
+  @Override
+  public Lookback<K> resize(int size) {
+    if (bufferSize == size) {
+      return this;
+    }
+    if (size <= 0) {
+      return new None<>();
+    }
+    if (size == 1) {
+      LastKey<K> lookback = new LastKey<>();
+      lookback.add(ringBuffer.tail());
+      return lookback;
+    }
+    RingBuffer<K> newBuffer = new RingBuffer<>(size);
+    K key = ringBuffer.head();
+    while (key != null) {
+      newBuffer.add(key);
+      ringBuffer.remove(key);
+      key = ringBuffer.head();
+    }
+    ringBuffer = newBuffer;
+    bufferSize = size;
+    return this;
+  }
 }

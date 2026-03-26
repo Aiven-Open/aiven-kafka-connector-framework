@@ -15,43 +15,42 @@
  */
 package io.aiven.commons.kafka.connector.source.lookback;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 public class NoneTest extends AbstractLookbackTest {
 
-	private final None<String> underTest = new None<>();
+  private final None<String> underTest = new None<>();
 
-	@Override
-	@Test
-	void addTest() {
-		underTest.add("aKey");
-		assertThat(underTest.contains("aKey")).as("Should never contain a key").isFalse();
-	}
+  @Override
+  @Test
+  void addTest() {
+    underTest.add("aKey");
+    assertThat(underTest.contains("aKey")).as("Should never contain a key").isFalse();
+  }
 
-	@Override
-	@Test
-	void getTest() {
-		assertThat(underTest.get()).as("Should never contain a key").isNull();
-		underTest.add("aKey");
-		assertThat(underTest.get()).as("Should never contain a key").isNull();
-	}
+  @Override
+  @Test
+  void getTest() {
+    assertThat(underTest.get()).as("Should never contain a key").isNull();
+    underTest.add("aKey");
+    assertThat(underTest.get()).as("Should never contain a key").isNull();
+  }
 
-	@Override
-	@Test
-	void containsTest() {
-		assertThat(underTest.contains("aKey")).as("Should never contain a key").isFalse();
-		underTest.add("aKey");
-		assertThat(underTest.contains("aKey")).as("Should never contain a key").isFalse();
-	}
+  @Override
+  @Test
+  void containsTest() {
+    assertThat(underTest.contains("aKey")).as("Should never contain a key").isFalse();
+    underTest.add("aKey");
+    assertThat(underTest.contains("aKey")).as("Should never contain a key").isFalse();
+  }
 
-	@Override
-	@Test
-	void sizeTest() {
-		assertThat(underTest.size()).isEqualTo(0);
-		underTest.add("aKey");
-		assertThat(underTest.size()).isEqualTo(0);
-	}
-
+  @Override
+  @Test
+  void sizeTest() {
+    assertThat(underTest.size()).isEqualTo(0);
+    underTest.add("aKey");
+    assertThat(underTest.size()).isEqualTo(0);
+  }
 }

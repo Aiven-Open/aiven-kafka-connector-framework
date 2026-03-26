@@ -19,126 +19,124 @@ package io.aiven.commons.kafka.connector.source.transformer;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.task.Context;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.function.Consumer;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.function.Consumer;
-
+// spotless:off
 /**
- * ByteArrayTransformer chunks an entire object into a maximum size specified by
- * the {@link SourceConfigFragment.Setter#transformerBuffer(int)} configuration
+ * ByteArrayTransformer chunks an entire object into a maximum size specified by the
+ * transformerBuffer {@link SourceConfigFragment.Setter#transformerBuffer(int)} configuration
  * option.
- * <p>
- * If the configuration option specifies a buffer that is smaller than the
- * length of the input stream, the record will be split into multiple parts.
- * When this happens the transformer makes no guarantees for only once delivery
- * or delivery order as those are dependant upon the Kafka producer and remote
- * consumer configurations. This class will produce the blocks in order and on
+ *
+ * <p>If the configuration option specifies a buffer that is smaller than the length of the input
+ * stream, the record will be split into multiple parts. When this happens the transformer makes no
+ * guarantees for only once delivery or delivery order as those are dependant upon the Kafka
+ * producer and remote consumer configurations. This class will produce the blocks in order and on
  * restart will send any blocks that were not acknowledged by Kafka.
- * </p>
  */
+// spotless:on
 public class ByteArrayTransformer extends InputStreamTransformer {
 
-	/**
-	 * Gets the registry information for this transformer.
-	 * 
-	 * @return the registry information for this transformer.
-	 */
-	public static TransformerInfo info() {
-		return new TransformerInfo("Bytes", ByteArrayTransformer.class, TransformerInfo.FEATURE_NONE,
-				"Passes the input stream bytes as Kafka records.  Will split the input stream into multiple records if the"
-						+ " number of bytes exceeds the specified maximum buffer size.");
-	}
+  /**
+   * Gets the registry information for this transformer.
+   *
+   * @return the registry information for this transformer.
+   */
+  public static TransformerInfo info() {
+    return new TransformerInfo(
+        "Bytes",
+        ByteArrayTransformer.class,
+        TransformerInfo.FEATURE_NONE,
+        "Passes the input stream bytes as Kafka records.  Will split the input stream into multiple records if the"
+            + " number of bytes exceeds the specified maximum buffer size.");
+  }
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ByteArrayTransformer.class);
-	private final int maxBufferSize;
+  private static final Logger LOGGER = LoggerFactory.getLogger(ByteArrayTransformer.class);
+  private final int maxBufferSize;
 
-	/**
-	 * Constructs a ByteArray transformer using the values from the config.
-	 * 
-	 * @param config
-	 *            the configuration to use.
-	 */
-	public ByteArrayTransformer(SourceCommonConfig config) {
-		super(config, info());
-		maxBufferSize = config.getTransformerBufferSize();
-	}
+  /**
+   * Constructs a ByteArray transformer using the values from the config.
+   *
+   * @param config the configuration to use.
+   */
+  public ByteArrayTransformer(SourceCommonConfig config) {
+    super(config, info());
+    maxBufferSize = config.getTransformerBufferSize();
+  }
 
-	@Override
-	public StreamSpliterator createSpliterator(final IOSupplier<InputStream> inputStreamIOSupplier,
-			final long streamLength, final Context context) {
-		if (streamLength == 0) {
-			LOGGER.warn(
-					"Object sent for processing has an invalid streamLength of {}, object is empty returning an empty spliterator.",
-					streamLength);
-			return emptySpliterator(inputStreamIOSupplier);
-		}
+  @Override
+  public StreamSpliterator createSpliterator(
+      final IOSupplier<InputStream> inputStreamIOSupplier,
+      final long streamLength,
+      final Context context) {
+    if (streamLength == 0) {
+      LOGGER.warn(
+          "Object sent for processing has an invalid streamLength of {}, object is empty returning an empty spliterator.",
+          streamLength);
+      return emptySpliterator(inputStreamIOSupplier);
+    }
 
-		return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
+    return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
 
-			@Override
-			protected void inputOpened(final InputStream input) {
+      @Override
+      protected void inputOpened(final InputStream input) {}
 
-			}
+      @Override
+      protected void doClose() {
+        // nothing to do.
+      }
 
-			@Override
-			protected void doClose() {
-				// nothing to do.
-			}
+      @Override
+      protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
 
-			@Override
-			protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
+        try {
+          /// TODO: determine if we need to create a copy of the buffer. I don't see why
+          /// --
+          /// CW
+          final byte[] buffer = new byte[maxBufferSize];
+          final byte[] chunk = Arrays.copyOf(buffer, IOUtils.read(inputStream, buffer));
+          if (chunk.length > 0) {
+            action.accept(new SchemaAndValue(null, chunk));
+            return true;
+          }
 
-				try {
-					/// TODO: determine if we need to create a copy of the buffer. I don't see why
-					/// --
-					/// CW
-					final byte[] buffer = new byte[maxBufferSize];
-					final byte[] chunk = Arrays.copyOf(buffer, IOUtils.read(inputStream, buffer));
-					if (chunk.length > 0) {
-						action.accept(new SchemaAndValue(null, chunk));
-						return true;
-					}
+          return false;
+        } catch (IOException e) {
+          LOGGER.error("Error trying to advance inputStream: {}", e.getMessage(), e);
+          return false;
+        }
+      }
+    };
+  }
 
-					return false;
-				} catch (IOException e) {
-					LOGGER.error("Error trying to advance inputStream: {}", e.getMessage(), e);
-					return false;
-				}
-			}
-		};
-	}
+  /**
+   * This method returns an empty spliterator when an empty input stream is supplied to be split
+   *
+   * @param inputStreamIOSupplier The empty input stream that was supplied
+   * @return an Empty spliterator to return to the calling method.
+   */
+  private static StreamSpliterator emptySpliterator(
+      final IOSupplier<InputStream> inputStreamIOSupplier) {
+    return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
+      @Override
+      protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
+        return false;
+      }
 
-	/**
-	 * This method returns an empty spliterator when an empty input stream is
-	 * supplied to be split
-	 *
-	 * @param inputStreamIOSupplier
-	 *            The empty input stream that was supplied
-	 * @return an Empty spliterator to return to the calling method.
-	 */
-	private static StreamSpliterator emptySpliterator(final IOSupplier<InputStream> inputStreamIOSupplier) {
-		return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
-			@Override
-			protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
-				return false;
-			}
+      @Override
+      protected void doClose() {
+        // nothing to do
+      }
 
-			@Override
-			protected void doClose() {
-				// nothing to do
-			}
-
-			@Override
-			protected void inputOpened(final InputStream input) {
-			}
-
-		};
-	}
+      @Override
+      protected void inputOpened(final InputStream input) {}
+    };
+  }
 }

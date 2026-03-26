@@ -19,6 +19,9 @@ package io.aiven.commons.kafka.connector.source.transformer;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import io.confluent.connect.avro.AvroData;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.function.Consumer;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
@@ -28,74 +31,70 @@ import org.apache.kafka.connect.data.SchemaAndValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.function.Consumer;
-
-/**
- * Transforms a stream of Avro records into individual kafka messages, one per
- * record.
- */
+/** Transforms a stream of Avro records into individual kafka messages, one per record. */
 public class AvroTransformer extends InputStreamTransformer {
 
-	/**
-	 * Gets the registry information for this transformer.
-	 * 
-	 * @return the registry information for this transformer.
-	 */
-	public static TransformerInfo info() {
-		return new TransformerInfo("Avro", AvroTransformer.class, TransformerInfo.FEATURE_NONE,
-				"Accepts an Avro file-formatted input stream and creates one Kafka record for every Avro datum encountered.");
-	}
+  /**
+   * Gets the registry information for this transformer.
+   *
+   * @return the registry information for this transformer.
+   */
+  public static TransformerInfo info() {
+    return new TransformerInfo(
+        "Avro",
+        AvroTransformer.class,
+        TransformerInfo.FEATURE_NONE,
+        "Accepts an Avro file-formatted input stream and creates one Kafka record for every Avro datum encountered.");
+  }
 
-	private final AvroData avroData;
+  private final AvroData avroData;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(AvroTransformer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AvroTransformer.class);
 
-	/**
-	 * Constructs the AvroTransformer.
-	 * 
-	 * @param config
-	 *            The configuration for this connector.
-	 */
-	public AvroTransformer(final SourceCommonConfig config) {
-		super(config, info());
-		this.avroData = new AvroData(config.getTransformerCacheSize());
-	}
+  /**
+   * Constructs the AvroTransformer.
+   *
+   * @param config The configuration for this connector.
+   */
+  public AvroTransformer(final SourceCommonConfig config) {
+    super(config, info());
+    this.avroData = new AvroData(config.getTransformerCacheSize());
+  }
 
-	@Override
-	public StreamSpliterator createSpliterator(final IOSupplier<InputStream> inputStreamIOSupplier,
-			final long streamLength, final Context context) {
-		return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
-			private DataFileStream<GenericRecord> dataFileStream;
-			private final DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
+  @Override
+  public StreamSpliterator createSpliterator(
+      final IOSupplier<InputStream> inputStreamIOSupplier,
+      final long streamLength,
+      final Context context) {
+    return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
+      private DataFileStream<GenericRecord> dataFileStream;
+      private final DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
 
-			@Override
-			protected void inputOpened(final InputStream input) throws IOException {
-				dataFileStream = new DataFileStream<>(input, datumReader);
-			}
+      @Override
+      protected void inputOpened(final InputStream input) throws IOException {
+        dataFileStream = new DataFileStream<>(input, datumReader);
+      }
 
-			@Override
-			public void doClose() {
-				if (dataFileStream != null) {
-					try {
-						dataFileStream.close();
-					} catch (IOException e) {
-						LOGGER.error("Error closing reader: {}", e.getMessage(), e);
-					}
-				}
-			}
+      @Override
+      public void doClose() {
+        if (dataFileStream != null) {
+          try {
+            dataFileStream.close();
+          } catch (IOException e) {
+            LOGGER.error("Error closing reader: {}", e.getMessage(), e);
+          }
+        }
+      }
 
-			@Override
-			protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
-				if (dataFileStream.hasNext()) {
-					final GenericRecord record = dataFileStream.next();
-					action.accept(avroData.toConnectData(record.getSchema(), record));
-					return true;
-				}
-				return false;
-			}
-		};
-	}
-
+      @Override
+      protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
+        if (dataFileStream.hasNext()) {
+          final GenericRecord record = dataFileStream.next();
+          action.accept(avroData.toConnectData(record.getSchema(), record));
+          return true;
+        }
+        return false;
+      }
+    };
+  }
 }

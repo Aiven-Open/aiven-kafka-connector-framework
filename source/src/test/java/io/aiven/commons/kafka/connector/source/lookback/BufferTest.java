@@ -15,76 +15,76 @@
  */
 package io.aiven.commons.kafka.connector.source.lookback;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class BufferTest extends AbstractLookbackTest {
-	private Buffer<String> underTest;
+  private Buffer<String> underTest;
 
-	@BeforeEach
-	void setup() {
-		underTest = new Buffer<>(3);
-	}
+  @BeforeEach
+  void setup() {
+    underTest = new Buffer<>(3);
+  }
 
-	@Override
-	@Test
-	void addTest() {
-		assertThat(underTest.contains("aKey")).isFalse();
-		underTest.add("aKey");
-		assertThat(underTest.contains("aKey")).isTrue();
-		underTest.add("bKey");
-		assertThat(underTest.contains("aKey")).isTrue();
-		assertThat(underTest.contains("bKey")).isTrue();
-		underTest.add("cKey");
-		assertThat(underTest.contains("aKey")).isTrue();
-		assertThat(underTest.contains("bKey")).isTrue();
-		assertThat(underTest.contains("cKey")).isTrue();
-		underTest.add("dKey");
-		assertThat(underTest.contains("aKey")).isFalse();
-		assertThat(underTest.contains("bKey")).isTrue();
-		assertThat(underTest.contains("cKey")).isTrue();
-		assertThat(underTest.contains("dKey")).isTrue();
-	}
+  @Override
+  @Test
+  void addTest() {
+    assertThat(underTest.contains("aKey")).isFalse();
+    underTest.add("aKey");
+    assertThat(underTest.contains("aKey")).isTrue();
+    underTest.add("bKey");
+    assertThat(underTest.contains("aKey")).isTrue();
+    assertThat(underTest.contains("bKey")).isTrue();
+    underTest.add("cKey");
+    assertThat(underTest.contains("aKey")).isTrue();
+    assertThat(underTest.contains("bKey")).isTrue();
+    assertThat(underTest.contains("cKey")).isTrue();
+    underTest.add("dKey");
+    assertThat(underTest.contains("aKey")).isFalse();
+    assertThat(underTest.contains("bKey")).isTrue();
+    assertThat(underTest.contains("cKey")).isTrue();
+    assertThat(underTest.contains("dKey")).isTrue();
+  }
 
-	@Override
-	@Test
-	void getTest() {
-		assertThat(underTest.get()).isNull();
-		underTest.add("aKey");
-		assertThat(underTest.get()).isEqualTo("aKey");
-		underTest.add("bKey");
-		assertThat(underTest.get()).isEqualTo("aKey");
-		underTest.add("cKey");
-		assertThat(underTest.get()).isEqualTo("aKey");
-		underTest.add("dKey");
-		assertThat(underTest.get()).isEqualTo("bKey");
-	}
+  @Override
+  @Test
+  void getTest() {
+    assertThat(underTest.get()).isNull();
+    underTest.add("aKey");
+    assertThat(underTest.get()).isEqualTo("aKey");
+    underTest.add("bKey");
+    assertThat(underTest.get()).isEqualTo("aKey");
+    underTest.add("cKey");
+    assertThat(underTest.get()).isEqualTo("aKey");
+    underTest.add("dKey");
+    assertThat(underTest.get()).isEqualTo("bKey");
+  }
 
-	@Override
-	@Test
-	void containsTest() {
-		assertThat(underTest.contains("aKey")).isFalse();
-		underTest.add("aKey");
-		assertThat(underTest.contains("aKey")).isTrue();
-		underTest.add("bKey");
-		assertThat(underTest.contains("aKey")).isTrue();
-		assertThat(underTest.contains("bKey")).isTrue();
-		underTest.add("cKey");
-		assertThat(underTest.contains("aKey")).isTrue();
-		assertThat(underTest.contains("bKey")).isTrue();
-		assertThat(underTest.contains("cKey")).isTrue();
-		underTest.add("dKey");
-		assertThat(underTest.contains("aKey")).isFalse();
-		assertThat(underTest.contains("bKey")).isTrue();
-		assertThat(underTest.contains("cKey")).isTrue();
-		assertThat(underTest.contains("dKey")).isTrue();
-	}
+  @Override
+  @Test
+  void containsTest() {
+    assertThat(underTest.contains("aKey")).isFalse();
+    underTest.add("aKey");
+    assertThat(underTest.contains("aKey")).isTrue();
+    underTest.add("bKey");
+    assertThat(underTest.contains("aKey")).isTrue();
+    assertThat(underTest.contains("bKey")).isTrue();
+    underTest.add("cKey");
+    assertThat(underTest.contains("aKey")).isTrue();
+    assertThat(underTest.contains("bKey")).isTrue();
+    assertThat(underTest.contains("cKey")).isTrue();
+    underTest.add("dKey");
+    assertThat(underTest.contains("aKey")).isFalse();
+    assertThat(underTest.contains("bKey")).isTrue();
+    assertThat(underTest.contains("cKey")).isTrue();
+    assertThat(underTest.contains("dKey")).isTrue();
+  }
 
-	@Override
-	@Test
-	void sizeTest() {
-		assertThat(underTest.size()).isEqualTo(3);
-	}
+  @Override
+  @Test
+  void sizeTest() {
+    assertThat(underTest.size()).isEqualTo(3);
+  }
 }

@@ -15,48 +15,46 @@
  */
 package io.aiven.commons.kafka.connector.source.impl;
 
-import io.aiven.commons.kafka.connector.source.EvolvingSourceRecordIterator;
 import io.aiven.commons.kafka.connector.source.AbstractSourceTask;
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecordIterator;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.transformer.JsonTransformer;
-import org.apache.kafka.common.config.ConfigException;
-
 import java.io.IOException;
 import java.util.Map;
+import org.apache.kafka.common.config.ConfigException;
 
 public class ExampleSourceTask extends AbstractSourceTask {
-	private ExampleNativeSourceData nativeSourceData;
+  private ExampleNativeSourceData nativeSourceData;
 
-	public ExampleSourceTask() {
-	}
+  public ExampleSourceTask() {}
 
-	@Override
-	protected EvolvingSourceRecordIterator getIterator(final SourceCommonConfig config) {
-		return new EvolvingSourceRecordIterator(config, nativeSourceData);
-	}
+  @Override
+  protected EvolvingSourceRecordIterator getIterator(final SourceCommonConfig config) {
+    return new EvolvingSourceRecordIterator(config, nativeSourceData);
+  }
 
-	@Override
-	protected SourceCommonConfig configure(final Map<String, String> props, final OffsetManager offsetManager) {
-		SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
-		setter.transformerClass(JsonTransformer.class);
-		SourceCommonConfig result = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
-		try {
-			nativeSourceData = new ExampleNativeSourceData(result, offsetManager);
-		} catch (IOException e) {
-			throw new ConfigException("Unable to create native source data", e);
-		}
-		return result;
-	}
+  @Override
+  protected SourceCommonConfig configure(
+      final Map<String, String> props, final OffsetManager offsetManager) {
+    SourceConfigFragment.Setter setter = SourceConfigFragment.setter(props);
+    setter.transformerClass(JsonTransformer.class);
+    SourceCommonConfig result =
+        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    try {
+      nativeSourceData = new ExampleNativeSourceData(result, offsetManager);
+    } catch (IOException e) {
+      throw new ConfigException("Unable to create native source data", e);
+    }
+    return result;
+  }
 
-	@Override
-	protected void closeResources() {
+  @Override
+  protected void closeResources() {}
 
-	}
-
-	@Override
-	public String version() {
-		return "Example version 1.0";
-	}
+  @Override
+  public String version() {
+    return "Example version 1.0";
+  }
 }

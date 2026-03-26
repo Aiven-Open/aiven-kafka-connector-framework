@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -31,178 +30,164 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * A testing fixture to generate/read JSON data.
- */
-final public class JsonTestDataFixture {
+/** A testing fixture to generate/read JSON data. */
+public final class JsonTestDataFixture {
 
-	public final static String MESSAGE_PREFIX = "Hello, from JSON Test Data Fixture: ";
+  public static final String MESSAGE_PREFIX = "Hello, from JSON Test Data Fixture: ";
 
-	private final static String MSG_FORMAT = "{\"id\" : %s, \"message\" : \"%s\", \"value\" : \"%s\"}%n";
+  private static final String MSG_FORMAT =
+      "{\"id\" : %s, \"message\" : \"%s\", \"value\" : \"%s\"}%n";
 
-	public static final String SCHEMA_JSON = "{\n  \"type\": \"struct\", \"name\": \"TestRecord\",\n "
-			+ "  \"fields\": [\n {\"field\": \"message\", \"type\": \"string\"},\n"
-			+ "    {\"field\": \"id\", \"type\": \"int32\"}\n  ]\n}";
+  public static final String SCHEMA_JSON =
+      "{\n  \"type\": \"struct\", \"name\": \"TestRecord\",\n "
+          + "  \"fields\": [\n {\"field\": \"message\", \"type\": \"string\"},\n"
+          + "    {\"field\": \"id\", \"type\": \"int32\"}\n  ]\n}";
 
-	public static final String CONNECT_EXTRA_SCHEMA_JSON = "{\n  \"type\": \"struct\",\n  \"name\": \"TestRecord\",\n"
-			+ "  \"fields\": [\n    {\"name\": \"message\", \"type\": \"string\"},\n"
-			+ "    {\"name\": \"id\", \"type\": \"int32\"}\n  ],\n"
-			+ "    \"connect.version\":1, \"connect.name\": \"TestRecord\"}\n";
+  public static final String CONNECT_EXTRA_SCHEMA_JSON =
+      "{\n  \"type\": \"struct\",\n  \"name\": \"TestRecord\",\n"
+          + "  \"fields\": [\n    {\"name\": \"message\", \"type\": \"string\"},\n"
+          + "    {\"name\": \"id\", \"type\": \"int32\"}\n  ],\n"
+          + "    \"connect.version\":1, \"connect.name\": \"TestRecord\"}\n";
 
-	public static final String EVOLVED_SCHEMA_JSON = "{\n  \"type\": \"struct\",\n  \"name\": \"TestRecord\",\n"
-			+ "  \"fields\": [\n    {\"field\": \"message\", \"type\": \"string\"},\n"
-			+ "    {\"field\": \"id\", \"type\": \"int32\"},\n"
-			+ "    {\"field\": \"age\", \"type\": \"int32\", \"default\":0}\n  ]\n}";
+  public static final String EVOLVED_SCHEMA_JSON =
+      "{\n  \"type\": \"struct\",\n  \"name\": \"TestRecord\",\n"
+          + "  \"fields\": [\n    {\"field\": \"message\", \"type\": \"string\"},\n"
+          + "    {\"field\": \"id\", \"type\": \"int32\"},\n"
+          + "    {\"field\": \"age\", \"type\": \"int32\", \"default\":0}\n  ]\n}";
 
-	private final static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	private final static DeserializationFeature[] DESERIALIZATION_FEATURES = {
-			DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS};
+  private static final DeserializationFeature[] DESERIALIZATION_FEATURES = {
+    DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS
+  };
 
-	static {
-		for (final DeserializationFeature feature : DESERIALIZATION_FEATURES) {
-			OBJECT_MAPPER.enable(feature);
-		}
-		OBJECT_MAPPER.setNodeFactory(JsonNodeFactory.withExactBigDecimals(true));
-	}
+  static {
+    for (final DeserializationFeature feature : DESERIALIZATION_FEATURES) {
+      OBJECT_MAPPER.enable(feature);
+    }
+    OBJECT_MAPPER.setNodeFactory(JsonNodeFactory.withExactBigDecimals(true));
+  }
 
-	private JsonTestDataFixture() {
-		// do not instantiate
-	}
+  private JsonTestDataFixture() {
+    // do not instantiate
+  }
 
-	/**
-	 * Generates a byte array containing the specified number of records.
-	 *
-	 * @param numRecs
-	 *            the numer of records to generate
-	 * @return A byte array containing the specified number of records.
-	 * @throws IOException
-	 *             if the JSON records can not be serialized.
-	 */
-	public static byte[] generateJsonData(final int numRecs) throws IOException {
-		return generateJsonData(0, numRecs);
-	}
+  /**
+   * Generates a byte array containing the specified number of records.
+   *
+   * @param numRecs the numer of records to generate
+   * @return A byte array containing the specified number of records.
+   * @throws IOException if the JSON records can not be serialized.
+   */
+  public static byte[] generateJsonData(final int numRecs) throws IOException {
+    return generateJsonData(0, numRecs);
+  }
 
-	/**
-	 * creates and serializes the specified number of records with the specified
-	 * schema.
-	 *
-	 * @param messageId
-	 *            the messageId to start with.
-	 * @param numOfRecs
-	 *            the number of records to write.
-	 * @return A byte array containing the specified number of records.
-	 * @throws IOException
-	 *             if the Avro records can not be serialized.
-	 */
-	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
-	public static byte[] generateJsonData(final int messageId, final int numOfRecs) throws IOException {
-		return generateJsonRecords(messageId, numOfRecs, "test message").getBytes(StandardCharsets.UTF_8);
-	}
+  /**
+   * creates and serializes the specified number of records with the specified schema.
+   *
+   * @param messageId the messageId to start with.
+   * @param numOfRecs the number of records to write.
+   * @return A byte array containing the specified number of records.
+   * @throws IOException if the Avro records can not be serialized.
+   */
+  @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
+  public static byte[] generateJsonData(final int messageId, final int numOfRecs)
+      throws IOException {
+    return generateJsonRecords(messageId, numOfRecs, "test message")
+        .getBytes(StandardCharsets.UTF_8);
+  }
 
-	/**
-	 * Creates the specified number of JSON records encoded into a string.
-	 *
-	 * @param recordCount
-	 *            the number of records to generate.
-	 * @return The specified number of JSON records encoded into a string.
-	 */
-	public static String generateJsonRecords(final int recordCount) {
-		return generateJsonRecords(0, recordCount, "test message");
-	}
+  /**
+   * Creates the specified number of JSON records encoded into a string.
+   *
+   * @param recordCount the number of records to generate.
+   * @return The specified number of JSON records encoded into a string.
+   */
+  public static String generateJsonRecords(final int recordCount) {
+    return generateJsonRecords(0, recordCount, "test message");
+  }
 
-	/**
-	 * Generates a single JSON record
-	 *
-	 * @param messageId
-	 *            the id for the record
-	 * @param msg
-	 *            the message for the record
-	 * @return a standard JSON test record.
-	 */
-	public static String generateJsonRecord(final int messageId, final String msg) {
-		return String.format(MSG_FORMAT, messageId, msg, MESSAGE_PREFIX + messageId);
-	}
+  /**
+   * Generates a single JSON record
+   *
+   * @param messageId the id for the record
+   * @param msg the message for the record
+   * @return a standard JSON test record.
+   */
+  public static String generateJsonRecord(final int messageId, final String msg) {
+    return String.format(MSG_FORMAT, messageId, msg, MESSAGE_PREFIX + messageId);
+  }
 
-	/**
-	 * Creates Json test data.
-	 *
-	 * @param recordCount
-	 *            the number of records to create.
-	 * @param testMessage
-	 *            the message for the records.
-	 * @return
-	 */
-	public static String generateJsonRecords(final int messageId, final int recordCount, final String testMessage) {
-		final StringBuilder jsonRecords = new StringBuilder();
-		for (int i = 0; i < recordCount; i++) {
-			jsonRecords.append(generateJsonRecord(messageId + i, testMessage));
-		}
-		return jsonRecords.toString();
-	}
+  /**
+   * Creates Json test data.
+   *
+   * @param recordCount the number of records to create.
+   * @param testMessage the message for the records.
+   * @return
+   */
+  public static String generateJsonRecords(
+      final int messageId, final int recordCount, final String testMessage) {
+    final StringBuilder jsonRecords = new StringBuilder();
+    for (int i = 0; i < recordCount; i++) {
+      jsonRecords.append(generateJsonRecord(messageId + i, testMessage));
+    }
+    return jsonRecords.toString();
+  }
 
-	/**
-	 * Reads a json record from the byte array.
-	 *
-	 * @param bytes
-	 *            the bytes to extract the record from.
-	 * @return JsonNode read from the bytes.
-	 * @throws IOException
-	 *             on IO error.
-	 */
-	public static JsonNode readJsonRecord(final byte[] bytes) throws IOException {
-		return OBJECT_MAPPER.readTree(bytes);
-	}
+  /**
+   * Reads a json record from the byte array.
+   *
+   * @param bytes the bytes to extract the record from.
+   * @return JsonNode read from the bytes.
+   * @throws IOException on IO error.
+   */
+  public static JsonNode readJsonRecord(final byte[] bytes) throws IOException {
+    return OBJECT_MAPPER.readTree(bytes);
+  }
 
-	/**
-	 * read multiple JSON records.
-	 *
-	 * @param values
-	 *            The Strings containing the serialized JSON records.
-	 * @return a list of JsonRecords extracted from the values.
-	 * @throws IOException
-	 *             on IO error.
-	 */
-	public static List<JsonNode> readJsonRecords(final Collection<String> values) throws IOException {
-		final List<JsonNode> result = new ArrayList<>();
-		for (final String value : values) {
-			result.add(OBJECT_MAPPER.readTree(value));
-		}
-		return result;
-	}
+  /**
+   * read multiple JSON records.
+   *
+   * @param values The Strings containing the serialized JSON records.
+   * @return a list of JsonRecords extracted from the values.
+   * @throws IOException on IO error.
+   */
+  public static List<JsonNode> readJsonRecords(final Collection<String> values) throws IOException {
+    final List<JsonNode> result = new ArrayList<>();
+    for (final String value : values) {
+      result.add(OBJECT_MAPPER.readTree(value));
+    }
+    return result;
+  }
 
-	/**
-	 * Reads a list of JsonRecords from an array of bytes. Reads the bytes line by
-	 * line.
-	 *
-	 * @param bytes
-	 *            the serialized json records.
-	 * @return a list of JsonRecords extracted from the values.
-	 * @throws IOException
-	 *             on IO error.
-	 */
-	public static List<JsonNode> readJsonRecords(final byte[] bytes) throws IOException {
-		final List<JsonNode> result = new ArrayList<>();
-		for (final String value : readLines(bytes)) {
-			result.add(OBJECT_MAPPER.readTree(value));
-		}
-		return result;
-	}
+  /**
+   * Reads a list of JsonRecords from an array of bytes. Reads the bytes line by line.
+   *
+   * @param bytes the serialized json records.
+   * @return a list of JsonRecords extracted from the values.
+   * @throws IOException on IO error.
+   */
+  public static List<JsonNode> readJsonRecords(final byte[] bytes) throws IOException {
+    final List<JsonNode> result = new ArrayList<>();
+    for (final String value : readLines(bytes)) {
+      result.add(OBJECT_MAPPER.readTree(value));
+    }
+    return result;
+  }
 
-	/**
-	 * Reads based lines from the byte array.
-	 *
-	 * @param input
-	 *            the serialized data
-	 * @return a list of lines from the byte data.
-	 * @throws IOException
-	 *             on IO error.
-	 */
-	public static List<String> readLines(final byte[] input) throws IOException {
-		try (InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(input), StandardCharsets.UTF_8);
-				BufferedReader bufferedReader = new BufferedReader(reader)) {
-			return bufferedReader.lines().collect(Collectors.toList());
-		}
-	}
-
+  /**
+   * Reads based lines from the byte array.
+   *
+   * @param input the serialized data
+   * @return a list of lines from the byte data.
+   * @throws IOException on IO error.
+   */
+  public static List<String> readLines(final byte[] input) throws IOException {
+    try (InputStreamReader reader =
+            new InputStreamReader(new ByteArrayInputStream(input), StandardCharsets.UTF_8);
+        BufferedReader bufferedReader = new BufferedReader(reader)) {
+      return bufferedReader.lines().collect(Collectors.toList());
+    }
+  }
 }

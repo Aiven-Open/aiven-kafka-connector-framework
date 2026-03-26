@@ -17,36 +17,32 @@ package io.aiven.commons.kafka.connector.source.lookback;
 
 /**
  * A Lookback that only tracks the last key seen.
- * 
- * @param <K>
- *            the key type.
+ *
+ * @param <K> the key type.
  */
 public class LastKey<K extends Comparable<K>> implements Lookback<K> {
-	private K lastKey;
+  private K lastKey;
 
-	/**
-	 * Constructor.
-	 */
-	public LastKey() {
-	}
+  /** Constructor. */
+  public LastKey() {}
 
-	@Override
-	public void add(K key) {
-		lastKey = key;
-	}
+  @Override
+  public void add(K key) {
+    lastKey = key;
+  }
 
-	@Override
-	public K get() {
-		return lastKey;
-	}
+  @Override
+  public K get() {
+    return lastKey;
+  }
 
-	@Override
-	public int size() {
-		return 1;
-	}
+  @Override
+  public int size() {
+    return 1;
+  }
 
-	@Override
-	public boolean contains(K key) {
-		return lastKey != null && key.compareTo(lastKey) == 0;
-	}
+  @Override
+  public boolean contains(K key) {
+    return lastKey != null && key.compareTo(lastKey) == 0;
+  }
 }

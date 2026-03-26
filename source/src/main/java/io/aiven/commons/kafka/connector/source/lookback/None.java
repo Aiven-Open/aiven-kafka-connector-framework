@@ -17,35 +17,31 @@ package io.aiven.commons.kafka.connector.source.lookback;
 
 /**
  * Lookback that does not track any keys.
- * 
- * @param <K>
- *            the key type.
+ *
+ * @param <K> the key type.
  */
 public class None<K extends Comparable<K>> implements Lookback<K> {
 
-	/**
-	 * Constructor.
-	 */
-	public None() {
-	}
+  /** Constructor. */
+  public None() {}
 
-	@Override
-	public void add(K key) {
-		// does nothing.
-	}
+  @Override
+  public void add(K key) {
+    // does nothing.
+  }
 
-	@Override
-	public K get() {
-		return null;
-	}
+  @Override
+  public K get() {
+    return null;
+  }
 
-	@Override
-	public int size() {
-		return 0;
-	}
+  @Override
+  public int size() {
+    return 0;
+  }
 
-	@Override
-	public boolean contains(K key) {
-		return false;
-	}
+  @Override
+  public boolean contains(K key) {
+    return false;
+  }
 }

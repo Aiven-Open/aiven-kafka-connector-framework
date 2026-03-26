@@ -19,20 +19,18 @@ package io.aiven.commons.kafka.connector.source.impl.nativeProvided;
 import java.nio.ByteBuffer;
 
 /**
- * A "native" object for testing. In a real implementation this would be the
- * object returned from storage.
+ * A "native" object for testing. In a real implementation this would be the object returned from
+ * storage.
  */
 public record ExampleNativeItem(String key, ByteBuffer data) {
 
-	/**
-	 * Constructor.
-	 *
-	 * @param key
-	 *            the key for this object.
-	 * @param data
-	 *            the data for this object.
-	 */
-	public ExampleNativeItem(final String key, final byte[] data) {
-		this(key, ByteBuffer.wrap(data));
-	}
+  /**
+   * Constructor.
+   *
+   * @param key the key for this object.
+   * @param data the data for this object.
+   */
+  public ExampleNativeItem(final String key, final byte[] data) {
+    this(key, ByteBuffer.wrap(data));
+  }
 }

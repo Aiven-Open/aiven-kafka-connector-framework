@@ -21,58 +21,51 @@ import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
 import io.aiven.commons.kafka.connector.source.task.Context;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-/**
- * A simple String implementation would use a NativeClient to retrieve the
- * NativeItems.
- *
- */
+/** A simple String implementation would use a NativeClient to retrieve the NativeItems. */
 public class ExampleCsvSourceData extends NativeSourceData<String> {
 
-	ExampleCsvClient client;
+  ExampleCsvClient client;
 
-	public ExampleCsvSourceData(final SourceCommonConfig sourceConfig, final OffsetManager offsetManager)
-			throws IOException {
-		super(sourceConfig, offsetManager);
-		client = new ExampleCsvClient();
-	}
+  public ExampleCsvSourceData(
+      final SourceCommonConfig sourceConfig, final OffsetManager offsetManager) throws IOException {
+    super(sourceConfig, offsetManager);
+    client = new ExampleCsvClient();
+  }
 
-	@Override
-	public String getSourceName() {
-		return "Example native source data";
-	}
+  @Override
+  public String getSourceName() {
+    return "Example native source data";
+  }
 
-	@Override
-	public OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Map<String, Object> data) {
-		return new ExampleOffsetManagerEntry(data);
-	}
+  @Override
+  public OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Map<String, Object> data) {
+    return new ExampleOffsetManagerEntry(data);
+  }
 
-	@Override
-	protected OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Context context) {
-		// cast String because it is the K type in the NativeSourceData<K> above
-		return new ExampleOffsetManagerEntry((String) context.getNativeKey(), "Group1");
-	}
+  @Override
+  protected OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Context context) {
+    // cast String because it is the K type in the NativeSourceData<K> above
+    return new ExampleOffsetManagerEntry((String) context.getNativeKey(), "Group1");
+  }
 
-	@Override
-	protected Optional<KeySerde<String>> getNativeKeySerde() {
-		return Optional.empty();
-	}
+  @Override
+  protected Optional<KeySerde<String>> getNativeKeySerde() {
+    return Optional.empty();
+  }
 
-	@Override
-	protected OffsetManager.OffsetManagerKey getOffsetManagerKey(String nativeKey) {
-		return new ExampleOffsetManagerEntry(nativeKey, "Group1").getManagerKey();
-	}
+  @Override
+  protected OffsetManager.OffsetManagerKey getOffsetManagerKey(String nativeKey) {
+    return new ExampleOffsetManagerEntry(nativeKey, "Group1").getManagerKey();
+  }
 
-	@Override
-	public Stream<ExampleSourceNativeInfo> getNativeItemStream(String offset) {
-		// the offset is a String because it is the K type in NativeSourceData<K> above
-		return client.listObjects(offset).stream().map(ExampleSourceNativeInfo::new);
-
-	}
-
+  @Override
+  public Stream<ExampleSourceNativeInfo> getNativeItemStream(String offset) {
+    // the offset is a String because it is the K type in NativeSourceData<K> above
+    return client.listObjects(offset).stream().map(ExampleSourceNativeInfo::new);
+  }
 }
