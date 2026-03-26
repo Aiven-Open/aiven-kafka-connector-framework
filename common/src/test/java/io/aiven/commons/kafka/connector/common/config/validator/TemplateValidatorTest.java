@@ -15,75 +15,87 @@
  */
 package io.aiven.commons.kafka.connector.common.config.validator;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatException;
+
 import io.aiven.commons.kafka.connector.common.templating.TemplateVariable;
 import io.aiven.commons.kafka.connector.common.templating.TemplateVariableRegistry;
 import org.apache.kafka.common.config.ConfigException;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatException;
-
-/**
- * Tests for the template validator
- */
+/** Tests for the template validator */
 public class TemplateValidatorTest {
 
-	public static final TemplateVariableRegistry TESTING_REGISTRY = TemplateVariableRegistry.builder()
-			.add(TemplateVariable.KEY).add(TemplateVariable.PARTITION).add(TemplateVariable.TIMESTAMP).build();
+  public static final TemplateVariableRegistry TESTING_REGISTRY =
+      TemplateVariableRegistry.builder()
+          .add(TemplateVariable.KEY)
+          .add(TemplateVariable.PARTITION)
+          .add(TemplateVariable.TIMESTAMP)
+          .build();
 
-	final TemplateValidator underTest = new TemplateValidator(TESTING_REGISTRY);
-	@Test
-	void missingKey() {
-		assertThatException().isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{key}}-{{missing}}"))
-				.isInstanceOf(ConfigException.class).withMessage(
-						"Invalid value {{key}}-{{missing}} for configuration CONFIGURATION_NAME template variable 'missing': 'missing' is not defined in the variable registry");
-	}
+  final TemplateValidator underTest = new TemplateValidator(TESTING_REGISTRY);
 
-	@Test
-	void wrongParameterName() {
-		assertThatException()
-				.isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{partition:notPadding=true}}"))
-				.isInstanceOf(ConfigException.class).withMessage(
-						"Invalid value {{partition:notPadding=true}} for configuration CONFIGURATION_NAME template variable 'partition': parameter name should be 'padding'");
-	}
+  @Test
+  void missingKey() {
+    assertThatException()
+        .isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{key}}-{{missing}}"))
+        .isInstanceOf(ConfigException.class)
+        .withMessage(
+            "Invalid value {{key}}-{{missing}} for configuration CONFIGURATION_NAME template variable 'missing': 'missing' is not defined in the variable registry");
+  }
 
-	@Test
-	void wrongParameterValue() {
-		assertThatException()
-				.isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{partition:padding=notABoolean}}"))
-				.isInstanceOf(ConfigException.class).withMessage(
-						"Invalid value notABoolean for configuration CONFIGURATION_NAME template variable 'partition' parameter 'padding' in '{{partition:padding=notABoolean}}': String must be one of: true, false");
-	}
+  @Test
+  void wrongParameterName() {
+    assertThatException()
+        .isThrownBy(
+            () -> underTest.ensureValid("CONFIGURATION_NAME", "{{partition:notPadding=true}}"))
+        .isInstanceOf(ConfigException.class)
+        .withMessage(
+            "Invalid value {{partition:notPadding=true}} for configuration CONFIGURATION_NAME template variable 'partition': parameter name should be 'padding'");
+  }
 
-	@Test
-	void missingParameterValue() {
-		assertThatException().isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{partition:padding=}}"))
-				.isInstanceOf(ConfigException.class).withMessage(
-						"Invalid value parameter `padding` value has not been set for configuration CONFIGURATION_NAME template variable 'partition': {{partition:padding=}}");
-	}
+  @Test
+  void wrongParameterValue() {
+    assertThatException()
+        .isThrownBy(
+            () -> underTest.ensureValid("CONFIGURATION_NAME", "{{partition:padding=notABoolean}}"))
+        .isInstanceOf(ConfigException.class)
+        .withMessage(
+            "Invalid value notABoolean for configuration CONFIGURATION_NAME template variable 'partition' parameter 'padding' in '{{partition:padding=notABoolean}}': String must be one of: true, false");
+  }
 
-	@Test
-	void optionalParameterNotSpecified() {
-		// should validate with no issues
-		underTest.ensureValid("CONFIGURATION_NAME", "{{partition}}");
-	}
+  @Test
+  void missingParameterValue() {
+    assertThatException()
+        .isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{partition:padding=}}"))
+        .isInstanceOf(ConfigException.class)
+        .withMessage(
+            "Invalid value parameter `padding` value has not been set for configuration CONFIGURATION_NAME template variable 'partition': {{partition:padding=}}");
+  }
 
-	@Test
-	void missingRequiredParameter() {
-		assertThatException().isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{timestamp}}"))
-				.isInstanceOf(ConfigException.class).withMessage(
-						"Invalid value {{timestamp}} for configuration CONFIGURATION_NAME template variable 'timestamp': parameter 'unit' must be specified and string must be one of: yyyy, MM, dd, HH");
+  @Test
+  void optionalParameterNotSpecified() {
+    // should validate with no issues
+    underTest.ensureValid("CONFIGURATION_NAME", "{{partition}}");
+  }
 
-	}
+  @Test
+  void missingRequiredParameter() {
+    assertThatException()
+        .isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{timestamp}}"))
+        .isInstanceOf(ConfigException.class)
+        .withMessage(
+            "Invalid value {{timestamp}} for configuration CONFIGURATION_NAME template variable 'timestamp': parameter 'unit' must be specified and string must be one of: yyyy, MM, dd, HH");
+  }
 
-	@Test
-	void helpText() {
-		String result = underTest.toString();
-		assertThat(result).contains(TemplateVariable.KEY.getName());
-		assertThat(result).contains(TemplateVariable.PARTITION.getName());
-		assertThat(result).contains(TemplateVariable.TIMESTAMP.getName());
+  @Test
+  void helpText() {
+    String result = underTest.toString();
+    assertThat(result).contains(TemplateVariable.KEY.getName());
+    assertThat(result).contains(TemplateVariable.PARTITION.getName());
+    assertThat(result).contains(TemplateVariable.TIMESTAMP.getName());
 
-		TemplateValidator noRegistry = new TemplateValidator(null);
-		assertThat(noRegistry.toString()).isEqualTo("no restrictions");
-	}
+    TemplateValidator noRegistry = new TemplateValidator(null);
+    assertThat(noRegistry.toString()).isEqualTo("no restrictions");
+  }
 }

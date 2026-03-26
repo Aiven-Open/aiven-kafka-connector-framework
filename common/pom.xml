@@ -30,7 +30,7 @@
   <name>Aiven framework common library for connectors on Apache Kafka</name>
   <description>A framework to make development of source connectors easier</description>
 
-  <properties></properties>
+  <properties/>
 
   <dependencies>
     <dependency>

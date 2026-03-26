@@ -22,9 +22,9 @@ import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
 import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.config.validator.ScaleValidator;
-import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import io.aiven.commons.kafka.connector.source.extractor.ByteArrayExtractor;
 import io.aiven.commons.kafka.connector.source.extractor.Extractor;
+import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import io.aiven.commons.util.collections.Scale;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -282,8 +282,8 @@ public final class SourceConfigFragment extends ConfigFragment {
   }
 
   /**
-   * Gets the size, in bytes, of the extractor cache size in bytes. Only applies to extractors
-   * that utilize caches like Avro or Parquet.
+   * Gets the size, in bytes, of the extractor cache size in bytes. Only applies to extractors that
+   * utilize caches like Avro or Parquet.
    *
    * @return the size in bytes of the extractor buffer.
    */

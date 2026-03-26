@@ -40,8 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class provides a extractor to take a List of CSVRecord generated from apache csv-commons
- * and transforms that data into a SchemaAndValue Object usable by Connect to add messages to Kafka.
+ * This class provides a extractor to take a List of CSVRecord generated from apache csv-commons and
+ * transforms that data into a SchemaAndValue Object usable by Connect to add messages to Kafka.
  *
  * <p>Assumptions:
  *

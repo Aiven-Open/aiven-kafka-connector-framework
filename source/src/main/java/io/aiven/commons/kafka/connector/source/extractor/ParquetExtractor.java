@@ -37,8 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A Extractor that converts an input stream from a Parquet file into individual kafka messages,
- * one per record.
+ * A Extractor that converts an input stream from a Parquet file into individual kafka messages, one
+ * per record.
  */
 public class ParquetExtractor extends InputStreamExtractor {
 

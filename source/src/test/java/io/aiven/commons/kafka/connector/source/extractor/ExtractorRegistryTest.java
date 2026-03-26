@@ -25,8 +25,7 @@ public class ExtractorRegistryTest {
   private static int PRIVATE_FEATURE1 = 1 << (ExtractorInfo.PRIVATE_FEATURE_SHIFT + 0);
 
   private ExtractorInfo[] infos = {
-    new ExtractorInfo(
-        "no features", Extractor.class, ExtractorInfo.FEATURE_NONE, "mo features"),
+    new ExtractorInfo("no features", Extractor.class, ExtractorInfo.FEATURE_NONE, "mo features"),
     new ExtractorInfo("feat1", Extractor.class, FEATURE1, "the first feature"),
     new ExtractorInfo("feat2", Extractor.class, FEATURE2, "the second feature"),
     new ExtractorInfo("feat3", Extractor.class, FEATURE1 | FEATURE2, "oooo two features"),
@@ -117,9 +116,7 @@ public class ExtractorRegistryTest {
     assertThat(underTest.anyFeature(FEATURE2).stream().map(ExtractorInfo::commonName).toList())
         .containsExactlyInAnyOrder("feat2", "feat3", "private + 2", "private + 3");
     assertThat(
-            underTest.anyFeature(PRIVATE_FEATURE1).stream()
-                .map(ExtractorInfo::commonName)
-                .toList())
+            underTest.anyFeature(PRIVATE_FEATURE1).stream().map(ExtractorInfo::commonName).toList())
         .containsExactlyInAnyOrder(
             "private", "private + 1", "private + 2", "private + 3", "private + 4");
     assertThat(

@@ -100,9 +100,7 @@ public abstract class InputStreamExtractor extends Extractor {
     /** The input stream supplier. */
     private final IOSupplier<InputStream> inputStreamIOSupplier;
 
-    /**
-     * The logger to be used by all instances of this class. This will be the Extractor logger.
-     */
+    /** The logger to be used by all instances of this class. This will be the Extractor logger. */
     protected final Logger logger;
 
     /**

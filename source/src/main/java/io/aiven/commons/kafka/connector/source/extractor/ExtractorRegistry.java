@@ -23,9 +23,9 @@ import java.util.TreeMap;
 import org.apache.kafka.common.config.ConfigDef;
 
 /**
- * A registry of extractors. ExtractorRegistry instances are immutable. Use the builder to
- * create them. The Builder will allow multiple registries to be merged into a new registry.
- * Extractor names are not case specific in the registry.
+ * A registry of extractors. ExtractorRegistry instances are immutable. Use the builder to create
+ * them. The Builder will allow multiple registries to be merged into a new registry. Extractor
+ * names are not case specific in the registry.
  */
 public class ExtractorRegistry {
   /** The map of extractor names to info */
@@ -108,9 +108,8 @@ public class ExtractorRegistry {
   }
 
   /**
-   * Gets a ExtractorInfo for the specific name. The ExtractorInfo with the first matching name
-   * is returned. If multiple names match the string the first lexically sorted one will be
-   * returned.
+   * Gets a ExtractorInfo for the specific name. The ExtractorInfo with the first matching name is
+   * returned. If multiple names match the string the first lexically sorted one will be returned.
    *
    * @param name the name of the extractor.
    * @return the ExtractorInfo or {@code null} if not found.
@@ -154,8 +153,8 @@ public class ExtractorRegistry {
     }
 
     /**
-     * Adds all the extractors from a registry to the builder. Any existing ExtractorsInfos with
-     * the same name will be overwritten.
+     * Adds all the extractors from a registry to the builder. Any existing ExtractorsInfos with the
+     * same name will be overwritten.
      *
      * @param registry the registry to read.
      * @return this.

@@ -18,10 +18,9 @@ package io.aiven.commons.kafka.connector.source;
 
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
+import io.aiven.commons.kafka.connector.source.extractor.Extractor;
 import io.aiven.commons.kafka.connector.source.lookback.Lookback;
 import io.aiven.commons.kafka.connector.source.task.Context;
-import io.aiven.commons.kafka.connector.source.extractor.Extractor;
-
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;

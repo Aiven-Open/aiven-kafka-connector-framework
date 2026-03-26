@@ -15,45 +15,44 @@
  */
 package io.aiven.commons.kafka.connector.common.documentation;
 
-import java.io.StringWriter;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.velocity.VelocityContext;
+import java.io.StringWriter;
 import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class TemplateVarsTest {
-	// TemplateVariableRegistry registry = TemplateVariableRegistry.STANDARD_SINK;
+  // TemplateVariableRegistry registry = TemplateVariableRegistry.STANDARD_SINK;
 
-	@Test
-	void visibilityInVelocityTest() {
+  @Test
+  void visibilityInVelocityTest() {
 
-		Velocity.setProperty("resource.loader", "testApp");
-		Velocity.setProperty("testApp.resource.loader.class", ClasspathResourceLoader.class.getName());
-		Velocity.init();
+    Velocity.setProperty("resource.loader", "testApp");
+    Velocity.setProperty("testApp.resource.loader.class", ClasspathResourceLoader.class.getName());
+    Velocity.init();
 
-		VelocityContext context = new VelocityContext();
+    VelocityContext context = new VelocityContext();
 
-		TemplateVarsFactory factory = new TemplateVarsFactory();
+    TemplateVarsFactory factory = new TemplateVarsFactory();
 
-		context.put("TemplateVarsFactory", factory);
+    context.put("TemplateVarsFactory", factory);
 
-		Template template = Velocity.getTemplate("TemplateVarsTest.vm");
+    Template template = Velocity.getTemplate("TemplateVarsTest.vm");
 
-		StringWriter sw = new StringWriter();
+    StringWriter sw = new StringWriter();
 
-		template.merge(context, sw);
-		String result = sw.toString();
-		assertThat(result).contains("Var Name: key");
-		assertThat(result).contains("Var Description: The key from the Kafka source record");
-		assertThat(result).contains("Example: '{{ key }}'");
-		assertThat(result).contains("Example: '{{ partition:padding=[true, false] }}'");
-		assertThat(result).contains("        Parameter: padding");
-		assertThat(result).contains("        Specifies that the value should be left padded");
-		assertThat(result).contains("          - required: false");
-		assertThat(result).contains("          - values: [true, false]");
-	}
+    template.merge(context, sw);
+    String result = sw.toString();
+    assertThat(result).contains("Var Name: key");
+    assertThat(result).contains("Var Description: The key from the Kafka source record");
+    assertThat(result).contains("Example: '{{ key }}'");
+    assertThat(result).contains("Example: '{{ partition:padding=[true, false] }}'");
+    assertThat(result).contains("        Parameter: padding");
+    assertThat(result).contains("        Specifies that the value should be left padded");
+    assertThat(result).contains("          - required: false");
+    assertThat(result).contains("          - values: [true, false]");
+  }
 }

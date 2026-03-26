@@ -95,8 +95,8 @@ public abstract class IOExtractorTest {
 
   /**
    * Verifies that output records that are extracted from the data can be skipped. For example a
-   * JSONL extractor returns one record for every line in the JSONL structure. The extractor
-   * must be able to start returning output from some point after the start of the structure
+   * JSONL extractor returns one record for every line in the JSONL structure. The extractor must be
+   * able to start returning output from some point after the start of the structure
    *
    * @throws Exception on error.
    */
@@ -135,8 +135,7 @@ public abstract class IOExtractorTest {
   }
 
   /**
-   * Verifies that an IOException during the InputStream read does not cause the Extractor to
-   * abort.
+   * Verifies that an IOException during the InputStream read does not cause the Extractor to abort.
    */
   @Test
   final void testIOExceptionDuringDataRead() throws IOException {
