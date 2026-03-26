@@ -18,60 +18,54 @@ package io.aiven.commons.kafka.connector.source.transformer;
 
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
+import java.util.stream.Stream;
 import org.apache.kafka.connect.data.SchemaAndValue;
 
-import java.util.stream.Stream;
-
 /**
- * Extracts data from the native abstract source record to Key SchemaAndValue
- * object and a stream of SchemaAndValue objects for the values. This class is
- * used within the EvolvingSourceRecordIterator to convert the abstract source
- * record into one or more Kafka source records.
- *
+ * Extracts data from the native abstract source record to Key SchemaAndValue object and a stream of
+ * SchemaAndValue objects for the values. This class is used within the EvolvingSourceRecordIterator
+ * to convert the abstract source record into one or more Kafka source records.
  */
 public abstract class Transformer implements AutoCloseable {
-	/** The source configuration for the Kafka task. */
-	protected final SourceCommonConfig config;
-	/** The info for this Transformer */
-	protected final TransformerInfo info;
+  /** The source configuration for the Kafka task. */
+  protected final SourceCommonConfig config;
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param config
-	 *            The configuration for the source connector.
-	 * @param info
-	 *            The TransformerInfo for this transformer.
-	 */
-	protected Transformer(SourceCommonConfig config, TransformerInfo info) {
-		this.config = config;
-		this.info = info;
-	}
-	/**
-	 * Gets a stream of SchemaAndValue records from the input stream.
-	 * 
-	 * @param sourceRecord
-	 *            The EvolvingSourceRecord being processed.
-	 * 
-	 * @return the stream of values for Kafka SourceRecords.
-	 */
-	public abstract Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord);
+  /** The info for this Transformer */
+  protected final TransformerInfo info;
 
-	/**
-	 * Convert the native key into a Schema and Value for Kafka. By default, we will
-	 * use the toString() method to get the key
-	 * 
-	 * @param evolvingSourceRecord
-	 *            the abstract source record to extract the keyData from.
-	 * 
-	 * @return a SchemaAndValue for the key.
-	 */
-	public SchemaAndValue generateKeyData(final EvolvingSourceRecord evolvingSourceRecord) {
-		return SchemaAndValueFactory.createSchemaAndValue(evolvingSourceRecord.getNativeKey().toString());
-	}
+  /**
+   * Constructor.
+   *
+   * @param config The configuration for the source connector.
+   * @param info The TransformerInfo for this transformer.
+   */
+  protected Transformer(SourceCommonConfig config, TransformerInfo info) {
+    this.config = config;
+    this.info = info;
+  }
 
-	@Override
-	public void close() throws Exception {
-		// do nothing.
-	}
+  /**
+   * Gets a stream of SchemaAndValue records from the input stream.
+   *
+   * @param sourceRecord The EvolvingSourceRecord being processed.
+   * @return the stream of values for Kafka SourceRecords.
+   */
+  public abstract Stream<SchemaAndValue> generateRecords(final EvolvingSourceRecord sourceRecord);
+
+  /**
+   * Convert the native key into a Schema and Value for Kafka. By default, we will use the
+   * toString() method to get the key
+   *
+   * @param evolvingSourceRecord the abstract source record to extract the keyData from.
+   * @return a SchemaAndValue for the key.
+   */
+  public SchemaAndValue generateKeyData(final EvolvingSourceRecord evolvingSourceRecord) {
+    return SchemaAndValueFactory.createSchemaAndValue(
+        evolvingSourceRecord.getNativeKey().toString());
+  }
+
+  @Override
+  public void close() throws Exception {
+    // do nothing.
+  }
 }

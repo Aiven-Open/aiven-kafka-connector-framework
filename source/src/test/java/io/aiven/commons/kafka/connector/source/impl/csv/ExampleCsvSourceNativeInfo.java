@@ -20,45 +20,39 @@ import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.source.AbstractSourceNativeInfo;
 import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.task.Context;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-/**
- * This example data object has a String key and a byte buffer as its data
- * object.
- */
+/** This example data object has a String key and a byte buffer as its data object. */
 public class ExampleCsvSourceNativeInfo extends AbstractSourceNativeInfo<String, ByteBuffer> {
 
-	/**
-	 * Constructor.
-	 *
-	 * @param item
-	 *            the ExampleNativeItem comprising a key of String and a data item
-	 *            of ByteBuffer.
-	 */
-	public ExampleCsvSourceNativeInfo(ExampleNativeItem item) {
-		super(new NativeInfo<String, ByteBuffer>(item.key(), item.data()));
-		// in some cases it would make sense to pass the ExampleNativeItem as the data
-		// type and extract the key type from that
-	}
+  /**
+   * Constructor.
+   *
+   * @param item the ExampleNativeItem comprising a key of String and a data item of ByteBuffer.
+   */
+  public ExampleCsvSourceNativeInfo(ExampleNativeItem item) {
+    super(new NativeInfo<String, ByteBuffer>(item.key(), item.data()));
+    // in some cases it would make sense to pass the ExampleNativeItem as the data
+    // type and extract the key type from that
+  }
 
-	@Override
-	public Context getContext() {
-		return new Context(nativeKey());
-		// we don't have any context data here, but in some cases the ExampleNativeItem
-		// may have topic, partition or kafka offset information.
-	}
+  @Override
+  public Context getContext() {
+    return new Context(nativeKey());
+    // we don't have any context data here, but in some cases the ExampleNativeItem
+    // may have topic, partition or kafka offset information.
+  }
 
-	@Override
-	protected InputStream getInputStream() throws IOException {
-		return new ByteArrayInputStream(nativeInfo.nativeItem().array());
-	}
+  @Override
+  protected InputStream getInputStream() throws IOException {
+    return new ByteArrayInputStream(nativeInfo.nativeItem().array());
+  }
 
-	@Override
-	public long estimateInputStreamLength() throws UnsupportedOperationException {
-		return nativeInfo.nativeItem().capacity();
-	}
+  @Override
+  public long estimateInputStreamLength() throws UnsupportedOperationException {
+    return nativeInfo.nativeItem().capacity();
+  }
 }

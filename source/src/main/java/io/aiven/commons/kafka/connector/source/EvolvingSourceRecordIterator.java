@@ -16,89 +16,88 @@
 
 package io.aiven.commons.kafka.connector.source;
 
+import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
+import io.aiven.commons.kafka.connector.source.task.DistributionStrategy;
 import java.util.Collections;
 import java.util.Iterator;
 
-import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
-import io.aiven.commons.kafka.connector.source.task.DistributionStrategy;
-
 /**
- * Iterator that processes Native Source Data and creates AbstractSourceRecords.
- * It supports splitting each native record into multiple AbstractSourceRecords.
- * NOTE: this is NOT an {@code abstract} class but rather a {@code final} class
- * that is an iterator over {@link EvolvingSourceRecord} instances.
+ * Iterator that processes Native Source Data and creates AbstractSourceRecords. It supports
+ * splitting each native record into multiple AbstractSourceRecords. NOTE: this is NOT an {@code
+ * abstract} class but rather a {@code final} class that is an iterator over {@link
+ * EvolvingSourceRecord} instances.
  */
 public final class EvolvingSourceRecordIterator implements Iterator<EvolvingSourceRecord> {
 
-	/** the taskId of this running task */
-	private final int taskId;
+  /** the taskId of this running task */
+  private final int taskId;
 
-	/**
-	 * The inner iterator to provides a base EvolvingSourceRecord for a storage item
-	 * that has passed the filters and potentially had data extracted.
-	 */
-	private Iterator<EvolvingSourceRecord> inner;
-	/**
-	 * The outer iterator that provides an EvolvingSourceRecord for each record
-	 * contained by the storage item identified by the inner record.
-	 */
-	private Iterator<EvolvingSourceRecord> outer;
+  /**
+   * The inner iterator to provides a base EvolvingSourceRecord for a storage item that has passed
+   * the filters and potentially had data extracted.
+   */
+  private Iterator<EvolvingSourceRecord> inner;
 
-	/**
-	 * The predicate which will determine if a native item should be assigned to
-	 * this task for processing
-	 */
-	private final DistributionStrategy distributionStrategy;
+  /**
+   * The outer iterator that provides an EvolvingSourceRecord for each record contained by the
+   * storage item identified by the inner record.
+   */
+  private Iterator<EvolvingSourceRecord> outer;
 
-	private final NativeSourceData<?> nativeSourceData;
+  /**
+   * The predicate which will determine if a native item should be assigned to this task for
+   * processing
+   */
+  private final DistributionStrategy distributionStrategy;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param sourceConfig
-	 *            The source configuration.
-	 * @param nativeSourceData
-	 *            Access methods for the native source.
-	 */
-	public EvolvingSourceRecordIterator(final SourceCommonConfig sourceConfig,
-			final NativeSourceData<?> nativeSourceData) {
-		super();
-		final int maxTasks = sourceConfig.getMaxTasks();
-		this.nativeSourceData = nativeSourceData;
-		this.taskId = sourceConfig.getTaskId() % maxTasks;
-		this.distributionStrategy = sourceConfig.getDistributionType().getDistributionStrategy(maxTasks);
-		this.inner = Collections.emptyIterator();
-		this.outer = Collections.emptyIterator();
-	}
+  private final NativeSourceData<?> nativeSourceData;
 
-	/**
-	 * Gets the logger for the concrete implementation.
-	 *
-	 * @return The logger for the concrete implementation.
-	 */
+  /**
+   * Constructor.
+   *
+   * @param sourceConfig The source configuration.
+   * @param nativeSourceData Access methods for the native source.
+   */
+  public EvolvingSourceRecordIterator(
+      final SourceCommonConfig sourceConfig, final NativeSourceData<?> nativeSourceData) {
+    super();
+    final int maxTasks = sourceConfig.getMaxTasks();
+    this.nativeSourceData = nativeSourceData;
+    this.taskId = sourceConfig.getTaskId() % maxTasks;
+    this.distributionStrategy =
+        sourceConfig.getDistributionType().getDistributionStrategy(maxTasks);
+    this.inner = Collections.emptyIterator();
+    this.outer = Collections.emptyIterator();
+  }
 
-	@Override
-	public boolean hasNext() {
-		if (!outer.hasNext()) {
-			nativeSourceData.recordNativeKeyFinished();
-		}
-		if (!inner.hasNext() && !outer.hasNext()) {
-			inner = nativeSourceData.getIterator(context -> taskId == distributionStrategy.getTaskFor(context));
-		}
-		while (!outer.hasNext() && inner.hasNext()) {
-			outer = nativeSourceData.transform(inner.next()).iterator();
-		}
-		return outer.hasNext();
-	}
+  /**
+   * Gets the logger for the concrete implementation.
+   *
+   * @return The logger for the concrete implementation.
+   */
+  @Override
+  public boolean hasNext() {
+    if (!outer.hasNext()) {
+      nativeSourceData.recordNativeKeyFinished();
+    }
+    if (!inner.hasNext() && !outer.hasNext()) {
+      inner =
+          nativeSourceData.getIterator(
+              context -> taskId == distributionStrategy.getTaskFor(context));
+    }
+    while (!outer.hasNext() && inner.hasNext()) {
+      outer = nativeSourceData.transform(inner.next()).iterator();
+    }
+    return outer.hasNext();
+  }
 
-	@Override
-	public EvolvingSourceRecord next() {
-		return outer.next();
-	}
+  @Override
+  public EvolvingSourceRecord next() {
+    return outer.next();
+  }
 
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException("This iterator is unmodifiable");
-	}
-
+  @Override
+  public void remove() {
+    throw new UnsupportedOperationException("This iterator is unmodifiable");
+  }
 }

@@ -16,139 +16,149 @@
 
 package io.aiven.commons.kafka.connector.source.transformer;
 
-import io.aiven.commons.util.io.compression.CompressionType;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
-import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
+import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.testFixture.format.ByteArrayDataFixture;
-import org.apache.kafka.connect.data.SchemaAndValue;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-
+import io.aiven.commons.util.io.compression.CompressionType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.apache.kafka.connect.data.SchemaAndValue;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-/**
- * The Byte array transformer test.
- */
+/** The Byte array transformer test. */
 final class ByteArrayTransformerTest extends IOTransformerTest {
-	/** The size of the buffer used in testing */
-	private final static int BUFFER_SIZE = 4096;
-	/** THe function to extract the byte buffer from the object */
-	private final static Function<Object, byte[]> messageExtractor = o -> (byte[]) o;
+  /** The size of the buffer used in testing */
+  private static final int BUFFER_SIZE = 4096;
 
-	@Override
-	protected byte[] generateOneBuffer() {
-		return ByteArrayDataFixture.generateByteData(4096);
-	}
-	@Override
-	protected Transformer setupTransformer(CompressionType compressionType) {
-		return setupTransformer(compressionType, BUFFER_SIZE);
-	}
+  /** THe function to extract the byte buffer from the object */
+  private static final Function<Object, byte[]> messageExtractor = o -> (byte[]) o;
 
-	/**
-	 * Sets up the transformer with the specified buffer size.
-	 * 
-	 * @param bufferSize
-	 *            the buffer size for the transformer.
-	 * @return the configured transformer.
-	 */
-	private Transformer setupTransformer(CompressionType compressionType, int bufferSize) {
-		Map<String, String> props = new HashMap<>();
-		SourceConfigFragment.setter(props).transformerBuffer(bufferSize);
-		ConnectorCommonConfigFragment.setter(props).compressionType(compressionType);
+  @Override
+  protected byte[] generateOneBuffer() {
+    return ByteArrayDataFixture.generateByteData(4096);
+  }
 
-		SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(),
-				props);
-		return new ByteArrayTransformer(sourceCommonConfig);
-	}
+  @Override
+  protected Transformer setupTransformer(CompressionType compressionType) {
+    return setupTransformer(compressionType, BUFFER_SIZE);
+  }
 
-	@Override
-	@Test
-	void testReadData() throws Exception {
-		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
-				ByteArrayDataFixture.generateByteData(BUFFER_SIZE));
-		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
-		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+  /**
+   * Sets up the transformer with the specified buffer size.
+   *
+   * @param bufferSize the buffer size for the transformer.
+   * @return the configured transformer.
+   */
+  private Transformer setupTransformer(CompressionType compressionType, int bufferSize) {
+    Map<String, String> props = new HashMap<>();
+    SourceConfigFragment.setter(props).transformerBuffer(bufferSize);
+    ConnectorCommonConfigFragment.setter(props).compressionType(compressionType);
 
-		assertThat(records).extracting(SchemaAndValue::value).extracting(messageExtractor)
-				.containsExactly(ByteArrayDataFixture.generateByteData(BUFFER_SIZE));
-	}
+    SourceCommonConfig sourceCommonConfig =
+        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    return new ByteArrayTransformer(sourceCommonConfig);
+  }
 
-	@Override
-	@Test
-	void testReadRecordsSkipFew() throws Exception {
-		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
-				ByteArrayDataFixture.generateByteRecords(BUFFER_SIZE, 25));
-		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
-		// skip 10 records -- we have to set the record after the read because the
-		// getOffsetManagerEntry() creates a defensive copy
-		final ExampleOffsetManagerEntry entry = (ExampleOffsetManagerEntry) sourceRecord.getOffsetManagerEntry();
-		entry.setRecordCount(10);
-		sourceRecord.setOffsetManagerEntry(entry);
+  @Override
+  @Test
+  void testReadData() throws Exception {
+    final ExampleNativeItem nativeItem =
+        new ExampleNativeItem("nativeKey", ByteArrayDataFixture.generateByteData(BUFFER_SIZE));
+    final EvolvingSourceRecord sourceRecord =
+        createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
+    final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
 
-		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
-		assertThat(records).hasSize(15);
-		for (int i = 0; i < 15; i++) {
-			assertThat(records.get(i).value()).isEqualTo(
-					ByteArrayDataFixture.generateByteRecord(BUFFER_SIZE, ByteArrayDataFixture.intAsByte(i + 10)));
-		}
-	}
+    assertThat(records)
+        .extracting(SchemaAndValue::value)
+        .extracting(messageExtractor)
+        .containsExactly(ByteArrayDataFixture.generateByteData(BUFFER_SIZE));
+  }
 
-	@Override
-	@Test
-	void testReadRecordsSkipMoreRecordsThanExist() throws Exception {
-		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
-				ByteArrayDataFixture.generateByteRecords(BUFFER_SIZE, 20));
-		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
-		// skip 25 records -- we have to set the record after the read because the
-		// getOffsetManagerEntry() creates a defensive copy
-		final ExampleOffsetManagerEntry entry = (ExampleOffsetManagerEntry) sourceRecord.getOffsetManagerEntry();
-		entry.setRecordCount(25);
-		sourceRecord.setOffsetManagerEntry(entry);
+  @Override
+  @Test
+  void testReadRecordsSkipFew() throws Exception {
+    final ExampleNativeItem nativeItem =
+        new ExampleNativeItem(
+            "nativeKey", ByteArrayDataFixture.generateByteRecords(BUFFER_SIZE, 25));
+    final EvolvingSourceRecord sourceRecord =
+        createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
+    // skip 10 records -- we have to set the record after the read because the
+    // getOffsetManagerEntry() creates a defensive copy
+    final ExampleOffsetManagerEntry entry =
+        (ExampleOffsetManagerEntry) sourceRecord.getOffsetManagerEntry();
+    entry.setRecordCount(10);
+    sourceRecord.setOffsetManagerEntry(entry);
 
-		final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
+    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+    assertThat(records).hasSize(15);
+    for (int i = 0; i < 15; i++) {
+      assertThat(records.get(i).value())
+          .isEqualTo(
+              ByteArrayDataFixture.generateByteRecord(
+                  BUFFER_SIZE, ByteArrayDataFixture.intAsByte(i + 10)));
+    }
+  }
 
-		assertThat(records).isEmpty();
-	}
+  @Override
+  @Test
+  void testReadRecordsSkipMoreRecordsThanExist() throws Exception {
+    final ExampleNativeItem nativeItem =
+        new ExampleNativeItem(
+            "nativeKey", ByteArrayDataFixture.generateByteRecords(BUFFER_SIZE, 20));
+    final EvolvingSourceRecord sourceRecord =
+        createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
+    // skip 25 records -- we have to set the record after the read because the
+    // getOffsetManagerEntry() creates a defensive copy
+    final ExampleOffsetManagerEntry entry =
+        (ExampleOffsetManagerEntry) sourceRecord.getOffsetManagerEntry();
+    entry.setRecordCount(25);
+    sourceRecord.setOffsetManagerEntry(entry);
 
-	/**
-	 * Test that buffers that are too long wrap correctly. The buffer that is
-	 * provided is 10 x {@link #BUFFER_SIZE}. The {@code bufferFactorCount}
-	 * determines how many records that will be split into.
-	 * 
-	 * @param bufferFactorCount
-	 *            the factor to multiply the {@link #BUFFER_SIZE} by to create the
-	 *            actual test buffer size.
-	 * @param numberOfExpectedRecords
-	 *            the number of records the byte array is split into based off the
-	 *            max buffer size
-	 */
-	@ParameterizedTest
-	@CsvSource({"1,10", "2,5", "3,4", "4,3", "5,2", "6,2", "7,2", "8,2", "9,2", "10,1", "11,1", "12,1"})
-	void testGetRecordsWithVariableMaxBufferSize(final int bufferFactorCount, final int numberOfExpectedRecords)
-			throws Exception {
-		transformer.close();
-		int bufferSize = bufferFactorCount * BUFFER_SIZE;
-		int byteCount = BUFFER_SIZE * 10;
-		transformer = setupTransformer(CompressionType.NONE, bufferSize);
+    final Stream<SchemaAndValue> records = transformer.generateRecords(sourceRecord);
 
-		final ExampleNativeItem nativeItem = new ExampleNativeItem("nativeKey",
-				ByteArrayDataFixture.generateByteData(byteCount));
-		final EvolvingSourceRecord sourceRecord = createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
+    assertThat(records).isEmpty();
+  }
 
-		final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+  /**
+   * Test that buffers that are too long wrap correctly. The buffer that is provided is 10 x {@link
+   * #BUFFER_SIZE}. The {@code bufferFactorCount} determines how many records that will be split
+   * into.
+   *
+   * @param bufferFactorCount the factor to multiply the {@link #BUFFER_SIZE} by to create the
+   *     actual test buffer size.
+   * @param numberOfExpectedRecords the number of records the byte array is split into based off the
+   *     max buffer size
+   */
+  @ParameterizedTest
+  @CsvSource({
+    "1,10", "2,5", "3,4", "4,3", "5,2", "6,2", "7,2", "8,2", "9,2", "10,1", "11,1", "12,1"
+  })
+  void testGetRecordsWithVariableMaxBufferSize(
+      final int bufferFactorCount, final int numberOfExpectedRecords) throws Exception {
+    transformer.close();
+    int bufferSize = bufferFactorCount * BUFFER_SIZE;
+    int byteCount = BUFFER_SIZE * 10;
+    transformer = setupTransformer(CompressionType.NONE, bufferSize);
 
-		assertThat(records).hasSize(numberOfExpectedRecords);
-	}
+    final ExampleNativeItem nativeItem =
+        new ExampleNativeItem("nativeKey", ByteArrayDataFixture.generateByteData(byteCount));
+    final EvolvingSourceRecord sourceRecord =
+        createExampleSourceRecord(new ExampleSourceNativeInfo(nativeItem));
+
+    final List<SchemaAndValue> records = transformer.generateRecords(sourceRecord).toList();
+
+    assertThat(records).hasSize(numberOfExpectedRecords);
+  }
 }

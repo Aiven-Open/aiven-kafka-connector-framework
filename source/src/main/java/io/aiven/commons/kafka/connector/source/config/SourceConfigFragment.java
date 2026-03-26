@@ -16,7 +16,6 @@
 
 package io.aiven.commons.kafka.connector.source.config;
 
-import io.aiven.commons.util.collections.Scale;
 import io.aiven.commons.kafka.config.ExtendedConfigKey;
 import io.aiven.commons.kafka.config.SinceInfo;
 import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
@@ -26,406 +25,443 @@ import io.aiven.commons.kafka.config.validator.ScaleValidator;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import io.aiven.commons.kafka.connector.source.transformer.ByteArrayTransformer;
 import io.aiven.commons.kafka.connector.source.transformer.Transformer;
+import io.aiven.commons.util.collections.Scale;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-/**
- * Defines properties that are shared across all Source implementations.
- */
+/** Defines properties that are shared across all Source implementations. */
 public final class SourceConfigFragment extends ConfigFragment {
 
-	private static final String MAX_POLL_RECORDS = "max.poll.records";
-	private static final String TARGET_TOPIC = "topic";
-	private static final String ERRORS_TOLERANCE = "errors.tolerance";
-	private static final String DISTRIBUTION_TYPE = "distribution.type";
+  private static final String MAX_POLL_RECORDS = "max.poll.records";
+  private static final String TARGET_TOPIC = "topic";
+  private static final String ERRORS_TOLERANCE = "errors.tolerance";
+  private static final String DISTRIBUTION_TYPE = "distribution.type";
 
-	/** The name of the ring buffer size property */
-	private static final String RING_BUFFER_SIZE = "ring.buffer.size";
-	/** The name of the native start key property. Visible for use in logging */
-	public static final String NATIVE_START_KEY = "native.start.key";
+  /** The name of the ring buffer size property */
+  private static final String RING_BUFFER_SIZE = "ring.buffer.size";
 
-	private static final String TRANSFORMER_CLASS = "transformer.class";
-	private static final String TRANSFORMER_BUFFER = "transformer.buffer";
-	private static final String TRANSFORMER_CACHE = "transformer.cache.size";
-	private static final String CSV_TRANSFORMER_HEADERS_ENABLED = "transformer.csv.headers.enabled";
-	private static final String CSV_TRANSFORMER_HEADERS = "transformer.csv.headers";
+  /** The name of the native start key property. Visible for use in logging */
+  public static final String NATIVE_START_KEY = "native.start.key";
 
-	/**
-	 * Creates a Setter for this fragment.
-	 *
-	 * @param data
-	 *            the data map to modify.
-	 * @return the Setter
-	 */
-	public static Setter setter(final Map<String, String> data) {
-		return new Setter(data);
-	}
+  private static final String TRANSFORMER_CLASS = "transformer.class";
+  private static final String TRANSFORMER_BUFFER = "transformer.buffer";
+  private static final String TRANSFORMER_CACHE = "transformer.cache.size";
+  private static final String CSV_TRANSFORMER_HEADERS_ENABLED = "transformer.csv.headers.enabled";
+  private static final String CSV_TRANSFORMER_HEADERS = "transformer.csv.headers";
 
-	/**
-	 * Construct the SourceConfigFragment.
-	 *
-	 * @param dataAccess
-	 *            the FragmentDataAccess that this fragment is associated with.
-	 */
-	public SourceConfigFragment(final FragmentDataAccess dataAccess) {
-		super(dataAccess);
-	}
+  /**
+   * Creates a Setter for this fragment.
+   *
+   * @param data the data map to modify.
+   * @return the Setter
+   */
+  public static Setter setter(final Map<String, String> data) {
+    return new Setter(data);
+  }
 
-	/**
-	 * Update the configuration definition with the properties for the source
-	 * configuration.
-	 * 
-	 * @param configDef
-	 *            the configuration to update.
-	 */
-	public static void update(final ConfigDef configDef) {
-		SinceInfo.Builder siBuilder = SinceInfo.builder().groupId("io.aiven.commons")
-				.artifactId("kafka-source-connector-framework");
-		configDef
-				.define(ExtendedConfigKey.builder(RING_BUFFER_SIZE).type(ConfigDef.Type.INT).defaultValue(1000)
-						.validator(ConfigDef.Range.atLeast(1))
-						.documentation("The number of storage key to store in the ring buffer.")
-						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(MAX_POLL_RECORDS).type(ConfigDef.Type.INT).defaultValue(500)
-						.validator(ConfigDef.Range.atLeast(1)).documentation("Max poll records")
-						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(ERRORS_TOLERANCE).defaultValue(ToleranceType.NONE.name())
-						.validator(ConfigDef.CaseInsensitiveValidString.in(
-								Arrays.stream(ToleranceType.values()).map(ToleranceType::name).toArray(String[]::new)))
-						.documentation(
-								"Indicates to the connector what level of exceptions are allowed before the connector stops.")
-						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(TARGET_TOPIC).validator(new ConfigDef.NonEmptyString())
-						.documentation("The name of the topic to write records to.")
-						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(DISTRIBUTION_TYPE).defaultValue(DistributionType.OBJECT_HASH.name())
-						.validator(ConfigDef.CaseInsensitiveValidString.in(Arrays.stream(DistributionType.values())
-								.map(DistributionType::name).toArray(String[]::new)))
-						.documentation(
-								"Based on tasks.max config and the type of strategy selected, objects are processed in distributed"
-										+ " way by Kafka connect workers.")
-						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(NATIVE_START_KEY).documentation(
-						"An identifier for the source connector to know which key to start processing from, on a restart it will also begin reading messages from this point as well")
-						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(TRANSFORMER_CLASS).type(ConfigDef.Type.CLASS)
-						.defaultValue(ByteArrayTransformer.class).validator(new TransformerValidator())
-						.documentation("Defines the class for the Transformer").internalConfig(true)
-						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(TRANSFORMER_BUFFER).type(ConfigDef.Type.INT).defaultValue(4096)
-						.validator(ScaleValidator.between(4096, Integer.MAX_VALUE, Scale.IEC))
-						.documentation(
-								"Defines the size in bytes of the transformer buffer used when reading buffered input streams.")
-						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(TRANSFORMER_CACHE).type(ConfigDef.Type.INT).defaultValue(500)
-						.validator(ScaleValidator.between(100, Integer.MAX_VALUE, Scale.IEC))
-						.documentation(
-								"Defines the size in bytes of the transformer cache used when processing Avro based input like Avro or Parquet streams.")
-						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(CSV_TRANSFORMER_HEADERS_ENABLED).type(ConfigDef.Type.BOOLEAN)
-						.defaultValue("true").validator(ConfigDef.LambdaValidator.with((k, v) -> {
-							if (v instanceof String) {
-								ConfigDef.CaseInsensitiveValidString.in("true", "false").ensureValid(k, v);
-							}
-						}, ConfigDef.CaseInsensitiveValidString.in("true", "false")::toString))
-						.documentation(
-								"Only valid if CSV Transformer is used. If 'true' the first line of the CSV will be a header line describing all the columns. If 'false' no header line is provided and columns will be defined as 'field0' through 'fieldN'.")
-						.since(siBuilder.version("1.0.0").build()).build())
-				.define(ExtendedConfigKey.builder(CSV_TRANSFORMER_HEADERS).type(ConfigDef.Type.LIST).documentation(
-						"Only valid if CSV Transformer is used. A comma separated list of the field names for CVS records.  Rows with more fields than there are headers will be assigned 'fieldN' names")
-						.since(siBuilder.version("1.0.0").build()).build());
-	}
+  /**
+   * Construct the SourceConfigFragment.
+   *
+   * @param dataAccess the FragmentDataAccess that this fragment is associated with.
+   */
+  public SourceConfigFragment(final FragmentDataAccess dataAccess) {
+    super(dataAccess);
+  }
 
-	/**
-	 * Gets the target topic.
-	 *
-	 * @return the target topic.
-	 */
-	public String getTargetTopic() {
-		return getString(TARGET_TOPIC);
-	}
+  /**
+   * Update the configuration definition with the properties for the source configuration.
+   *
+   * @param configDef the configuration to update.
+   */
+  public static void update(final ConfigDef configDef) {
+    SinceInfo.Builder siBuilder =
+        SinceInfo.builder()
+            .groupId("io.aiven.commons")
+            .artifactId("kafka-source-connector-framework");
+    configDef
+        .define(
+            ExtendedConfigKey.builder(RING_BUFFER_SIZE)
+                .type(ConfigDef.Type.INT)
+                .defaultValue(1000)
+                .validator(ConfigDef.Range.atLeast(1))
+                .documentation("The number of storage key to store in the ring buffer.")
+                .since(siBuilder.version("1.0.0").build())
+                .build())
+        .define(
+            ExtendedConfigKey.builder(MAX_POLL_RECORDS)
+                .type(ConfigDef.Type.INT)
+                .defaultValue(500)
+                .validator(ConfigDef.Range.atLeast(1))
+                .documentation("Max poll records")
+                .since(siBuilder.version("1.0.0").build())
+                .build())
+        .define(
+            ExtendedConfigKey.builder(ERRORS_TOLERANCE)
+                .defaultValue(ToleranceType.NONE.name())
+                .validator(
+                    ConfigDef.CaseInsensitiveValidString.in(
+                        Arrays.stream(ToleranceType.values())
+                            .map(ToleranceType::name)
+                            .toArray(String[]::new)))
+                .documentation(
+                    "Indicates to the connector what level of exceptions are allowed before the connector stops.")
+                .since(siBuilder.version("1.0.0").build())
+                .build())
+        .define(
+            ExtendedConfigKey.builder(TARGET_TOPIC)
+                .validator(new ConfigDef.NonEmptyString())
+                .documentation("The name of the topic to write records to.")
+                .since(siBuilder.version("1.0.0").build())
+                .build())
+        .define(
+            ExtendedConfigKey.builder(DISTRIBUTION_TYPE)
+                .defaultValue(DistributionType.OBJECT_HASH.name())
+                .validator(
+                    ConfigDef.CaseInsensitiveValidString.in(
+                        Arrays.stream(DistributionType.values())
+                            .map(DistributionType::name)
+                            .toArray(String[]::new)))
+                .documentation(
+                    "Based on tasks.max config and the type of strategy selected, objects are processed in distributed"
+                        + " way by Kafka connect workers.")
+                .since(siBuilder.version("1.0.0").build())
+                .build())
+        .define(
+            ExtendedConfigKey.builder(NATIVE_START_KEY)
+                .documentation(
+                    "An identifier for the source connector to know which key to start processing from, on a restart it will also begin reading messages from this point as well")
+                .since(siBuilder.version("1.0.0").build())
+                .build())
+        .define(
+            ExtendedConfigKey.builder(TRANSFORMER_CLASS)
+                .type(ConfigDef.Type.CLASS)
+                .defaultValue(ByteArrayTransformer.class)
+                .validator(new TransformerValidator())
+                .documentation("Defines the class for the Transformer")
+                .internalConfig(true)
+                .since(siBuilder.version("1.0.0").build())
+                .build())
+        .define(
+            ExtendedConfigKey.builder(TRANSFORMER_BUFFER)
+                .type(ConfigDef.Type.INT)
+                .defaultValue(4096)
+                .validator(ScaleValidator.between(4096, Integer.MAX_VALUE, Scale.IEC))
+                .documentation(
+                    "Defines the size in bytes of the transformer buffer used when reading buffered input streams.")
+                .since(siBuilder.version("1.0.0").build())
+                .build())
+        .define(
+            ExtendedConfigKey.builder(TRANSFORMER_CACHE)
+                .type(ConfigDef.Type.INT)
+                .defaultValue(500)
+                .validator(ScaleValidator.between(100, Integer.MAX_VALUE, Scale.IEC))
+                .documentation(
+                    "Defines the size in bytes of the transformer cache used when processing Avro based input like Avro or Parquet streams.")
+                .since(siBuilder.version("1.0.0").build())
+                .build())
+        .define(
+            ExtendedConfigKey.builder(CSV_TRANSFORMER_HEADERS_ENABLED)
+                .type(ConfigDef.Type.BOOLEAN)
+                .defaultValue("true")
+                .validator(
+                    ConfigDef.LambdaValidator.with(
+                        (k, v) -> {
+                          if (v instanceof String) {
+                            ConfigDef.CaseInsensitiveValidString.in("true", "false")
+                                .ensureValid(k, v);
+                          }
+                        },
+                        ConfigDef.CaseInsensitiveValidString.in("true", "false")::toString))
+                .documentation(
+                    "Only valid if CSV Transformer is used. If 'true' the first line of the CSV will be a header line describing all the columns. If 'false' no header line is provided and columns will be defined as 'field0' through 'fieldN'.")
+                .since(siBuilder.version("1.0.0").build())
+                .build())
+        .define(
+            ExtendedConfigKey.builder(CSV_TRANSFORMER_HEADERS)
+                .type(ConfigDef.Type.LIST)
+                .documentation(
+                    "Only valid if CSV Transformer is used. A comma separated list of the field names for CVS records.  Rows with more fields than there are headers will be assigned 'fieldN' names")
+                .since(siBuilder.version("1.0.0").build())
+                .build());
+  }
 
-	/**
-	 * Gets the maximum number of records to poll at one time.
-	 *
-	 * @return The maximum number of records to poll at one time.
-	 */
-	public int getMaxPollRecords() {
-		return getInt(MAX_POLL_RECORDS);
-	}
+  /**
+   * Gets the target topic.
+   *
+   * @return the target topic.
+   */
+  public String getTargetTopic() {
+    return getString(TARGET_TOPIC);
+  }
 
-	/**
-	 * Gets the error tolerance.
-	 *
-	 * @return the error tolerance.
-	 */
-	public ToleranceType getErrorsTolerance() {
-		return ToleranceType.valueOf(getString(ERRORS_TOLERANCE).toUpperCase(Locale.ROOT));
-	}
+  /**
+   * Gets the maximum number of records to poll at one time.
+   *
+   * @return The maximum number of records to poll at one time.
+   */
+  public int getMaxPollRecords() {
+    return getInt(MAX_POLL_RECORDS);
+  }
 
-	/**
-	 * Gets the distribution type
-	 *
-	 * @return the distribution type.
-	 */
-	public DistributionType getDistributionType() {
-		return DistributionType.valueOf(getString(DISTRIBUTION_TYPE).toUpperCase(Locale.ROOT));
-	}
+  /**
+   * Gets the error tolerance.
+   *
+   * @return the error tolerance.
+   */
+  public ToleranceType getErrorsTolerance() {
+    return ToleranceType.valueOf(getString(ERRORS_TOLERANCE).toUpperCase(Locale.ROOT));
+  }
 
-	/**
-	 * Gets the ring buffer size.
-	 *
-	 * @return the ring buffer size.
-	 */
-	public int getRingBufferSize() {
-		return getInt(RING_BUFFER_SIZE);
-	}
+  /**
+   * Gets the distribution type
+   *
+   * @return the distribution type.
+   */
+  public DistributionType getDistributionType() {
+    return DistributionType.valueOf(getString(DISTRIBUTION_TYPE).toUpperCase(Locale.ROOT));
+  }
 
-	/**
-	 * Gets the Transformer instance for this source.
-	 * 
-	 * @param config
-	 *            the configuration for this source.
-	 * @return the Transformer instance for this source.
-	 */
-	public Transformer getTransformer(SourceCommonConfig config) {
-		Class<? extends Transformer> clazz;
-		Object klass = values().get(TRANSFORMER_CLASS);
-		if (klass instanceof String) {
-			try {
-				clazz = Utils.loadClass((String) klass, Transformer.class);
-			} catch (ClassNotFoundException e) {
-				throw new KafkaException("Class " + klass + " cannot be found", e);
-			}
-		} else if (klass instanceof Class<?> && Transformer.class.isAssignableFrom((Class<?>) klass)) {
-			clazz = (Class<? extends Transformer>) klass;
-		} else {
-			throw new KafkaException(
-					"Unexpected element of type " + klass.getClass().getName() + ", expected String or Class");
-		}
-		try {
-			return clazz.getDeclaredConstructor(SourceCommonConfig.class).newInstance(config);
-		} catch (InvocationTargetException | InstantiationException | IllegalAccessException
-				| NoSuchMethodException e) {
-			throw new KafkaException(e);
-		}
-	}
+  /**
+   * Gets the ring buffer size.
+   *
+   * @return the ring buffer size.
+   */
+  public int getRingBufferSize() {
+    return getInt(RING_BUFFER_SIZE);
+  }
 
-	/**
-	 * Gets the size, in bytes, of the transformer buffer in bytes. Only applies to
-	 * transformers that create buffered input streams.
-	 * 
-	 * @return the size in bytes of the transformer buffer.
-	 */
-	public int getTransformerBufferSize() {
-		return getInt(TRANSFORMER_BUFFER);
-	}
+  /**
+   * Gets the Transformer instance for this source.
+   *
+   * @param config the configuration for this source.
+   * @return the Transformer instance for this source.
+   */
+  public Transformer getTransformer(SourceCommonConfig config) {
+    Class<? extends Transformer> clazz;
+    Object klass = values().get(TRANSFORMER_CLASS);
+    if (klass instanceof String) {
+      try {
+        clazz = Utils.loadClass((String) klass, Transformer.class);
+      } catch (ClassNotFoundException e) {
+        throw new KafkaException("Class " + klass + " cannot be found", e);
+      }
+    } else if (klass instanceof Class<?> && Transformer.class.isAssignableFrom((Class<?>) klass)) {
+      clazz = (Class<? extends Transformer>) klass;
+    } else {
+      throw new KafkaException(
+          "Unexpected element of type "
+              + klass.getClass().getName()
+              + ", expected String or Class");
+    }
+    try {
+      return clazz.getDeclaredConstructor(SourceCommonConfig.class).newInstance(config);
+    } catch (InvocationTargetException
+        | InstantiationException
+        | IllegalAccessException
+        | NoSuchMethodException e) {
+      throw new KafkaException(e);
+    }
+  }
 
-	/**
-	 * Gets the size, in bytes, of the transformer cache size in bytes. Only applies
-	 * to transformers that utilize caches like Avro or Parquet.
-	 *
-	 * @return the size in bytes of the transformer buffer.
-	 */
-	public int getTransformerCacheSize() {
-		return getInt(TRANSFORMER_CACHE);
-	}
+  /**
+   * Gets the size, in bytes, of the transformer buffer in bytes. Only applies to transformers that
+   * create buffered input streams.
+   *
+   * @return the size in bytes of the transformer buffer.
+   */
+  public int getTransformerBufferSize() {
+    return getInt(TRANSFORMER_BUFFER);
+  }
 
-	/**
-	 * Gets the nativeStartKey.
-	 *
-	 * @return the key to start consuming records from.
-	 */
-	public String getNativeStartKey() {
-		return getString(NATIVE_START_KEY);
-	}
+  /**
+   * Gets the size, in bytes, of the transformer cache size in bytes. Only applies to transformers
+   * that utilize caches like Avro or Parquet.
+   *
+   * @return the size in bytes of the transformer buffer.
+   */
+  public int getTransformerCacheSize() {
+    return getInt(TRANSFORMER_CACHE);
+  }
 
-	/**
-	 * Gets the CSV transformer header enable flag.
-	 * 
-	 * @return {@code true} if headers should be parsed from CSV input,
-	 *         {@code false} otherwise.
-	 */
-	public Boolean isCsvTransformerHeaderEnabled() {
-		return getBoolean(CSV_TRANSFORMER_HEADERS_ENABLED);
-	}
+  /**
+   * Gets the nativeStartKey.
+   *
+   * @return the key to start consuming records from.
+   */
+  public String getNativeStartKey() {
+    return getString(NATIVE_START_KEY);
+  }
 
-	/**
-	 * Gets the list of header for the CSV input. Will override any parsed from the
-	 * CSV input itself.
-	 * 
-	 * @return the list of headers for the CSV input.
-	 */
-	public List<String> getCsvTransformerHeader() {
-		return getList(CSV_TRANSFORMER_HEADERS);
-	}
+  /**
+   * Gets the CSV transformer header enable flag.
+   *
+   * @return {@code true} if headers should be parsed from CSV input, {@code false} otherwise.
+   */
+  public Boolean isCsvTransformerHeaderEnabled() {
+    return getBoolean(CSV_TRANSFORMER_HEADERS_ENABLED);
+  }
 
-	/**
-	 * The SourceConfigFragment setter.
-	 */
-	public static class Setter extends AbstractFragmentSetter<Setter> {
-		/**
-		 * Constructor.
-		 *
-		 * @param data
-		 *            the data to modify.
-		 */
-		protected Setter(final Map<String, String> data) {
-			super(data);
-		}
+  /**
+   * Gets the list of header for the CSV input. Will override any parsed from the CSV input itself.
+   *
+   * @return the list of headers for the CSV input.
+   */
+  public List<String> getCsvTransformerHeader() {
+    return getList(CSV_TRANSFORMER_HEADERS);
+  }
 
-		/**
-		 * Set the maximum poll records.
-		 *
-		 * @param maxPollRecords
-		 *            the maximum number of records to poll.
-		 * @return this
-		 */
-		public Setter maxPollRecords(final int maxPollRecords) {
-			return setValue(MAX_POLL_RECORDS, maxPollRecords);
-		}
+  /** The SourceConfigFragment setter. */
+  public static class Setter extends AbstractFragmentSetter<Setter> {
+    /**
+     * Constructor.
+     *
+     * @param data the data to modify.
+     */
+    protected Setter(final Map<String, String> data) {
+      super(data);
+    }
 
-		/**
-		 * Sets the error tolerance.
-		 *
-		 * @param tolerance
-		 *            the error tolerance
-		 * @return this.
-		 */
-		public Setter errorsTolerance(final ToleranceType tolerance) {
-			return setValue(ERRORS_TOLERANCE, tolerance.name());
-		}
+    /**
+     * Set the maximum poll records.
+     *
+     * @param maxPollRecords the maximum number of records to poll.
+     * @return this
+     */
+    public Setter maxPollRecords(final int maxPollRecords) {
+      return setValue(MAX_POLL_RECORDS, maxPollRecords);
+    }
 
-		/**
-		 * Sets the target topic.
-		 *
-		 * @param targetTopic
-		 *            the target topic.
-		 * @return this.
-		 */
-		public Setter targetTopic(final String targetTopic) {
-			return setValue(TARGET_TOPIC, targetTopic);
-		}
+    /**
+     * Sets the error tolerance.
+     *
+     * @param tolerance the error tolerance
+     * @return this.
+     */
+    public Setter errorsTolerance(final ToleranceType tolerance) {
+      return setValue(ERRORS_TOLERANCE, tolerance.name());
+    }
 
-		/**
-		 * Sets the distribution type.
-		 *
-		 * @param distributionType
-		 *            the distribution type.
-		 * @return this
-		 */
-		public Setter distributionType(final DistributionType distributionType) {
-			return setValue(DISTRIBUTION_TYPE, distributionType.name());
-		}
+    /**
+     * Sets the target topic.
+     *
+     * @param targetTopic the target topic.
+     * @return this.
+     */
+    public Setter targetTopic(final String targetTopic) {
+      return setValue(TARGET_TOPIC, targetTopic);
+    }
 
-		/**
-		 * Sets the ring buffer size.
-		 *
-		 * @param ringBufferSize
-		 *            the ring buffer size
-		 * @return this.
-		 */
-		public Setter ringBufferSize(final int ringBufferSize) {
-			return setValue(RING_BUFFER_SIZE, ringBufferSize);
-		}
+    /**
+     * Sets the distribution type.
+     *
+     * @param distributionType the distribution type.
+     * @return this
+     */
+    public Setter distributionType(final DistributionType distributionType) {
+      return setValue(DISTRIBUTION_TYPE, distributionType.name());
+    }
 
-		/**
-		 * Sets the initial native key to start from.
-		 *
-		 * @param nativeStartKey
-		 *            the key to start reading new messages from.
-		 * @return this.
-		 */
-		public Setter nativeStartKey(final String nativeStartKey) {
-			return setValue(NATIVE_START_KEY, nativeStartKey);
-		}
+    /**
+     * Sets the ring buffer size.
+     *
+     * @param ringBufferSize the ring buffer size
+     * @return this.
+     */
+    public Setter ringBufferSize(final int ringBufferSize) {
+      return setValue(RING_BUFFER_SIZE, ringBufferSize);
+    }
 
-		/**
-		 * Sets the transformer class for this source.
-		 * 
-		 * @param transformer
-		 *            the class of the Transformer for this souce.
-		 * @return the transformer for this source.
-		 */
-		public Setter transformerClass(final Class<? extends Transformer> transformer) {
-			return setValue(TRANSFORMER_CLASS, transformer);
-		}
+    /**
+     * Sets the initial native key to start from.
+     *
+     * @param nativeStartKey the key to start reading new messages from.
+     * @return this.
+     */
+    public Setter nativeStartKey(final String nativeStartKey) {
+      return setValue(NATIVE_START_KEY, nativeStartKey);
+    }
 
-		/**
-		 * Sets the transformer buffer size.
-		 * 
-		 * @param bufferSize
-		 *            the buffer size in bytes.
-		 * @return this.
-		 */
-		public Setter transformerBuffer(final int bufferSize) {
-			return setValue(TRANSFORMER_BUFFER, bufferSize);
-		}
+    /**
+     * Sets the transformer class for this source.
+     *
+     * @param transformer the class of the Transformer for this souce.
+     * @return the transformer for this source.
+     */
+    public Setter transformerClass(final Class<? extends Transformer> transformer) {
+      return setValue(TRANSFORMER_CLASS, transformer);
+    }
 
-		/**
-		 * Sets the cache size in bytes.
-		 * 
-		 * @param cacheSize
-		 *            the cache size in bytes.
-		 * @return this
-		 */
-		public Setter transformerCache(final int cacheSize) {
-			return setValue(TRANSFORMER_CACHE, cacheSize);
-		}
+    /**
+     * Sets the transformer buffer size.
+     *
+     * @param bufferSize the buffer size in bytes.
+     * @return this.
+     */
+    public Setter transformerBuffer(final int bufferSize) {
+      return setValue(TRANSFORMER_BUFFER, bufferSize);
+    }
 
-		/**
-		 * Sets the header flag for the CSV transformer.
-		 * 
-		 * @param state
-		 *            the state for the header flag.
-		 * @return this
-		 */
-		public Setter csvTransformerHeadersEnabled(final boolean state) {
-			return setValue(CSV_TRANSFORMER_HEADERS_ENABLED, state);
-		}
+    /**
+     * Sets the cache size in bytes.
+     *
+     * @param cacheSize the cache size in bytes.
+     * @return this
+     */
+    public Setter transformerCache(final int cacheSize) {
+      return setValue(TRANSFORMER_CACHE, cacheSize);
+    }
 
-		/**
-		 * Sets the headers for the CSV. Should be a comma separated list of field
-		 * names.
-		 * 
-		 * @param headers
-		 *            the header names.
-		 * @return this
-		 */
-		public Setter csvTransformerHeaders(String headers) {
-			return setValue(CSV_TRANSFORMER_HEADERS, headers);
-		}
-	}
+    /**
+     * Sets the header flag for the CSV transformer.
+     *
+     * @param state the state for the header flag.
+     * @return this
+     */
+    public Setter csvTransformerHeadersEnabled(final boolean state) {
+      return setValue(CSV_TRANSFORMER_HEADERS_ENABLED, state);
+    }
 
-	private static class TransformerValidator implements ConfigDef.Validator {
+    /**
+     * Sets the headers for the CSV. Should be a comma separated list of field names.
+     *
+     * @param headers the header names.
+     * @return this
+     */
+    public Setter csvTransformerHeaders(String headers) {
+      return setValue(CSV_TRANSFORMER_HEADERS, headers);
+    }
+  }
 
-		@Override
-		public void ensureValid(String name, Object value) {
-			if (value == null) {
-				throw new ConfigException("Transformer class may not be null");
-			}
-			try {
-				Class<?> clazz = value instanceof Class<?> ? (Class<?>) value : Class.forName(value.toString());
-				if (!Transformer.class.isAssignableFrom(clazz)) {
-					throw new ConfigException("Transformer class in configuration must extend Transformer");
-				}
-			} catch (ClassNotFoundException e) {
-				throw new ConfigException("Transformer class specified in configuration not found: {}", e.getMessage());
-			}
-		}
+  private static class TransformerValidator implements ConfigDef.Validator {
 
-		@Override
-		public String toString() {
-			return String.format("A class that extends %s.", Transformer.class.getCanonicalName());
-		}
-	}
+    @Override
+    public void ensureValid(String name, Object value) {
+      if (value == null) {
+        throw new ConfigException("Transformer class may not be null");
+      }
+      try {
+        Class<?> clazz =
+            value instanceof Class<?> ? (Class<?>) value : Class.forName(value.toString());
+        if (!Transformer.class.isAssignableFrom(clazz)) {
+          throw new ConfigException("Transformer class in configuration must extend Transformer");
+        }
+      } catch (ClassNotFoundException e) {
+        throw new ConfigException(
+            "Transformer class specified in configuration not found: {}", e.getMessage());
+      }
+    }
+
+    @Override
+    public String toString() {
+      return String.format("A class that extends %s.", Transformer.class.getCanonicalName());
+    }
+  }
 }

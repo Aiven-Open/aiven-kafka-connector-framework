@@ -19,116 +19,109 @@ package io.aiven.commons.kafka.connector.source.task;
 import java.util.Optional;
 
 /**
- * A Context which captures all the details about the source object that are
- * required to successfully send a source record onto Kafka
+ * A Context which captures all the details about the source object that are required to
+ * successfully send a source record onto Kafka
  */
 public class Context {
-	/** The Kafka topic for this Context. May be {@code null}. */
-	private String topic;
-	/** The Kafka partition for this Context. May be {@code null}. */
-	private Integer partition;
-	/**
-	 * The Kafka offset for this Context. When used as a Context within a larger
-	 * context, this is the number of bytes into the native stream that this context
-	 * starts at. May be {@code null}.
-	 */
-	private Long offset;
+  /** The Kafka topic for this Context. May be {@code null}. */
+  private String topic;
 
-	/** the native key that is being processed */
-	private final Comparable<?> nativeKey;
-	/**
-	 * Constructor.
-	 * 
-	 * @param nativeKey
-	 *            The native key for the object being processed.
-	 */
-	public Context(Comparable<?> nativeKey) {
-		this.nativeKey = nativeKey;
-	}
+  /** The Kafka partition for this Context. May be {@code null}. */
+  private Integer partition;
 
-	/**
-	 * Creates a defensive copy of the Context
-	 *
-	 * @param anotherContext
-	 *            The Context which needs to be copied
-	 */
-	protected Context(final Context anotherContext) {
-		this.nativeKey = anotherContext.nativeKey;
-		this.partition = anotherContext.partition;
-		this.topic = anotherContext.topic;
-		this.offset = anotherContext.offset;
-	}
+  /**
+   * The Kafka offset for this Context. When used as a Context within a larger context, this is the
+   * number of bytes into the native stream that this context starts at. May be {@code null}.
+   */
+  private Long offset;
 
-	/**
-	 * Gets the Kafka topic as specified by the context.
-	 * 
-	 * @return an Optional kafka topic.
-	 */
-	public final Optional<String> getTopic() {
-		return Optional.ofNullable(topic);
-	}
+  /** the native key that is being processed */
+  private final Comparable<?> nativeKey;
 
-	/**
-	 * Sets the Kafka topic for this context.
-	 * 
-	 * @param topic
-	 *            the topic. May be {@code null}.
-	 */
-	public final void setTopic(final String topic) {
-		this.topic = topic;
-	}
+  /**
+   * Constructor.
+   *
+   * @param nativeKey The native key for the object being processed.
+   */
+  public Context(Comparable<?> nativeKey) {
+    this.nativeKey = nativeKey;
+  }
 
-	/**
-	 * Gets the Kafka partition as specified by the context.
-	 * 
-	 * @return an Optional kafka partition.
-	 */
-	public final Optional<Integer> getPartition() {
-		return Optional.ofNullable(partition);
-	}
+  /**
+   * Creates a defensive copy of the Context
+   *
+   * @param anotherContext The Context which needs to be copied
+   */
+  protected Context(final Context anotherContext) {
+    this.nativeKey = anotherContext.nativeKey;
+    this.partition = anotherContext.partition;
+    this.topic = anotherContext.topic;
+    this.offset = anotherContext.offset;
+  }
 
-	/**
-	 * Sets the Kafka partition for this context.
-	 * 
-	 * @param partition
-	 *            the partition. May be {@code null}.
-	 */
-	public final void setPartition(final Integer partition) {
-		this.partition = partition;
-	}
+  /**
+   * Gets the Kafka topic as specified by the context.
+   *
+   * @return an Optional kafka topic.
+   */
+  public final Optional<String> getTopic() {
+    return Optional.ofNullable(topic);
+  }
 
-	/**
-	 * Get the native key as specified by this context.
-	 * 
-	 * @param <T>
-	 *            the returned native key type.
-	 * @return the Optional storage key for the native object this context is
-	 *         associated with.
-	 */
-	public final <T extends Comparable<T>> T getNativeKey() {
-		return (T) nativeKey;
-	}
+  /**
+   * Sets the Kafka topic for this context.
+   *
+   * @param topic the topic. May be {@code null}.
+   */
+  public final void setTopic(final String topic) {
+    this.topic = topic;
+  }
 
-	/**
-	 * Gets the native offset for this context. When used as a Context within a
-	 * larger context, this is the number of bytes into the native stream that this
-	 * context starts at.
-	 * 
-	 * @return an optional native offset for this context.
-	 */
-	public final Optional<Long> getOffset() {
-		return Optional.ofNullable(offset);
-	}
+  /**
+   * Gets the Kafka partition as specified by the context.
+   *
+   * @return an Optional kafka partition.
+   */
+  public final Optional<Integer> getPartition() {
+    return Optional.ofNullable(partition);
+  }
 
-	/**
-	 * Sets the native offset for this context. When used as a Context within a
-	 * larger context, this is the number of bytes into the native stream that this
-	 * context starts at.
-	 * 
-	 * @param offset
-	 *            the optional native offset for this context. May be {@code null}.
-	 */
-	public final void setOffset(final Long offset) {
-		this.offset = offset;
-	}
+  /**
+   * Sets the Kafka partition for this context.
+   *
+   * @param partition the partition. May be {@code null}.
+   */
+  public final void setPartition(final Integer partition) {
+    this.partition = partition;
+  }
+
+  /**
+   * Get the native key as specified by this context.
+   *
+   * @param <T> the returned native key type.
+   * @return the Optional storage key for the native object this context is associated with.
+   */
+  public final <T extends Comparable<T>> T getNativeKey() {
+    return (T) nativeKey;
+  }
+
+  /**
+   * Gets the native offset for this context. When used as a Context within a larger context, this
+   * is the number of bytes into the native stream that this context starts at.
+   *
+   * @return an optional native offset for this context.
+   */
+  public final Optional<Long> getOffset() {
+    return Optional.ofNullable(offset);
+  }
+
+  /**
+   * Sets the native offset for this context. When used as a Context within a larger context, this
+   * is the number of bytes into the native stream that this context starts at.
+   *
+   * @param offset the optional native offset for this context. May be {@code null}.
+   */
+  public final void setOffset(final Long offset) {
+    this.offset = offset;
+  }
 }

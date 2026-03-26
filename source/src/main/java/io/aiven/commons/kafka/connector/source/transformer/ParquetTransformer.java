@@ -17,8 +17,15 @@ package io.aiven.commons.kafka.connector.source.transformer;
 
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.task.Context;
-
 import io.confluent.connect.avro.AvroData;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Instant;
+import java.util.function.Consumer;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.function.IOSupplier;
@@ -29,112 +36,115 @@ import org.apache.parquet.io.LocalInputFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Instant;
-import java.util.function.Consumer;
-
 /**
- * A Transformer that converts an input stream from a Parquet file into
- * individual kafka messages, one per record.
+ * A Transformer that converts an input stream from a Parquet file into individual kafka messages,
+ * one per record.
  */
 public class ParquetTransformer extends InputStreamTransformer {
 
-	/**
-	 * Gets the registry information for this transformer.
-	 * 
-	 * @return the registry information for this transformer.
-	 */
-	public static TransformerInfo info() {
-		return new TransformerInfo("Parquet", ParquetTransformer.class, TransformerInfo.FEATURE_INTERNAL_COMPRESSION,
-				"Accepts a Parquet file-formatted input stream and creates one Kafka record for every Avro datum encountered.");
-	}
+  /**
+   * Gets the registry information for this transformer.
+   *
+   * @return the registry information for this transformer.
+   */
+  public static TransformerInfo info() {
+    return new TransformerInfo(
+        "Parquet",
+        ParquetTransformer.class,
+        TransformerInfo.FEATURE_INTERNAL_COMPRESSION,
+        "Accepts a Parquet file-formatted input stream and creates one Kafka record for every Avro datum encountered.");
+  }
 
-	private final AvroData avroData;
+  private final AvroData avroData;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ParquetTransformer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ParquetTransformer.class);
 
-	/**
-	 * Constructs a ParquetTransformer using the values from the configuration.
-	 * 
-	 * @param config
-	 *            the configuration for the connector.
-	 */
-	public ParquetTransformer(final SourceCommonConfig config) {
-		super(config, info());
-		this.avroData = new AvroData(config.getTransformerCacheSize());
-	}
+  /**
+   * Constructs a ParquetTransformer using the values from the configuration.
+   *
+   * @param config the configuration for the connector.
+   */
+  public ParquetTransformer(final SourceCommonConfig config) {
+    super(config, info());
+    this.avroData = new AvroData(config.getTransformerCacheSize());
+  }
 
-	@Override
-	public StreamSpliterator createSpliterator(final IOSupplier<InputStream> inputStreamIOSupplier,
-			final long streamLength, final Context context) {
+  @Override
+  public StreamSpliterator createSpliterator(
+      final IOSupplier<InputStream> inputStreamIOSupplier,
+      final long streamLength,
+      final Context context) {
 
-		return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
+    return new StreamSpliterator(LOGGER, inputStreamIOSupplier) {
 
-			private ParquetReader<GenericRecord> reader;
-			private File parquetFile;
+      private ParquetReader<GenericRecord> reader;
+      private File parquetFile;
 
-			@Override
-			protected void inputOpened(final InputStream input) throws IOException {
-				final String timestamp = String.valueOf(Instant.now().toEpochMilli());
+      @Override
+      protected void inputOpened(final InputStream input) throws IOException {
+        final String timestamp = String.valueOf(Instant.now().toEpochMilli());
 
-				try {
-					// Create a temporary file for the Parquet data
-					parquetFile = File.createTempFile(context.getTopic().orElse("topic") + "_"
-							+ context.getPartition().orElse(null) + "_" + timestamp, ".parquet");
-				} catch (IOException e) {
-					LOGGER.error("Error creating temp file for Parquet data: {}", e.getMessage(), e);
-					throw e;
-				}
+        try {
+          // Create a temporary file for the Parquet data
+          parquetFile =
+              File.createTempFile(
+                  context.getTopic().orElse("topic")
+                      + "_"
+                      + context.getPartition().orElse(null)
+                      + "_"
+                      + timestamp,
+                  ".parquet");
+        } catch (IOException e) {
+          LOGGER.error("Error creating temp file for Parquet data: {}", e.getMessage(), e);
+          throw e;
+        }
 
-				try (OutputStream outputStream = Files.newOutputStream(parquetFile.toPath())) {
-					IOUtils.copy(input, outputStream); // Copy input stream to temporary file
-				}
-				reader = AvroParquetReader.<GenericRecord>builder(new LocalInputFile(parquetFile.toPath())).build();
+        try (OutputStream outputStream = Files.newOutputStream(parquetFile.toPath())) {
+          IOUtils.copy(input, outputStream); // Copy input stream to temporary file
+        }
+        reader =
+            AvroParquetReader.<GenericRecord>builder(new LocalInputFile(parquetFile.toPath()))
+                .build();
+      }
 
-			}
+      @Override
+      protected void doClose() {
+        if (reader != null) {
+          try {
+            reader.close(); // Close reader at end of file
+          } catch (IOException e) {
+            logger.error("Error closing reader: {}", e.getMessage(), e);
+          }
+        }
+        if (parquetFile != null) {
+          deleteTmpFile(parquetFile.toPath());
+        }
+      }
 
-			@Override
-			protected void doClose() {
-				if (reader != null) {
-					try {
-						reader.close(); // Close reader at end of file
-					} catch (IOException e) {
-						logger.error("Error closing reader: {}", e.getMessage(), e);
-					}
-				}
-				if (parquetFile != null) {
-					deleteTmpFile(parquetFile.toPath());
-				}
-			}
+      @Override
+      protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
+        try {
+          final GenericRecord record = reader.read();
+          if (record != null) {
+            action.accept(
+                avroData.toConnectData(record.getSchema(), record)); // Pass record to the stream
+            return true;
+          }
+        } catch (IOException e) {
+          logger.error("Error reading record: {}", e.getMessage(), e);
+        }
+        return false;
+      }
+    };
+  }
 
-			@Override
-			protected boolean doAdvance(final Consumer<? super SchemaAndValue> action) {
-				try {
-					final GenericRecord record = reader.read();
-					if (record != null) {
-						action.accept(avroData.toConnectData(record.getSchema(), record)); // Pass record to the stream
-						return true;
-					}
-				} catch (IOException e) {
-					logger.error("Error reading record: {}", e.getMessage(), e);
-				}
-				return false;
-			}
-		};
-	}
-
-	static void deleteTmpFile(final Path parquetFile) {
-		if (Files.exists(parquetFile)) {
-			try {
-				Files.delete(parquetFile);
-			} catch (IOException e) {
-				LOGGER.error("Error in deleting tmp file {}", e.getMessage(), e);
-			}
-		}
-	}
+  static void deleteTmpFile(final Path parquetFile) {
+    if (Files.exists(parquetFile)) {
+      try {
+        Files.delete(parquetFile);
+      } catch (IOException e) {
+        LOGGER.error("Error in deleting tmp file {}", e.getMessage(), e);
+      }
+    }
+  }
 }
