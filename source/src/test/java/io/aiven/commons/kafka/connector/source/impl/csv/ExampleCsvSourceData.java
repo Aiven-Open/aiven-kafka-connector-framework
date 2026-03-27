@@ -21,10 +21,11 @@ import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
 import io.aiven.commons.kafka.connector.source.task.Context;
+import io.aiven.commons.util.collections.ExtendedIterator;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /** A simple String implementation would use a NativeClient to retrieve the NativeItems. */
 public class ExampleCsvSourceData extends NativeSourceData<String> {
@@ -64,8 +65,9 @@ public class ExampleCsvSourceData extends NativeSourceData<String> {
   }
 
   @Override
-  public Stream<ExampleSourceNativeInfo> getNativeItemStream(String offset) {
+  public Iterator<ExampleSourceNativeInfo> getNativeItemIterator(String offset) {
     // the offset is a String because it is the K type in NativeSourceData<K> above
-    return client.listObjects(offset).stream().map(ExampleSourceNativeInfo::new);
+    return ExtendedIterator.create(client.listObjects(offset).iterator())
+        .map(ExampleSourceNativeInfo::new);
   }
 }

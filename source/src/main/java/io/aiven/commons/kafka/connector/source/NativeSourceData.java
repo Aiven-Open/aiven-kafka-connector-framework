@@ -21,6 +21,7 @@ import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.extractor.Extractor;
 import io.aiven.commons.kafka.connector.source.lookback.Lookback;
 import io.aiven.commons.kafka.connector.source.task.Context;
+import io.aiven.commons.util.collections.ExtendedIterator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -92,16 +93,16 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
   public abstract String getSourceName();
 
   /**
-   * Get a stream of Native object from the underlying storage layer. The implementation must return
-   * the native objects in a repeatable order based on the key. In addition, the underlying storage
-   * must be able to start streaming from a specific previously returned key.
+   * Get an iterator of Native objects from the underlying storage layer. The implementation must
+   * return the native objects in a repeatable order based on the key. In addition, the underlying
+   * storage must be able to start from a specific previously returned key.
    *
-   * @param offset the native key to start from. May be {@code null} ot indicate start at the
+   * @param startFrom the native key to start from. May be {@code null} ot indicate start at the
    *     beginning.
-   * @return A stream of native objects. May be empty but not {@code null}.
+   * @return An iterator of native objects. May be empty but not {@code null}.
    */
-  protected abstract Stream<? extends AbstractSourceNativeInfo<K, ?>> getNativeItemStream(
-      final K offset);
+  protected abstract Iterator<? extends AbstractSourceNativeInfo<K, ?>> getNativeItemIterator(
+      final K startFrom);
 
   /**
    * Creates an offset manager entry using the data in the map.
@@ -156,7 +157,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 
   /**
    * Constructs a new iterator to continue extracting data from the native storage. Iterator is
-   * constructed by calling {@link #getNativeItemStream} and passing the native key from which we
+   * constructed by calling {@link #getNativeItemIterator} and passing the native key from which we
    * want to start scanning. This will be
    *
    * <ol>
@@ -181,17 +182,17 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
               return startKey;
             });
     NativeInfoConverter converter = new NativeInfoConverter();
-    Iterator<EvolvingSourceRecord> iter =
-        getNativeItemStream(key)
+    ExtendedIterator<EvolvingSourceRecord> iter =
+        ExtendedIterator.create(getNativeItemIterator(key))
             .map(converter::convert)
             .filter(osr -> osr.map(sr -> isCorrectTask.test(sr.getContext())).orElse(false))
             .map(
                 optT -> {
+                  // the isPresent check is handled in the filter above
                   EvolvingSourceRecord sourceRecord = optT.get();
                   lastSeenNativeKey = (K) sourceRecord.getNativeKey();
                   return sourceRecord;
-                })
-            .iterator();
+                });
     return new Iterator<>() {
       @Override
       public boolean hasNext() {
