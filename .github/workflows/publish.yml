@@ -39,8 +39,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Extract java version
-        run: echo "java_version=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT
+      - name: Extract version info
+        run: |
+          echo "version=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT;
+          echo "java_version=$(mvn -q -Dexec.executable=echo -Dexec.args='${jdk.version}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT;
+        id: project
 
       - name: Set up JDK ${{ steps.project.outputs.java_version }}
         uses: actions/setup-java@v5
@@ -48,10 +51,6 @@ jobs:
           distribution: 'adopt'
           java-version: ${{ steps.project.outputs.java_version }}
           cache: maven
-
-
-      - name: Extract Maven project version
-        run: echo "version=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT
 
       - name: Build  ${{ steps.project.outputs.version }})
         run: mvn -e -B -V -ntp clean verify
