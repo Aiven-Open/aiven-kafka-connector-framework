@@ -18,7 +18,10 @@
 */
 package io.aiven.commons.kafka.connector.common.config;
 
+import static io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment.DATA_COMPRESSION_TYPE;
+
 import io.aiven.commons.kafka.config.CommonConfigDef;
+import io.aiven.commons.kafka.config.ExtendedConfigKey;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import java.util.Map;
 import org.apache.kafka.common.config.ConfigValue;
@@ -30,6 +33,17 @@ public class ConnectorCommonConfigDef extends CommonConfigDef {
   public ConnectorCommonConfigDef() {
     super();
     ConnectorCommonConfigFragment.update(this);
+  }
+
+  /**
+   * This method hides the compression type from documentation but does not make it unconfigurable
+   */
+  protected void hideCompressionType() {
+    ExtendedConfigKey newKey =
+        ExtendedConfigKey.Builder.unbuild(configKeys().get(DATA_COMPRESSION_TYPE))
+            .internalConfig(true)
+            .build();
+    configKeys().put(newKey.name, newKey);
   }
 
   @Override
