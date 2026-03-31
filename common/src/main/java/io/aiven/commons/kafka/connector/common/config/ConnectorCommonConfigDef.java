@@ -37,12 +37,23 @@ public class ConnectorCommonConfigDef extends CommonConfigDef {
 
   /**
    * This method hides the compression type from documentation but does not make it unconfigurable
+   *
+   * @param hide true hides the key from documentation false shows the config in the documentation
    */
-  protected void hideCompressionType() {
+  protected void hideCompressionType(boolean hide) {
+    hide(DATA_COMPRESSION_TYPE, hide);
+  }
+
+  /**
+   * Allows users to toggle certain config on and off in the documentation
+   *
+   * @param key The config key that you want to toggle hidden or unhidden in the documentation
+   * @param state true hides the key from documentation false shows the config in the documentation
+   */
+  protected void hide(String key, boolean state) {
+
     ExtendedConfigKey newKey =
-        ExtendedConfigKey.Builder.unbuild(configKeys().get(DATA_COMPRESSION_TYPE))
-            .internalConfig(true)
-            .build();
+        ExtendedConfigKey.Builder.unbuild(configKeys().get(key)).internalConfig(state).build();
     configKeys().put(newKey.name, newKey);
   }
 

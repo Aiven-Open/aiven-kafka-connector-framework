@@ -16,7 +16,6 @@
 
 package io.aiven.commons.kafka.connector.source.config;
 
-import io.aiven.commons.kafka.config.ExtendedConfigKey;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfig;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigDef;
@@ -155,88 +154,74 @@ public class SourceCommonConfig extends ConnectorCommonConfig {
       SourceConfigFragment.update(this);
     }
 
-    /**
-     * This method hides the extractor buffer from documentation but does not make them
-     * unconfigurable
-     */
-    protected void hideExtractorBuffer() {
-      ExtendedConfigKey newKey =
-          ExtendedConfigKey.Builder.unbuild(configKeys().get(SourceConfigFragment.EXTRACTOR_BUFFER))
-              .internalConfig(true)
-              .build();
-      configKeys().put(newKey.name, newKey);
-    }
-
-    /**
-     * This method hides the distribution type from documentation but does not make them
-     * unconfigurable
-     */
-    protected void hideDistributionType() {
-      ExtendedConfigKey newKey =
-          ExtendedConfigKey.Builder.unbuild(
-                  configKeys().get(SourceConfigFragment.DISTRIBUTION_TYPE))
-              .internalConfig(true)
-              .build();
-      configKeys().put(newKey.name, newKey);
-    }
-
-    /**
-     * This method hides the extractor cache size from documentation but does not make them
-     * unconfigurable
-     */
-    protected void hideExtractorCacheSize() {
-      ExtendedConfigKey newKey =
-          ExtendedConfigKey.Builder.unbuild(
-                  configKeys().get(SourceConfigFragment.EXTRACTOR_CACHE_SIZE))
-              .internalConfig(true)
-              .build();
-      configKeys().put(newKey.name, newKey);
-    }
-
-    /**
-     * This method hides the extractor csv headers from documentation but does not make them
-     * unconfigurable
-     */
-    protected void hideExtractorCSVHeaders() {
-      ExtendedConfigKey newKey =
-          ExtendedConfigKey.Builder.unbuild(
-                  configKeys().get(SourceConfigFragment.EXTRACTOR_CSV_HEADERS))
-              .internalConfig(true)
-              .build();
-      configKeys().put(newKey.name, newKey);
-    }
-
-    /**
-     * This method hides the extractor csv headers enabled from documentation but does not make them
-     * unconfigurable
-     */
-    protected void hideExtractorCSVHeadersEnabled() {
-      ExtendedConfigKey newKey =
-          ExtendedConfigKey.Builder.unbuild(
-                  configKeys().get(SourceConfigFragment.EXTRACTOR_CSV_HEADERS_ENABLED))
-              .internalConfig(true)
-              .build();
-      configKeys().put(newKey.name, newKey);
-    }
-
-    /**
-     * This method hides the extractor class enabled from documentation but does not make them
-     * unconfigurable
-     */
-    protected void hideExtractorExtractorClass() {
-      ExtendedConfigKey newKey =
-          ExtendedConfigKey.Builder.unbuild(configKeys().get(SourceConfigFragment.EXTRACTOR_CLASS))
-              .internalConfig(true)
-              .build();
-      configKeys().put(newKey.name, newKey);
-    }
-
     @Override
     public Map<String, ConfigValue> multiValidate(final Map<String, ConfigValue> valueMap) {
       final Map<String, ConfigValue> values = super.multiValidate(valueMap);
       final FragmentDataAccess fragmentDataAccess = FragmentDataAccess.from(valueMap);
       new SourceConfigFragment(fragmentDataAccess).validate(values);
       return values;
+    }
+
+    /**
+     * This method hides the extractor buffer from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideExtractorBuffer(boolean hide) {
+      hide(SourceConfigFragment.EXTRACTOR_BUFFER, hide);
+    }
+
+    /**
+     * This method hides the distribution type from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideDistributionType(boolean hide) {
+      hide(SourceConfigFragment.DISTRIBUTION_TYPE, hide);
+    }
+
+    /**
+     * This method hides the extractor cache size from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideExtractorCacheSize(boolean hide) {
+      hide(SourceConfigFragment.EXTRACTOR_CACHE_SIZE, hide);
+    }
+
+    /**
+     * This method hides the extractor csv headers from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideExtractorCSVHeaders(boolean hide) {
+
+      hide(SourceConfigFragment.EXTRACTOR_CSV_HEADERS, hide);
+    }
+
+    /**
+     * This method hides the extractor csv headers enabled from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideExtractorCSVHeadersEnabled(boolean hide) {
+
+      hide(SourceConfigFragment.EXTRACTOR_CSV_HEADERS_ENABLED, hide);
+    }
+
+    /**
+     * This method hides the extractor class enabled from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideExtractorExtractorClass(boolean hide) {
+      hide(SourceConfigFragment.EXTRACTOR_CLASS, hide);
     }
   }
 }
