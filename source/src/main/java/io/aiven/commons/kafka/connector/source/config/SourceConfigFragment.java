@@ -40,22 +40,22 @@ import org.apache.kafka.connect.runtime.errors.ToleranceType;
 /** Defines properties that are shared across all Source implementations. */
 public final class SourceConfigFragment extends ConfigFragment {
 
-  private static final String MAX_POLL_RECORDS = "max.poll.records";
-  private static final String TARGET_TOPIC = "topic";
-  private static final String ERRORS_TOLERANCE = "errors.tolerance";
-  private static final String DISTRIBUTION_TYPE = "distribution.type";
+  static final String MAX_POLL_RECORDS = "max.poll.records";
+  static final String TARGET_TOPIC = "topic";
+  static final String ERRORS_TOLERANCE = "errors.tolerance";
+  static final String DISTRIBUTION_TYPE = "distribution.type";
 
   /** The name of the ring buffer size property */
-  private static final String RING_BUFFER_SIZE = "ring.buffer.size";
+  static final String RING_BUFFER_SIZE = "ring.buffer.size";
 
   /** The name of the native start key property. Visible for use in logging */
   public static final String NATIVE_START_KEY = "native.start.key";
 
-  private static final String EXTRACTOR_CLASS = "extractor.class";
-  private static final String EXTRACTOR_BUFFER = "extractor.buffer";
-  private static final String EXTRACTOR_CACHE_SIZE = "extractor.cache.size";
-  private static final String EXTRACTOR_CSV_HEADERS_ENABLED = "extractor.csv.headers.enabled";
-  private static final String EXTRACTOR_CSV_HEADERS = "extractor.csv.headers";
+  static final String EXTRACTOR_CLASS = "extractor.class";
+  static final String EXTRACTOR_BUFFER = "extractor.buffer";
+  static final String EXTRACTOR_CACHE_SIZE = "extractor.cache.size";
+  static final String EXTRACTOR_CSV_HEADERS_ENABLED = "extractor.csv.headers.enabled";
+  static final String EXTRACTOR_CSV_HEADERS = "extractor.csv.headers";
 
   /**
    * Creates a Setter for this fragment.

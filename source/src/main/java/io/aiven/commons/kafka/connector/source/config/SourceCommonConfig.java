@@ -161,5 +161,67 @@ public class SourceCommonConfig extends ConnectorCommonConfig {
       new SourceConfigFragment(fragmentDataAccess).validate(values);
       return values;
     }
+
+    /**
+     * This method hides the extractor buffer from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideExtractorBuffer(boolean hide) {
+      hide(SourceConfigFragment.EXTRACTOR_BUFFER, hide);
+    }
+
+    /**
+     * This method hides the distribution type from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideDistributionType(boolean hide) {
+      hide(SourceConfigFragment.DISTRIBUTION_TYPE, hide);
+    }
+
+    /**
+     * This method hides the extractor cache size from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideExtractorCacheSize(boolean hide) {
+      hide(SourceConfigFragment.EXTRACTOR_CACHE_SIZE, hide);
+    }
+
+    /**
+     * This method hides the extractor csv headers from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideExtractorCSVHeaders(boolean hide) {
+
+      hide(SourceConfigFragment.EXTRACTOR_CSV_HEADERS, hide);
+    }
+
+    /**
+     * This method hides the extractor csv headers enabled from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideExtractorCSVHeadersEnabled(boolean hide) {
+
+      hide(SourceConfigFragment.EXTRACTOR_CSV_HEADERS_ENABLED, hide);
+    }
+
+    /**
+     * This method hides the extractor class enabled from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides the key from documentation false shows the config in the documentation
+     */
+    protected void hideExtractorExtractorClass(boolean hide) {
+      hide(SourceConfigFragment.EXTRACTOR_CLASS, hide);
+    }
   }
 }
