@@ -89,7 +89,20 @@ public class CsvTestDataFixture {
    */
   public static String generateCsvRecords(
       final int messageId, final int recordCount, final String testMessage) {
-    final StringBuilder csvRecords = new StringBuilder(MSG_HEADER).append(System.lineSeparator());
+    return generateCsvRecords(messageId, recordCount, testMessage, MSG_HEADER);
+  }
+
+  /**
+   * Creates Csv test data.
+   *
+   * @param recordCount the number of records to create.
+   * @param testMessage the message for the records.
+   * @param headers the headers for the csv columns.
+   * @return the string representing the csv records.
+   */
+  public static String generateCsvRecords(
+      final int messageId, final int recordCount, final String testMessage, String headers) {
+    final StringBuilder csvRecords = new StringBuilder(headers).append(System.lineSeparator());
     for (int i = 0; i < recordCount; i++) {
       csvRecords.append(generateCsvRecord(messageId + i, testMessage)).append("\n");
     }

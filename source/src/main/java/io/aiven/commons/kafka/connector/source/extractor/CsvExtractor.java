@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
 import org.apache.kafka.connect.data.Field;
@@ -60,9 +59,6 @@ public class CsvExtractor extends Extractor {
 
   /** The schema builder */
   private SchemaBuilder valueSchema;
-
-  /** The configured CSV parser */
-  private CSVParser parser;
 
   /** the configured format for the parser */
   private final CSVFormat csvFormat;
@@ -118,8 +114,7 @@ public class CsvExtractor extends Extractor {
 
   private List<CSVRecord> getRecords(String sourceRecord) {
     try {
-      parser = csvFormat.parse(new StringReader(sourceRecord));
-      return parser.getRecords();
+      return csvFormat.parse(new StringReader(sourceRecord)).getRecords();
     } catch (IOException e) {
       throw new RuntimeException(
           String.format("IOException occurred when processing csv to CSVRecord %s", e));
@@ -139,7 +134,7 @@ public class CsvExtractor extends Extractor {
 
   private void createValueSchema(CSVRecord record) {
     valueSchema = SchemaBuilder.struct();
-    List<String> headers = constructHeaders(parser.getHeaderNames());
+    List<String> headers = constructHeaders(record.getParser().getHeaderNames());
 
     int limit = Math.max(headers.size(), record.size());
     for (int i = 0; i < limit; i++) {
@@ -159,7 +154,9 @@ public class CsvExtractor extends Extractor {
   private SchemaAndValue toConnectData(CSVRecord value) {
     final Map<String, String> output = new LinkedHashMap<>(value.size());
 
-    if (valueSchema == null || valueSchema.fields().size() < value.size()) {
+    if (valueSchema == null
+        || valueSchema.fields().size() < value.size()
+        || headersHaveChanged(value)) {
       createValueSchema(value);
     }
 
@@ -176,12 +173,12 @@ public class CsvExtractor extends Extractor {
     return new SchemaAndValue(valueSchema, output);
   }
 
+  private boolean headersHaveChanged(CSVRecord value) {
+    return headers == null || !headers.equals(value.getParser().getHeaderNames());
+  }
+
   @Override
   public void close() throws Exception {
-    if (parser != null) {
-      parser.close();
-      parser = null;
-    }
     valueSchema = null;
   }
 }
