@@ -1,6 +1,7 @@
 ## v0.1.0
 ### What is changed
- 
+
+ - Update the headers behaviour in the CSVExtractor (#47)
  - Add option to hide some config from documentation (#45)
  - Merge pull request #44 from Aiven-Open/Issue_41_replace-getNaticeItemStream
  - Merge pull request #43 from Aiven-Open/fix-publish-error
