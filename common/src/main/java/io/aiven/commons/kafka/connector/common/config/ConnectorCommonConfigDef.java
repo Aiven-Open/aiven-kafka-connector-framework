@@ -21,7 +21,6 @@ package io.aiven.commons.kafka.connector.common.config;
 import static io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment.DATA_COMPRESSION_TYPE;
 
 import io.aiven.commons.kafka.config.CommonConfigDef;
-import io.aiven.commons.kafka.config.ExtendedConfigKey;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import java.util.Map;
 import org.apache.kafka.common.config.ConfigValue;
@@ -42,19 +41,6 @@ public class ConnectorCommonConfigDef extends CommonConfigDef {
    */
   protected void hideCompressionType(boolean hide) {
     hide(DATA_COMPRESSION_TYPE, hide);
-  }
-
-  /**
-   * Allows users to toggle certain config on and off in the documentation
-   *
-   * @param key The config key that you want to toggle hidden or unhidden in the documentation
-   * @param state true hides the key from documentation false shows the config in the documentation
-   */
-  protected void hide(String key, boolean state) {
-
-    ExtendedConfigKey newKey =
-        ExtendedConfigKey.Builder.unbuild(configKeys().get(key)).internalConfig(state).build();
-    configKeys().put(newKey.name, newKey);
   }
 
   @Override
