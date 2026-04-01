@@ -133,17 +133,26 @@ final class CsvExtractorTest extends IORecordExtractorTest {
 
     final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
     assertThat(records.size()).isEqualTo(2);
-    Schema schema = records.get(1).schema();
+    Schema schema = records.get(0).schema();
     List<Field> fields = schema.fields();
     assertThat(fields).hasSize(3);
     assertThat(fields.get(0).name()).isEqualTo("field0");
     assertThat(fields.get(1).name()).isEqualTo("field1");
-    assertThat(fields.get(2).name()).isEqualTo("field2");
+        assertThat(fields.get(2).name()).isEqualTo("field2");
 
-    Map<String, String> values = (Map) records.get(1).value();
+    Map<String, String> values = (Map) records.get(0).value();
+    assertThat(values.get("field0")).isEqualTo("1");
+    assertThat(values.get("field1")).isEqualTo("hi");
+        assertThat(values.get("field2")).isEqualTo("Hello, from CSV Test Data Fixture: 1");
+    schema = records.get(1).schema();
+    fields = schema.fields();
+    assertThat(fields).hasSize(2);
+    assertThat(fields.get(0).name()).isEqualTo("field0");
+    assertThat(fields.get(1).name()).isEqualTo("field1");
+
+    values = (Map) records.get(1).value();
     assertThat(values.get("field0")).isEqualTo("2");
     assertThat(values.get("field1")).isEqualTo("bye");
-    assertThat(values.get("field2")).isEqualTo("");
   }
 
   @Test
