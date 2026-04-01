@@ -24,11 +24,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
 import org.apache.kafka.connect.data.Field;
@@ -57,10 +59,16 @@ public class CsvExtractor extends Extractor {
   private static final Logger LOGGER = LoggerFactory.getLogger(CsvExtractor.class);
 
   /** The schema builder */
-  //  private SchemaBuilder valueSchema;
+  private SchemaBuilder valueSchema;
+
+  /** The configured CSV parser */
+  private CSVParser parser;
 
   /** the configured format for the parser */
   private final CSVFormat csvFormat;
+
+  /** the list of headers for this Extractor */
+  private final List<String> headers;
 
   /**
    * Gets the registry information for this extractor.
@@ -86,7 +94,7 @@ public class CsvExtractor extends Extractor {
     if (config.isCsvExtractorHeaderEnabled()) {
       builder.setHeader().setSkipHeaderRecord(true);
     }
-
+    headers = config.getCsvExtractorHeader();
     csvFormat = builder.get();
   }
 
@@ -110,17 +118,28 @@ public class CsvExtractor extends Extractor {
 
   private List<CSVRecord> getRecords(String sourceRecord) {
     try {
-      return csvFormat.parse(new StringReader(sourceRecord)).getRecords();
+      parser = csvFormat.parse(new StringReader(sourceRecord));
+      return parser.getRecords();
     } catch (IOException e) {
       throw new RuntimeException(
           String.format("IOException occurred when processing csv to CSVRecord %s", e));
     }
   }
 
-  private SchemaBuilder createValueSchema(CSVRecord record) {
-    SchemaBuilder valueSchema = SchemaBuilder.struct();
-    List<String> headers = record.getParser().getHeaderNames();
-    LOGGER.info("headers: {} records: {}", headers, record);
+  private List<String> constructHeaders(List<String> parserHeaders) {
+    if (headers == null) {
+      return new ArrayList<>(parserHeaders);
+    }
+    List<String> result = new ArrayList<>(headers);
+    if (parserHeaders != null && headers.size() < parserHeaders.size()) {
+      result.addAll(parserHeaders.subList(headers.size(), parserHeaders.size()));
+    }
+    return result;
+  }
+
+  private void createValueSchema(CSVRecord record) {
+    valueSchema = SchemaBuilder.struct();
+    List<String> headers = constructHeaders(record.getParser().getHeaderNames());
 
     int limit = Math.max(headers.size(), record.size());
     for (int i = 0; i < limit; i++) {
@@ -131,7 +150,6 @@ public class CsvExtractor extends Extractor {
         valueSchema.field(name, SchemaBuilder.STRING_SCHEMA);
       }
     }
-    return valueSchema;
   }
 
   /**
@@ -141,7 +159,11 @@ public class CsvExtractor extends Extractor {
   private SchemaAndValue toConnectData(CSVRecord value) {
     final Map<String, String> output = new LinkedHashMap<>(value.size());
 
-    SchemaBuilder valueSchema = createValueSchema(value);
+    if (valueSchema == null
+        || valueSchema.fields().size() < value.size()
+        || headershaveChanged(value)) {
+      createValueSchema(value);
+    }
 
     List<Field> fields = valueSchema.fields();
     for (int i = 0; i < fields.size(); i++) {
@@ -156,6 +178,16 @@ public class CsvExtractor extends Extractor {
     return new SchemaAndValue(valueSchema, output);
   }
 
+  private boolean headershaveChanged(CSVRecord value) {
+    return headers == null || !headers.equals(value.getParser().getHeaderNames());
+  }
+
   @Override
-  public void close() throws Exception {}
+  public void close() throws Exception {
+    if (parser != null) {
+      parser.close();
+      parser = null;
+    }
+    valueSchema = null;
+  }
 }

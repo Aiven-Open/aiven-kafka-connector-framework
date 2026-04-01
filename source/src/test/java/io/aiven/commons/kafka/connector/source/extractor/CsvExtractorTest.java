@@ -16,7 +16,9 @@
 
 package io.aiven.commons.kafka.connector.source.extractor;
 
+import static io.aiven.commons.kafka.connector.source.testFixture.format.CsvTestDataFixture.MSG_HEADER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
@@ -34,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import org.apache.commons.csv.CSVFormat;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
@@ -122,7 +125,7 @@ final class CsvExtractorTest extends IORecordExtractorTest {
   }
 
   @Test
-  void shortRowTest() throws Exception {
+  void shortRowTest() {
     Map<String, String> props = new HashMap<>();
     SourceConfigFragment.setter(props).csvExtractorHeadersEnabled(false);
     SourceCommonConfig sourceCommonConfig =
@@ -138,12 +141,12 @@ final class CsvExtractorTest extends IORecordExtractorTest {
     assertThat(fields).hasSize(3);
     assertThat(fields.get(0).name()).isEqualTo("field0");
     assertThat(fields.get(1).name()).isEqualTo("field1");
-        assertThat(fields.get(2).name()).isEqualTo("field2");
+    assertThat(fields.get(2).name()).isEqualTo("field2");
 
     Map<String, String> values = (Map) records.get(0).value();
     assertThat(values.get("field0")).isEqualTo("1");
     assertThat(values.get("field1")).isEqualTo("hi");
-        assertThat(values.get("field2")).isEqualTo("Hello, from CSV Test Data Fixture: 1");
+    assertThat(values.get("field2")).isEqualTo("Hello, from CSV Test Data Fixture: 1");
     schema = records.get(1).schema();
     fields = schema.fields();
     assertThat(fields).hasSize(2);
@@ -194,7 +197,7 @@ final class CsvExtractorTest extends IORecordExtractorTest {
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
     extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
-        CsvTestDataFixture.MSG_HEADER
+        MSG_HEADER
             + "\n"
             + CsvTestDataFixture.generateCsvRecord(1, "hi")
             + "\n"
@@ -351,5 +354,38 @@ final class CsvExtractorTest extends IORecordExtractorTest {
     assertThat(values.get("two")).isEqualTo("bye");
     assertThat(values.get("field2")).isEqualTo(CsvTestDataFixture.MESSAGE_PREFIX + "2");
     assertThat(values.get("field3")).isEqualTo("more data");
+  }
+
+  @Test
+  void multipleCSVFilesParsedTest() {
+    Map<String, String> props = new HashMap<>();
+
+    SourceCommonConfig sourceCommonConfig =
+        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    extractor = new CsvExtractor(sourceCommonConfig);
+    final String nativeItemOne =
+        CsvTestDataFixture.generateCsvRecords(0, 1, CsvTestDataFixture.TEST_MESSAGE, MSG_HEADER);
+    final String nativeItemTwo =
+        CsvTestDataFixture.generateCsvRecords(
+            0,
+            1,
+            CsvTestDataFixture.TEST_MESSAGE,
+            CSVFormat.RFC4180.format("message", "id", "value"));
+
+    final EvolvingSourceRecord sourceRecordOne = createEvolvingSourceRecord(nativeItemOne);
+    final EvolvingSourceRecord sourceRecordTwo = createEvolvingSourceRecord(nativeItemTwo);
+    final List<SchemaAndValue> batchOne = extractor.generateRecords(sourceRecordOne).toList();
+    final List<SchemaAndValue> batchTwo = extractor.generateRecords(sourceRecordTwo).toList();
+
+    assertThat(batchOne).hasSize(1);
+    Schema schema = batchOne.get(0).schema();
+    assertEquals("id", schema.fields().get(0).name());
+    assertEquals("message", schema.fields().get(1).name());
+    assertEquals("value", schema.fields().get(2).name());
+    assertThat(batchTwo).hasSize(1);
+    schema = batchTwo.get(0).schema();
+    assertEquals("message", schema.fields().get(0).name());
+    assertEquals("id", schema.fields().get(1).name());
+    assertEquals("value", schema.fields().get(2).name());
   }
 }
