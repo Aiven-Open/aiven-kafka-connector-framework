@@ -156,7 +156,7 @@ public class CsvExtractor extends Extractor {
 
     if (valueSchema == null
         || valueSchema.fields().size() < value.size()
-        || headershaveChanged(value)) {
+        || headersHaveChanged(value)) {
       createValueSchema(value);
     }
 
@@ -173,7 +173,7 @@ public class CsvExtractor extends Extractor {
     return new SchemaAndValue(valueSchema, output);
   }
 
-  private boolean headershaveChanged(CSVRecord value) {
+  private boolean headersHaveChanged(CSVRecord value) {
     return headers == null || !headers.equals(value.getParser().getHeaderNames());
   }
 
