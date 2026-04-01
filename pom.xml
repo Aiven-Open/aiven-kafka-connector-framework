@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>aiven-commons</artifactId>
-    <version>3-SNAPSHOT</version>
+    <version>3</version>
   </parent>
 
   <artifactId>framework-for-connectors</artifactId>
@@ -101,8 +101,8 @@
 
   <properties>
     <latestRelease>none</latestRelease>
-    <aiven.kafka.config.version>0.1.0-SNAPSHOT</aiven.kafka.config.version>
-    <aiven.util.version>0.1.0-SNAPSHOT</aiven.util.version>
+    <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
+    <aiven.util.version>0.1.0</aiven.util.version>
     <confluent.avro.data.aversion>7.9.5</confluent.avro.data.aversion>
   </properties>
 
