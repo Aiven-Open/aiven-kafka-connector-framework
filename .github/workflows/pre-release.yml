@@ -38,6 +38,7 @@ jobs:
   build:
     name: Check release conditions
     runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'pre-release')
 
     steps:
       - name: Checkout code
