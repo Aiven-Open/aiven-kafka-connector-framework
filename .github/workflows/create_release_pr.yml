@@ -81,8 +81,8 @@ jobs:
         run: |
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
-          mvn -e -B -V -ntp versions:set -DgenerateBackupPoms=false -DnewVersion=${{ github.event.inputs.release_version }} enforcer:enforce -Denforcer.rules=requireReleaseDeps
-          mvn -e -B -V -ntp spotless:apply
+          mvn -e -B -V -ntp versions:set -DgenerateBackupPoms=false -DnewVersion=${{ github.event.inputs.release_version }} 
+          mvn -e -B -V -ntp spotless:apply enforcer:enforce -Denforcer.rules=requireReleaseDeps
           git add pom.xml
           git commit -m "Release version ${{ github.event.inputs.release_version }}"
           git tag -a "v${{ steps.project.outputs.version }}" -m "Release version ${{ steps.project.outputs.version }}"
