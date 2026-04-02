@@ -72,12 +72,12 @@ jobs:
           fi
         id: project
 
-      # - name: Create tag
-      #   run: |
-      #     git config --local user.name "GitHub Action"
-      #     git config --local user.email "action@github.com"
-      #     git tag -a "v${{ steps.project.outputs.version }}" -m "Release version ${{ steps.project.outputs.version }}"
-      #     git push origin "v${{ steps.project.outputs.version }}"
+      - name: Create tag
+        run: |
+          git config --local user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+          git tag -a "v${{ steps.project.outputs.version }}" -m "Release version ${{ steps.project.outputs.version }}"
+          git push origin "v${{ steps.project.outputs.version }}"
 
       - name: Set up JDK ${{ steps.project.outputs.java_version }}
         uses: actions/setup-java@v5
