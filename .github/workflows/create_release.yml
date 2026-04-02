@@ -113,8 +113,9 @@ jobs:
           target_commitish: ${{ github.event.inputs.commit_hash }}
           draft: true
           prerelease: false
-          files: "common/target/*.jar
-                  sink/target/*.jar
-                  source/target/*.jar"
+          files: | 
+            common/target/*.jar
+            sink/target/*.jar
+            source/target/*.jar"
           body_path: /tmp/release_body.txt
 
