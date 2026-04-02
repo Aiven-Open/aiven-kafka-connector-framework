@@ -87,6 +87,7 @@ final class CsvExtractorTest extends IORecordExtractorTest {
    *
    * @return the message to extract.
    */
+  @Override
   protected Function<Object, String> messageExtractor() {
     return sv -> ((Map) sv).get("value").toString();
   }
