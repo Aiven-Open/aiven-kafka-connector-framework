@@ -17,11 +17,16 @@
     SPDX-License-Identifier: Apache-2
 -->
 
-${project.name}  (${project.version})
+${project.name}
 ======================
 
 [![Latest Build](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/PR_check.yml/badge.svg)](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/PR_check.yml)
 
+Versions
+========
+
+ - Development: ${project.version}
+ - Latest Release: ${project.properties.latestRelease}
 
 Overview
 ========

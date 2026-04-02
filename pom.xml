@@ -75,7 +75,9 @@
   <modules>
     <module>common</module>
     <module>source</module>
-    <module>sink</module>
+    <!--
+Sink module is removed until there is code
+<module>sink</module>-->
   </modules>
 
   <scm>
@@ -264,6 +266,7 @@
                   </includes>
                   <excludes>
                     <exclude>README.md</exclude>
+                    <exclude>CONTRIBUTING.md</exclude>
                   </excludes>
                 </resource>
               </resources>

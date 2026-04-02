@@ -35,7 +35,7 @@
             <item name="Architecture" href="./Architecture.html"/>
             <item name="Configuration Framework" href ="./ConfigurationFramework.html"/>
             <item name="Code of Conduct" href="./CODE_OF_CONDUCT.html" />
-            <item name="Contributing" href="./CONTRIBUTING.html" />
+            <item name="Contributing" href="./contributing.html" />
             <item name="Change log" href="./CHANGE_LOG.html" />
             <item name="Security Policy" href="./SECURITY.html" />
         </menu>
