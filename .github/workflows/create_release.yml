@@ -116,6 +116,6 @@ jobs:
           files: | 
             common/target/*.jar
             sink/target/*.jar
-            source/target/*.jar"
+            source/target/*.jar
           body_path: /tmp/release_body.txt
 
