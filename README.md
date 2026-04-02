@@ -14,12 +14,12 @@
     specific language governing permissions and limitations
     under the License.
 
-    SPDX-License-Identifier: Apache-2
+    SPDX-License-Identifier: Apache-2.0
 -->
 Aiven Kafka Connector Framework.
 ======================
 
-[![Build and Publish](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/merge.yml/badge.svg)](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/merge.yml)
+[![Latest Build](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/PR_check.yml/badge.svg)](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/PR_check.yml)
 
 A collection of utilities and interfaces to simplify the building and homogenization
 of sink and source connector pairs.

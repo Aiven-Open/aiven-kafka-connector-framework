@@ -17,35 +17,43 @@
     SPDX-License-Identifier: Apache-2
 -->
 
-${project.name}  ((${esc.hash} ${project.version}))
+${project.name}
 ======================
 
+[![Latest Build](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/PR_check.yml/badge.svg)](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/PR_check.yml)
 
-[![Build and Publish](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/merge.yml/badge.svg)](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/merge.yml)
+Versions
+========
 
-
-${project.name} is a collection of utilities and interfaces to simplify the building and homogenization
-of sink and source connector pairs thereby making the development of source and sink connectors faster.  Using the framework the developer only needs to worry about how to talk to the source or sink storage engine.  The rest of the flow is handled by the framework.  See the (architecture)[./Architecture.html] document for a detailed description of how the framework is designed.
-
-[![Build and Publish](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/merge.yml/badge.svg)](https://github.com/Aiven-Open/aiven-kafka-connector-framework/actions/workflows/merge.yml)
+ - Development: ${project.version}
+ - Latest Release: ${project.properties.latestRelease}
 
 Overview
 ========
 
+${project.name} is a collection of utilities and interfaces to simplify the building and homogenization
+of sink and source connector pairs thereby making the development of source and sink connectors faster.  Using the framework the developer only needs to worry about how to talk to the source or sink storage engine.  The rest of the flow is handled by the framework.  See the (architecture)[./Architecture.html] document for a detailed description of how the framework is designed.
+
 Features
 ============
 
-Setup
+Developer need only concentrate on the communication with the storage layers.  All timing and communication with Kafka is handled by the Framework.
+
+Build
 ============
 
+The latest release is ${project.properties.latestRelease} and is available for download from the Maven repository or via the [releases](${project.url}/releases) page.
+Please note that all jars are provided for your convenience, the project delivery is the source code found in the [project git repository](${project.url}).
+
+To build the framework execute `mvn install`.  This will create the jars and install them in your local maven repository where they can be accessed from other projects.
 
 License
 ============
-Aiven Kafka Connector Framework is licensed under the Apache License, version 2.0. Full license text is available in the [LICENSE](LICENSE) file.
+${project.name} is licensed under the Apache License, version 2.0. Full license text is available in the [license documentation](licenses.html) file.
 
 Please note that the project explicitly does not require a CLA (Contributor License Agreement) from its contributors.
 
 Contact
 ============
 Bug reports and patches are very welcome, please post them as GitHub issues and pull requests at https://github.com/aiven/aiven-kafka-connector-framework .
-To report any possible vulnerabilities or other serious issues please see our [security](SECURITY) policy.
+To report any possible vulnerabilities or other serious issues please see our [security policy](SECURITY.html).
