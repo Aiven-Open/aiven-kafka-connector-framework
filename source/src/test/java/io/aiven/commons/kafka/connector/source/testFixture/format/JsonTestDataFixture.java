@@ -19,7 +19,9 @@ package io.aiven.commons.kafka.connector.source.testFixture.format;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.cfg.ConfigFeature;
+import com.fasterxml.jackson.databind.cfg.JsonNodeFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -55,18 +57,15 @@ public final class JsonTestDataFixture {
           + "    {\"field\": \"id\", \"type\": \"int32\"},\n"
           + "    {\"field\": \"age\", \"type\": \"int32\", \"default\":0}\n  ]\n}";
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final ObjectMapper OBJECT_MAPPER =
+      JsonMapper.builder()
+          .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
+          .enable(JsonNodeFeature.STRIP_TRAILING_BIGDECIMAL_ZEROES)
+          .build();
 
-  private static final DeserializationFeature[] DESERIALIZATION_FEATURES = {
-    DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS
+  private static final ConfigFeature[] DESERIALIZATION_FEATURES = {
+    DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS,
   };
-
-  static {
-    for (final DeserializationFeature feature : DESERIALIZATION_FEATURES) {
-      OBJECT_MAPPER.enable(feature);
-    }
-    OBJECT_MAPPER.setNodeFactory(JsonNodeFactory.withExactBigDecimals(true));
-  }
 
   private JsonTestDataFixture() {
     // do not instantiate

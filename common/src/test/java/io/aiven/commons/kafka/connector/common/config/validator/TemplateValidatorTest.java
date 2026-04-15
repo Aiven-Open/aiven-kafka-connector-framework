@@ -26,6 +26,10 @@ import org.junit.jupiter.api.Test;
 /** Tests for the template validator */
 public class TemplateValidatorTest {
 
+  /** Default constructor. */
+  public TemplateValidatorTest() {}
+
+  /** A templateVariableRegistry for testing, comprising Key, Partition and Timestamp variables */
   public static final TemplateVariableRegistry TESTING_REGISTRY =
       TemplateVariableRegistry.builder()
           .add(TemplateVariable.KEY)

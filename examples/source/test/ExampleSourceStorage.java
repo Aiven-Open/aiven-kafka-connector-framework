@@ -19,8 +19,10 @@ import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.impl.ExampleOffsetManagerEntry;
 import io.aiven.commons.kafka.connector.source.impl.ExampleSourceConnector;
+import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeClient;
+import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.integration.SourceStorage;
-import io.aiven.commons.kafka.connector.source.transformer.TransformerRegistry;
+import io.aiven.commons.kafka.connector.source.extractor.ExtractorRegistry;
 import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.connector.Connector;
 
@@ -36,7 +38,7 @@ public class ExampleSourceStorage implements SourceStorage<String, ExampleNative
 	ExampleNativeClient client;
 
 	@Override
-	public TransformerRegistry supportedTransformers() {
+	public ExtractorRegistry supportedTransformers() {
 		return null;
 	}
 

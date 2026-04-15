@@ -48,11 +48,6 @@
       <artifactId>common-util</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>connect-api</artifactId>
       <scope>provided</scope>
@@ -60,6 +55,7 @@
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>connect-runtime</artifactId>
+      <version>${kafka.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

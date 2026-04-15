@@ -16,6 +16,7 @@
 package io.aiven.commons.kafka.connector.source.impl.test;
 
 import io.aiven.commons.kafka.connector.source.AbstractOffsetManagerIntegrationTest;
+import io.aiven.commons.kafka.connector.source.impl.nativeProvided.ExampleNativeItem;
 import io.aiven.commons.kafka.connector.source.integration.SourceStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

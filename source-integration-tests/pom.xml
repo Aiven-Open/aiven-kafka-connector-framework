@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.aiven.commons</groupId>
+    <artifactId>framework-for-connectors</artifactId>
+    <version>0.2.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>framework-for-connectors-source-integration-tests</artifactId>
+
+  <version>0.2.0-SNAPSHOT</version>
+  <name>Connector framework source integration tests library</name>
+  <description>Integration tests classes for connector framework source module implementations.  The generated jar includes dependency information for testing reuse.</description>
+  <dependencies>
+    <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <version>${awaitility.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>kafka-testkit</artifactId>
+      <version>${aiven.kafka.testkit.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>framework-for-connectors-common-integration-tests</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>framework-common-for-connectors</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>framework-for-source-connectors</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>connect-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!--    <dependency>-->
+    <!--      <groupId>org.apache.kafka</groupId>-->
+    <!--      <artifactId>connect-runtime</artifactId>-->
+    <!--      <scope>provided</scope>-->
+    <!--    </dependency>-->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-server-common</artifactId>
+      <version>${kafka.version}</version>
+      <classifier>test</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
+      <version>${kafka.version}</version>
+      <classifier>test</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka_2.13</artifactId>
+      <version>${kafka.version}</version>
+      <classifier>test</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka_2.13</artifactId>
+      <version>${kafka.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <configuration>
+            <skip>true</skip>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

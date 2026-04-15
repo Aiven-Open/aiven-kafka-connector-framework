@@ -24,8 +24,10 @@ import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.junit.jupiter.api.Test;
 
+/** Tests for the template variables */
 public class TemplateVarsTest {
-  // TemplateVariableRegistry registry = TemplateVariableRegistry.STANDARD_SINK;
+
+  TemplateVarsTest() {}
 
   @Test
   void visibilityInVelocityTest() {

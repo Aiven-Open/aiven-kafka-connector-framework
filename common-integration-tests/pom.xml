@@ -3,21 +3,16 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.aiven.commons</groupId>
-    <artifactId>aiven-kafka-connector-framework</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>framework-for-connectors</artifactId>
+    <version>0.2.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>kafka-common-connector-framework-tests</artifactId>
+  <artifactId>framework-for-connectors-common-integration-tests</artifactId>
 
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
   <name>Connector framework common tests library</name>
   <description>Test classes for the connector framework common module.  The generated jar includes dependency information for testing reuse.</description>
   <dependencies>
-    <dependency>
-      <groupId>io.aiven.commons</groupId>
-      <artifactId>kafka-common-connector-framework</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-    </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
@@ -28,14 +23,20 @@
       <artifactId>connect-api</artifactId>
       <scope>provided</scope>
     </dependency>
-    <!--    <dependency>-->
-    <!--      <groupId>org.apache.kafka</groupId>-->
-    <!--      <artifactId>connect-runtime</artifactId>-->
-    <!--      <scope>provided</scope>-->
-    <!--    </dependency>-->
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>framework-for-source-connectors</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 
@@ -78,6 +79,5 @@
         </configuration>
       </plugin>
     </plugins>
-    <sourceDirectory>../common/src/test/java</sourceDirectory>
   </build>
 </project>

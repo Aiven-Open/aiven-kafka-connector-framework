@@ -19,7 +19,11 @@ import io.aiven.commons.kafka.connector.common.templating.TemplateVariable;
 import io.aiven.commons.kafka.connector.common.templating.TemplateVariableRegistry;
 import java.util.function.Supplier;
 
+/** Tests for TemplateVariableRegistry */
 public class TemplateVariableTestRegistry implements Supplier<TemplateVariableRegistry> {
+
+  TemplateVariableTestRegistry() {}
+
   /** A registry of the standard variables used in a Sink connector. */
   @Override
   public TemplateVariableRegistry get() {

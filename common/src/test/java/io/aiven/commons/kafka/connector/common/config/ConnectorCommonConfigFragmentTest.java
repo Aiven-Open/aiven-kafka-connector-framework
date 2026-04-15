@@ -32,20 +32,15 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/**
- * Test for ConnectorCommonConfigFragment
- */
+/** Test for ConnectorCommonConfigFragment */
 public class ConnectorCommonConfigFragmentTest {
 
-  /**
-	 * Constructor.
-	 */
-	public ConnectorCommonConfigFragmentTest() {
-	}
+  /** Constructor. */
+  public ConnectorCommonConfigFragmentTest() {}
 
-	@ParameterizedTest(name = "{index} {0}")
-	@MethodSource("testInvalidConfigData")
-	void testInvalidConfig(String _ignore, Map<String, String> props, String[] expectedMessages) {
+  @ParameterizedTest(name = "{index} {0}")
+  @MethodSource("testInvalidConfigData")
+  void testInvalidConfig(String _ignore, Map<String, String> props, String[] expectedMessages) {
     assertThatThrownBy(() -> new ConnectorCommonConfig(new ConnectorCommonConfigDef(), props))
         .isInstanceOf(ConfigException.class)
         .hasMessageContainingAll(expectedMessages);

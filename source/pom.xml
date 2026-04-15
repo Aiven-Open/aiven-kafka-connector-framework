@@ -46,7 +46,7 @@
     </dependency>
     <dependency>
       <groupId>io.aiven.commons</groupId>
-      <artifactId>kafka-common-connector-framework-tests</artifactId>
+      <artifactId>framework-for-connectors-common-tests</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
@@ -74,34 +74,6 @@
       <artifactId>connect-api</artifactId>
       <version>${kafka.version}</version>
       <scope>provided</scope>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka-server-common</artifactId>
-      <version>${kafka.version}</version>
-      <classifier>test</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka-clients</artifactId>
-      <version>${kafka.version}</version>
-      <classifier>test</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka_2.13</artifactId>
-      <version>${kafka.version}</version>
-      <classifier>test</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka_2.13</artifactId>
-      <version>${kafka.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
@@ -146,12 +118,7 @@
       <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-config</artifactId>
     </dependency>
-      <dependency>
-          <groupId>io.aiven.commons</groupId>
-          <artifactId>kafka-testkit</artifactId>
-          <version>0.0.1-SNAPSHOT</version>
-          <scope>test</scope>
-      </dependency>
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
