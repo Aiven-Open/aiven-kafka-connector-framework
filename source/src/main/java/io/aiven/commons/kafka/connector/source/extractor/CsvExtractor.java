@@ -170,7 +170,7 @@ public class CsvExtractor extends Extractor {
       }
     }
 
-    return new SchemaAndValue(valueSchema, output);
+    return new SchemaAndValue(valueSchema.build(), output);
   }
 
   private boolean headersHaveChanged(CSVRecord value) {
