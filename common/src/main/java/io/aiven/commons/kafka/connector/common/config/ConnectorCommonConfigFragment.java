@@ -115,7 +115,7 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
                 .group(COMMON_GROUP)
                 .orderInGroup(++connectorCommon)
                 .documentation("The default schema registry URL.")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(SCHEMA_REGISTRY_ENABLE)
@@ -128,7 +128,7 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
                         + String.format(
                             "If not set the registry will be enabled if the %s parameter is set.",
                             SCHEMA_REGISTRY_URL))
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(VALUE_CONVERTER_SCHEMA_REGISTRY_URL)
@@ -139,7 +139,7 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
                     String.format(
                         "Schema registry URL for value converters.  If not specified the '%s' value will be used.",
                         SCHEMA_REGISTRY_URL))
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(VALUE_CONVERTER_SCHEMA_REGISTRY_ENABLE)
@@ -152,7 +152,7 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
                         + String.format(
                             "If not set the value converter schema registry will be enabled if the %s parameter enabled.",
                             SCHEMA_REGISTRY_ENABLE))
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(KEY_CONVERTER_SCHEMA_REGISTRY_URL)
@@ -163,7 +163,7 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
                     String.format(
                         "Schema registry URL for key converters.  If not specified the '%s' value will be used.",
                         SCHEMA_REGISTRY_URL))
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(KEY_CONVERTER_SCHEMA_REGISTRY_ENABLE)
@@ -176,7 +176,7 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
                         + String.format(
                             "If not set the key converter schema registry will be enabled if the %s parameter enabled.",
                             SCHEMA_REGISTRY_ENABLE))
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(DATA_COMPRESSION_TYPE)
@@ -186,7 +186,7 @@ public class ConnectorCommonConfigFragment extends ConfigFragment {
                 .defaultValue(CompressionType.NONE.name())
                 .documentation(
                     "The compression to use to read/write data streams from the data storage.  Note: different backends define the data stream differently.  Please check the documentation")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build());
 
     return configDef;
