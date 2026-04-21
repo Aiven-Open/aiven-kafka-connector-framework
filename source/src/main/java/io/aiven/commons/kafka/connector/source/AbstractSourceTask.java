@@ -270,17 +270,6 @@ public abstract class AbstractSourceTask extends SourceTask {
 
       return results;
     } else {
-      getLogger().info("Stopping");
-      Timer timer = new Timer(Duration.ofSeconds(5));
-      timer.start();
-      while (implemtationPollingThread.isAlive() && !timer.isExpired()) {
-        try {
-          Thread.sleep(500);
-        } catch (InterruptedException e) {
-          getLogger().info("Stopping wait was interrupted: {}", e.getMessage());
-        }
-      }
-      closeResources();
       return NULL_RESULT;
     }
   }
@@ -297,6 +286,23 @@ public abstract class AbstractSourceTask extends SourceTask {
   public final void stop() {
     getLogger().debug("Stopping");
     connectorStopped.set(true);
+    // stop is on a separate thread
+    try {
+      Timer timer = new Timer(Duration.ofSeconds(5));
+      timer.start();
+      while (implemtationPollingThread.isAlive() && !timer.isExpired()) {
+        try {
+          Thread.sleep(500);
+        } catch (InterruptedException e) {
+          getLogger().info("Stopping wait was interrupted: {}", e.getMessage());
+        }
+      }
+
+    } catch (RuntimeException e) {
+      getLogger().error("Exception caught while trying to close resources on stop() : ", e);
+    } finally {
+      closeResources();
+    }
   }
 
   /**
