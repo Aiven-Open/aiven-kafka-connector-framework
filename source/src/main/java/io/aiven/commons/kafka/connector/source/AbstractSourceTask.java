@@ -287,16 +287,20 @@ public abstract class AbstractSourceTask extends SourceTask {
     getLogger().debug("Stopping");
     connectorStopped.set(true);
     // stop is on a separate thread
-    Timer timer = new Timer(Duration.ofSeconds(5));
-    timer.start();
-    while (implemtationPollingThread.isAlive() && !timer.isExpired()) {
-      try {
-        Thread.sleep(500);
-      } catch (InterruptedException e) {
-        getLogger().info("Stopping wait was interrupted: {}", e.getMessage());
+    try {
+      Timer timer = new Timer(Duration.ofSeconds(5));
+      timer.start();
+      while (implemtationPollingThread.isAlive() && !timer.isExpired()) {
+        try {
+          Thread.sleep(500);
+        } catch (InterruptedException e) {
+          getLogger().info("Stopping wait was interrupted: {}", e.getMessage());
+        }
       }
+      closeResources();
+    } catch (RuntimeException e) {
+      getLogger().error("Exception caught while trying to close resources on stop() : ", e);
     }
-    closeResources();
   }
 
   /**
