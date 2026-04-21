@@ -297,9 +297,11 @@ public abstract class AbstractSourceTask extends SourceTask {
           getLogger().info("Stopping wait was interrupted: {}", e.getMessage());
         }
       }
-      closeResources();
+
     } catch (RuntimeException e) {
       getLogger().error("Exception caught while trying to close resources on stop() : ", e);
+    } finally {
+      closeResources();
     }
   }
 
