@@ -91,8 +91,8 @@ public final class SourceConfigFragment extends ConfigFragment {
             ExtendedConfigKey.builder(RING_BUFFER_SIZE)
                 .type(ConfigDef.Type.INT)
                 .defaultValue(1000)
-                .validator(ConfigDef.Range.atLeast(1))
-                .documentation("The number of storage key to store in the ring buffer.")
+                .validator(ConfigDef.Range.atLeast(0))
+                .documentation("The number of storage keys to store in the ring buffer.")
                 .since(siBuilder.version("1.0.0").build())
                 .build())
         .define(
