@@ -93,7 +93,7 @@ public final class SourceConfigFragment extends ConfigFragment {
                 .defaultValue(1000)
                 .validator(ConfigDef.Range.atLeast(0))
                 .documentation("The number of storage keys to store in the ring buffer.")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(MAX_POLL_RECORDS)
@@ -101,7 +101,7 @@ public final class SourceConfigFragment extends ConfigFragment {
                 .defaultValue(500)
                 .validator(ConfigDef.Range.atLeast(1))
                 .documentation("Max poll records")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(ERRORS_TOLERANCE)
@@ -113,13 +113,13 @@ public final class SourceConfigFragment extends ConfigFragment {
                             .toArray(String[]::new)))
                 .documentation(
                     "Indicates to the connector what level of exceptions are allowed before the connector stops.")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(TARGET_TOPIC)
                 .validator(new ConfigDef.NonEmptyString())
                 .documentation("The name of the topic to write records to.")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(DISTRIBUTION_TYPE)
@@ -132,13 +132,13 @@ public final class SourceConfigFragment extends ConfigFragment {
                 .documentation(
                     "Based on tasks.max config and the type of strategy selected, objects are processed in distributed"
                         + " way by Kafka connect workers.")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(NATIVE_START_KEY)
                 .documentation(
                     "An identifier for the source connector to know which key to start processing from, on a restart it will also begin reading messages from this point as well")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(EXTRACTOR_CLASS)
@@ -147,7 +147,7 @@ public final class SourceConfigFragment extends ConfigFragment {
                 .validator(new ExtractorValidator())
                 .documentation("Defines the class for the Extractor")
                 .internalConfig(true)
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(EXTRACTOR_BUFFER)
@@ -156,7 +156,7 @@ public final class SourceConfigFragment extends ConfigFragment {
                 .validator(ScaleValidator.between(4096, Integer.MAX_VALUE, Scale.IEC))
                 .documentation(
                     "Defines the size in bytes of the extractor buffer used when reading buffered input streams.")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(EXTRACTOR_CACHE_SIZE)
@@ -165,7 +165,7 @@ public final class SourceConfigFragment extends ConfigFragment {
                 .validator(ScaleValidator.between(100, Integer.MAX_VALUE, Scale.IEC))
                 .documentation(
                     "Defines the size in bytes of the extractor cache used when processing Avro based input like Avro or Parquet streams.")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(EXTRACTOR_CSV_HEADERS_ENABLED)
@@ -182,14 +182,14 @@ public final class SourceConfigFragment extends ConfigFragment {
                         ConfigDef.CaseInsensitiveValidString.in("true", "false")::toString))
                 .documentation(
                     "Only valid if CSV Extractor is used. If 'true' the first line of the CSV will be a header line describing all the columns. If 'false' no header line is provided and columns will be defined as 'field0' through 'fieldN'.")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build())
         .define(
             ExtendedConfigKey.builder(EXTRACTOR_CSV_HEADERS)
                 .type(ConfigDef.Type.LIST)
                 .documentation(
                     "Only valid if CSV Extractor is used. A comma separated list of the field names for CVS records.  Rows with more fields than there are headers will be assigned 'fieldN' names")
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .build());
   }
 
