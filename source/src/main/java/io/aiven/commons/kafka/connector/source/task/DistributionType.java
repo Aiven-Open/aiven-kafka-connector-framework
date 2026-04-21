@@ -19,6 +19,8 @@ package io.aiven.commons.kafka.connector.source.task;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** An enumeration of distribution strategies. */
 public enum DistributionType {
@@ -49,6 +51,8 @@ public enum DistributionType {
    */
   private final Function<Context, Optional<Long>> mutation;
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(DistributionType.class);
+
   /**
    * Creator
    *
@@ -69,11 +73,14 @@ public enum DistributionType {
   public Predicate<Context> asPredicate(int maxTasks, int taskId) {
     return mutation == null
         ? context -> true
-        : context ->
-            mutation
-                    .apply(context)
-                    .map(aLong -> Math.floorMod(Math.abs(aLong), maxTasks))
-                    .orElse(-1)
-                == taskId;
+        : context -> {
+          Optional<Integer> opt =
+              mutation.apply(context).map(aLong -> Math.floorMod(Math.abs(aLong), maxTasks));
+          if (opt.isPresent()) {
+            return opt.get() == taskId;
+          }
+          LOGGER.warn("SKIPPING INPUT: {} can not determine task for {}", name(), context);
+          return false;
+        };
   }
 }
