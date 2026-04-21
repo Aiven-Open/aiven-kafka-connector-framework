@@ -17,9 +17,10 @@
 package io.aiven.commons.kafka.connector.source;
 
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
-import io.aiven.commons.kafka.connector.source.task.DistributionStrategy;
+import io.aiven.commons.kafka.connector.source.task.Context;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 /**
  * Iterator that processes Native Source Data and creates AbstractSourceRecords. It supports
@@ -28,9 +29,6 @@ import java.util.Iterator;
  * EvolvingSourceRecord} instances.
  */
 public final class EvolvingSourceRecordIterator implements Iterator<EvolvingSourceRecord> {
-
-  /** the taskId of this running task */
-  private final int taskId;
 
   /**
    * The inner iterator to provides a base EvolvingSourceRecord for a storage item that has passed
@@ -48,7 +46,7 @@ public final class EvolvingSourceRecordIterator implements Iterator<EvolvingSour
    * The predicate which will determine if a native item should be assigned to this task for
    * processing
    */
-  private final DistributionStrategy distributionStrategy;
+  private final Predicate<Context> distributionStrategy;
 
   private final NativeSourceData<?> nativeSourceData;
 
@@ -63,9 +61,8 @@ public final class EvolvingSourceRecordIterator implements Iterator<EvolvingSour
     super();
     final int maxTasks = sourceConfig.getMaxTasks();
     this.nativeSourceData = nativeSourceData;
-    this.taskId = sourceConfig.getTaskId() % maxTasks;
-    this.distributionStrategy =
-        sourceConfig.getDistributionType().getDistributionStrategy(maxTasks);
+    int taskId = sourceConfig.getTaskId() % maxTasks;
+    this.distributionStrategy = sourceConfig.getDistributionType().asPredicate(maxTasks, taskId);
     this.inner = Collections.emptyIterator();
     this.outer = Collections.emptyIterator();
   }
@@ -81,9 +78,7 @@ public final class EvolvingSourceRecordIterator implements Iterator<EvolvingSour
       nativeSourceData.recordNativeKeyFinished();
     }
     if (!inner.hasNext() && !outer.hasNext()) {
-      inner =
-          nativeSourceData.getIterator(
-              context -> taskId == distributionStrategy.getTaskFor(context));
+      inner = nativeSourceData.getIterator(distributionStrategy);
     }
     while (!outer.hasNext() && inner.hasNext()) {
       outer = nativeSourceData.transform(inner.next()).iterator();

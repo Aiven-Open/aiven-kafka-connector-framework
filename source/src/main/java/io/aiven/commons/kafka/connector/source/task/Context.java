@@ -59,6 +59,12 @@ public class Context {
     this.offset = anotherContext.offset;
   }
 
+  @Override
+  public String toString() {
+    return String.format(
+        "Context{key:%s, partition:%s, topic:%s, offset:%s", nativeKey, partition, topic, offset);
+  }
+
   /**
    * Gets the Kafka topic as specified by the context.
    *

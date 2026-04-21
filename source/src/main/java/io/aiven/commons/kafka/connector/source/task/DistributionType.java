@@ -18,6 +18,9 @@ package io.aiven.commons.kafka.connector.source.task;
 
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** An enumeration of distribution strategies. */
 public enum DistributionType {
@@ -37,7 +40,9 @@ public enum DistributionType {
       context ->
           context.getPartition().isPresent()
               ? Optional.of((long) context.getPartition().get())
-              : Optional.empty());
+              : Optional.empty()),
+  /** ALL accepts all contexts. */
+  ALL(null);
 
   /**
    * The function to extract a long value from the context. The long value is then used as the
@@ -45,6 +50,8 @@ public enum DistributionType {
    * to assign the distribution to.
    */
   private final Function<Context, Optional<Long>> mutation;
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(DistributionType.class);
 
   /**
    * Creator
@@ -57,13 +64,23 @@ public enum DistributionType {
   }
 
   /**
-   * Returns a configured Distribution Strategy
+   * Creates a context predicate from this distribution type.
    *
-   * @param maxTasks the maximum number of configured tasks for this connector
-   * @return a configured Distribution Strategy with the correct mutation configured for proper
-   *     distribution across tasks of objects being processed.
+   * @param maxTasks the number of tasks this system is using.
+   * @param taskId the TaskID for the distribution.
+   * @return a predicate to filter contexts for the specific task.
    */
-  public DistributionStrategy getDistributionStrategy(final int maxTasks) {
-    return new DistributionStrategy(mutation, maxTasks);
+  public Predicate<Context> asPredicate(int maxTasks, int taskId) {
+    return mutation == null
+        ? context -> true
+        : context -> {
+          Optional<Integer> opt =
+              mutation.apply(context).map(aLong -> Math.floorMod(Math.abs(aLong), maxTasks));
+          if (opt.isPresent()) {
+            return opt.get() == taskId;
+          }
+          LOGGER.warn("SKIPPING INPUT: {} can not determine task for {}", name(), context);
+          return false;
+        };
   }
 }
