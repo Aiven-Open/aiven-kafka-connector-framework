@@ -1,3 +1,23 @@
+## v0.2.0
+### What is changed
+ 
+ - Added hideNativeStartKey Added hideRingBufferSize
+ - added DistributionType documentation
+ - Ensure that resources are closed on stop() (#62)
+ - changed since version numbers to 0.1.0
+ - Allows distribution types that accept all work.
+ - allow lookback size of 0
+ - 
+ 
+### Co-authored by
+ 
+ - Aindriú Lavelle
+ - Claude Warren
+ 
+ 
+### Full Changelog
+https://github.com/Aiven-Open/aiven-kafka-connector-framework/compare/v0.1.0...v0.2.0
+ 
 ## v0.1.0
 ### What is changed
 
@@ -32,5 +52,5 @@
  - Claude Warren
   
 ### Full Changelog
-https://github.com/Aiven-Open/aiven-commons/compare/1db3bd9ee7eb156cdf39af703c0235a4268afdd7...v0.1.0
+https://github.com/Aiven-Open/aiven-kafka-connector-framework/compare/1db3bd9ee7eb156cdf39af703c0235a4268afdd7...v0.1.0
  
