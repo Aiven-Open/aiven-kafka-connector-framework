@@ -49,7 +49,7 @@ public enum DistributionType {
   /** ALL accepts all contexts. */
   ALL(
       null,
-      "Accepts all input.  This should only be used in cases where there"
+      "Accepts all input.  This should only be used in cases where there "
           + "is one task or where the backend daa system ensures that only one listener will receive the message");
 
   /**
