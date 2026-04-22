@@ -18,6 +18,7 @@
 */
 package io.aiven.commons.kafka.connector.source.extractor;
 
+import io.aiven.commons.kafka.config.ConverterType;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import java.io.IOException;
@@ -25,16 +26,19 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
+import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
+import org.apache.kafka.connect.data.Struct;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,7 +156,6 @@ public class CsvExtractor extends Extractor {
    * @return A SchemaAndValue object that can be used by Kafka Connect to send Data to Kafka
    */
   private SchemaAndValue toConnectData(CSVRecord value) {
-    final Map<String, String> output = new LinkedHashMap<>(value.size());
 
     if (valueSchema == null
         || valueSchema.fields().size() < value.size()
@@ -160,6 +163,18 @@ public class CsvExtractor extends Extractor {
       createValueSchema(value);
     }
 
+    if (config.getValueConverter() == ConverterType.JSON) {
+      return new SchemaAndValue(valueSchema.build(), getStructForValue(value));
+    } else if (config.getValueConverter() == ConverterType.STRING) {
+      return new SchemaAndValue(valueSchema.build(), getMapForValue(value));
+    } else {
+      throw new ConfigException(
+          "Unsupported value.converter configured : " + config.getValueConverter().name());
+    }
+  }
+
+  private @NonNull Struct getStructForValue(CSVRecord value) {
+    Struct output = new Struct(valueSchema.build());
     List<Field> fields = valueSchema.fields();
     for (int i = 0; i < fields.size(); i++) {
       // handle the case where there are fewer fields than headers.
@@ -169,8 +184,21 @@ public class CsvExtractor extends Extractor {
         output.put(valueSchema.fields().get(i).name(), "");
       }
     }
+    return output;
+  }
 
-    return new SchemaAndValue(valueSchema.build(), output);
+  private Map<String, String> getMapForValue(CSVRecord value) {
+    Map output = new HashMap<>(value.size());
+    List<Field> fields = valueSchema.fields();
+    for (int i = 0; i < fields.size(); i++) {
+      // handle the case where there are fewer fields than headers.
+      if (i < value.size()) {
+        output.put(valueSchema.fields().get(i).name(), value.get(i));
+      } else {
+        output.put(valueSchema.fields().get(i).name(), "");
+      }
+    }
+    return output;
   }
 
   private boolean headersHaveChanged(CSVRecord value) {
