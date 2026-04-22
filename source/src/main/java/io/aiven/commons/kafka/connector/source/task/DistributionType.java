@@ -42,7 +42,7 @@ public enum DistributionType {
   PARTITION(
       context ->
           context.getPartition().isPresent()
-              ? Optional.of((long) context.getPartition().get())
+              ? Optional.of((long) context.getPartition().get())https://github.com/Aiven-Open/amqp-connector-for-apache-kafka/pull/11
               : Optional.empty(),
       "Uses the partition value value to distribute the work across the tasks. "
           + "If the partition is undefined the data is skipped."),
