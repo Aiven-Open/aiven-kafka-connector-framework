@@ -20,6 +20,7 @@ import static io.aiven.commons.kafka.connector.source.testFixture.format.CsvTest
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -40,6 +41,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
+import org.apache.kafka.connect.json.JsonConverter;
 import org.junit.jupiter.api.Test;
 
 final class CsvExtractorTest extends IORecordExtractorTest {
@@ -399,5 +401,48 @@ final class CsvExtractorTest extends IORecordExtractorTest {
     assertEquals("message", schema.fields().get(0).name());
     assertEquals("id", schema.fields().get(1).name());
     assertEquals("value", schema.fields().get(2).name());
+  }
+
+  @Test
+  void readJsonDataFromConverter() throws IOException {
+    Map<String, String> props = new HashMap<>();
+    SourceConfigFragment.setter(props).csvExtractorHeadersEnabled(false);
+    props.put("value.converter", "org.apache.kafka.connect.json.JsonConverter");
+    SourceCommonConfig sourceCommonConfig =
+        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    extractor = new CsvExtractor(sourceCommonConfig);
+    final String nativeItem =
+        CsvTestDataFixture.generateCsvRecord(1, "hi")
+            + "\n"
+            + CsvTestDataFixture.generateCsvRecord(2, "bye")
+            + ",more data";
+    final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
+
+    final List<SchemaAndValue> records = extractor.generateRecords(sourceRecord).toList();
+    assertThat(records.size()).isEqualTo(2);
+    Schema schema = records.get(0).schema();
+    JsonConverter converter = new JsonConverter();
+    // We are converting the value portion of the kafka event
+    converter.configure(Map.of("converter.type", "value"));
+    var result = converter.fromConnectData(null, schema, records.get(0).value());
+    ObjectMapper mapper = new ObjectMapper();
+    assertThat(result).isNotNull();
+    Map<String, Map<String, String>> mapResult = mapper.readValue(result, Map.class);
+    Map<String, String> payload = mapResult.get("payload");
+    assertThat(payload).isNotNull();
+    assertThat(payload.containsKey("field0")).isTrue();
+    assertThat(payload.containsKey("field1")).isTrue();
+    assertThat(payload.containsKey("field2")).isTrue();
+    assertThat(payload.size()).isEqualTo(3);
+    var resultTwo =
+        converter.fromConnectData(null, records.get(1).schema(), records.get(1).value());
+    assertThat(result).isNotNull();
+    Map<String, Map<String, String>> mapResultTwo = mapper.readValue(resultTwo, Map.class);
+    Map<String, String> payloadTwo = mapResultTwo.get("payload");
+    assertThat(payloadTwo.size()).isEqualTo(4);
+    assertThat(payloadTwo.get("field0")).isEqualTo("2");
+    assertThat(payloadTwo.get("field1")).isEqualTo("bye");
+    assertThat(payloadTwo.get("field2")).isEqualTo(CsvTestDataFixture.MESSAGE_PREFIX + "2");
+    assertThat(payloadTwo.get("field3")).isEqualTo("more data");
   }
 }
