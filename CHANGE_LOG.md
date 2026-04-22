@@ -1,43 +1,22 @@
 ## v0.2.0
 ### What is changed
  
- - Merge pull request #63 from Aiven-Open/Aadjust-documentation
- - removed accidental paste
- - Update DistributionType.java
- - Potential fix for pull request finding 'Missing space in string literal'
  - Added hideNativeStartKey Added hideRingBufferSize
  - added DistributionType documentation
  - Ensure that resources are closed on stop() (#62)
- - Merge pull request #60 from Aiven-Open/Add-ALL-distributionType
- - Fixed as per review + added tests
- - Merge pull request #61 from Aiven-Open/fix-version-numbers
- - Merge branch 'main' into fix-version-numbers
- - Merge pull request #59 from Aiven-Open/fix_lookback_config
  - changed since version numbers to 0.1.0
  - Allows distribution types that accept all work.
  - allow lookback size of 0
- - Merge pull request #57 from Aiven-Open/release-0.1.0
- - Bump version to 0.2.0-SNAPSHOT
- - Release version 0.1.0
- - Update create_release.yml
- - Revert "Release version 0.1.0" (#56)
- - Update create_release.yml
- - Update create_release.yml
- - Update create_release.yml
- - Update create_release.yml
- - Merge pull request #55 from Aiven-Open/release-0.1.0
- - Bump version to 0.2.0-SNAPSHOT
- 
+ - 
  
 ### Co-authored by
  
  - Aindriú Lavelle
  - Claude Warren
- - github-actions[bot]
  
  
 ### Full Changelog
-https://github.com/Aiven-Open/aiven-commons/compare/v0.1.0...v0.2.0
+https://github.com/Aiven-Open/aiven-kafka-connector-framework/compare/v0.1.0...v0.2.0
  
 ## v0.1.0
 ### What is changed
@@ -73,5 +52,5 @@ https://github.com/Aiven-Open/aiven-commons/compare/v0.1.0...v0.2.0
  - Claude Warren
   
 ### Full Changelog
-https://github.com/Aiven-Open/aiven-commons/compare/1db3bd9ee7eb156cdf39af703c0235a4268afdd7...v0.1.0
+https://github.com/Aiven-Open/aiven-kafka-connector-framework/compare/1db3bd9ee7eb156cdf39af703c0235a4268afdd7...v0.1.0
  
