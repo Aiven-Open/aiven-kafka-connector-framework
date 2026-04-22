@@ -30,7 +30,10 @@ public enum DistributionType {
    * the storage key and return a modulus of that relative to the number of maxTasks to decide which
    * task should process a given object
    */
-  OBJECT_HASH(context -> Optional.of((long) context.getNativeKey().hashCode())),
+  OBJECT_HASH(
+      context -> Optional.of((long) context.getNativeKey().hashCode()),
+      "Constructs a hash from the native key and uses that to distribute the "
+          + "work across the tasks."),
   /**
    * Partition takes the context and requires the context contain the partition id for it to be able
    * to decide the distribution across the max tasks, using a modulus to ensure even distribution
@@ -40,9 +43,14 @@ public enum DistributionType {
       context ->
           context.getPartition().isPresent()
               ? Optional.of((long) context.getPartition().get())
-              : Optional.empty()),
+              : Optional.empty(),
+      "Uses the partition value value to distribute the work across the tasks. "
+          + "If the partition is undefined the data is skipped."),
   /** ALL accepts all contexts. */
-  ALL(null);
+  ALL(
+      null,
+      "Accepts all input.  This should only be used in cases where there "
+          + "is one task or where the backend daa system ensures that only one listener will receive the message");
 
   /**
    * The function to extract a long value from the context. The long value is then used as the
@@ -51,16 +59,29 @@ public enum DistributionType {
    */
   private final Function<Context, Optional<Long>> mutation;
 
+  private final String documentation;
+
   private static final Logger LOGGER = LoggerFactory.getLogger(DistributionType.class);
 
   /**
-   * Creator
+   * Creator.
    *
-   * @param mutation the mutation required to get the correct details from the context for
-   *     distribution
+   * @param mutation The mutation required to get the correct details from the context for
+   *     distribution.
+   * @param documentation The documentation for this distribution type.
    */
-  DistributionType(final Function<Context, Optional<Long>> mutation) {
+  DistributionType(final Function<Context, Optional<Long>> mutation, final String documentation) {
     this.mutation = mutation;
+    this.documentation = documentation;
+  }
+
+  /**
+   * Gets the documentation for the distribution type.
+   *
+   * @return The documentation for the distribution type.
+   */
+  public String getDocumentation() {
+    return documentation;
   }
 
   /**

@@ -183,6 +183,26 @@ public class SourceCommonConfig extends ConnectorCommonConfig {
     }
 
     /**
+     * This method hides the native start key from documentation but does not make them
+     * unconfigurable
+     *
+     * @param hide true hides key from documentation false shows the config in the documentation.
+     */
+    protected void hideNativeStartKey(boolean hide) {
+      hide(SourceConfigFragment.NATIVE_START_KEY, hide);
+    }
+
+    /**
+     * This method hides the ring buffer size from documentation but does not make them
+     * unconfigurable.
+     *
+     * @param hide true hides key from documentation false shows the config in the documentation.
+     */
+    protected void hideRingBufferSize(boolean hide) {
+      hide(SourceConfigFragment.RING_BUFFER_SIZE, hide);
+    }
+
+    /**
      * This method hides the extractor cache size from documentation but does not make them
      * unconfigurable
      *
