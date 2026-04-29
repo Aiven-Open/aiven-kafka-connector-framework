@@ -120,14 +120,14 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
    * <pre>{@code
    * K key = ...
    * OffsetManagerEntry entry = createOffsetManagerEntry(context);
-   * OffsetManagerEntry emtry2 = createOffsetManagerEntry(entry1.getProperties());
+   * OffsetManagerEntry entry2 = createOffsetManagerEntry(entry1.getProperties());
    * entry2.getProperties() is element for element equal to entry1.getProperties()
    *
    * also
    *
    * OffsetManagerKey k = entry.getManagerKey()
    * OffsetManagerKey k2 = entry2.getManagerKey()
-   * k2.partitionMap() is element for element equal to k.partitionMap()
+   * k2.getPartitionMap() is element for element equal to k.getPartitionMap()
    * }</pre>
    *
    * @param context the context to create the offset manager from.

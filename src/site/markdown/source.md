@@ -22,7 +22,7 @@ Design Goals
 
  - Handle common issue where Apache Kafka polls for data at a different frequency than the back end data production.
  - Handle the complexity in generating a proper source messages.
- - Focus developer efforts on extracting data from the storage layer.
+ - Focus developer efforts on extracting records from the data source.
  - Simplify the data extraction through the use of abstract classes.
 
 Design Block Diagram
@@ -79,7 +79,7 @@ The framework calls the Object returned by the data storage `Native Object` and 
 Configuration
 -------------
 
-The Configuration will specify the information necessary to connect to the data storage and extract data from it.  Typically these are things like userId, userPassword, Host name, port, etc.
+The Configuration will specify the information necessary to connect to the data storage and extract data from it.  Typically, these are things like userId, userPassword, Host name, port, etc.
 
 The Configuration class will need a Configuration definition that specifies the names and datatypes for the configuration properties.
 
@@ -101,6 +101,15 @@ This method accepts the properties as defined by the user and the OffsetManager 
 
 This method provides a hook for the task to shut down any connections or other objects that need to be closed.  In general this cleans up any work done in the `configure()` method noted above.
 
+
+### protected EvolvingSourceRecord lastEvolution(final EvolvingSourceRecord evolvingSourceRecord)
+
+The `EvolvingSourceRecord` is created early in the process and as processing applied its content evolves.  Eventually it becomes a Kafka SourceRecord.  The `lastEvolution` method is a final point at which a source implementation may make a change to the record before the SourceRecord is produced. The default implementation makes no changes. Common modifications at this point are:
+
+* Key schema and/or value
+* Value schema and/or value
+* Offset manager entry
+
 AbstractSourceNativeInfo
 -----------------------
 
@@ -109,6 +118,8 @@ AbstractSourceNativeInfo interrogates the native object to extract information n
 ### public Context getContext();
 
 This method builds the initial Context from the native information.  The Context is developed as the source record data is discovered.  At a minimum the Context must contain the native key for the native Object.  If other information such as the Kafka topic or Kafka partition can be determined from the native object or its key they should be extracted and set in the Context by this method.
+
+If the Context partition or topic values are set they will be used to initialize the partition and topic for the source record.  Later processing may override those values.
 
 ### protected InputStream getInputStream() throws IOException, UnsupportedOperationException
 
@@ -133,9 +144,11 @@ The common name for the data source. For example "AWS S3 Storage" or "AMQP Queue
 
 Creates an iterator of Native objects from the underlying storage layer. The implementation should return the native objects in a repeatable order based on the key. In addition, the underlying storage should be able to start from a specific previously returned key. Systems that can not meet the repeatable order or starting offset requirements may produce duplicate entries or may skip some entries.
 
-###   public OffsetManager.OffsetManagerEntry createOffsetManagerEntry(final Map<String, Object> data);
+###   public OffsetManager.OffsetManagerEntry createOffsetManagerEntry(final Map&lt;String, Object&gt; data);
 
-Creates an offset manager entry using the data in the map.  The map the data extracted from a previous OffsetManagerEntry.
+Creates an offset manager entry using the data in the map.  The map the data extracted from a previous OffsetManagerEntry.  This method may return `null`, doing so will cause any partially processed native object to be reprocessed from the start.
+
+**Note:** If the source object contains multiple records and the order of those records are not consistent across multiple retrievals of the object, this method should probably return  `null`.
 
 ### protected OffsetManager.OffsetManagerEntry createOffsetManagerEntry(final Context context);
 
