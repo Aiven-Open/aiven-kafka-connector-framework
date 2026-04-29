@@ -90,7 +90,7 @@ The abstract source task requires the implementation of 3 methods.
 
 ### protected EvolvingSourceRecordIterator getIterator(final SourceCommonConfig config)
 
-This method accepts the configuration object and creates an iterator on the objects from the data layer.  The first step in the `Data source view` above. `EvolvingSourceRecordIterator` it a final class whos constructor only needs the configuration and the `NativeSourceData` implementation as described below.
+This method accepts the configuration object and creates an iterator on the objects from the data layer.  The first step in the `Data source view` above. `EvolvingSourceRecordIterator` it a final class whose constructor only needs the configuration and the `NativeSourceData` implementation as described below.
 
 ### protected SourceCommonConfig configure(final Map<String, String> props, final OffsetManager offsetManager)
 
@@ -114,7 +114,7 @@ This method builds the initial Context from the native information.  The Context
 
 In many data sources the source is actually some sort of data stream, for example a file from a file system, a byte array, a collection of CSV records, an Avro structure, etc.  This method gets that data as an input stream.  
 
-In come cases the data can not be thought of as a stream.  In these cases this method must throw an UnsupportedOperationException.
+In some cases the data can not be thought of as a stream.  In these cases this method must throw an UnsupportedOperationException.
 
 ### public long estimateInputStreamLength() throws UnsupportedOperationException
 
@@ -129,7 +129,7 @@ Native source data defines data access methods on the native object and native k
 
 The common name for the data source. For example "AWS S3 Storage" or "AMQP Queue".
 
-### protected Iterator<? extends AbstractSourceNativeInfo<K, ?>> getNativeItemIterator(final K startFrom) 
+### protected Iterator&lt;? extends AbstractSourceNativeInfo&lt;K, ?&gt;&gt; getNativeItemIterator(final K startFrom)
 
 Creates an iterator of Native objects from the underlying storage layer. The implementation should return the native objects in a repeatable order based on the key. In addition, the underlying storage should be able to start from a specific previously returned key. Systems that can not meet the repeatable order or starting offset requirements may produce duplicate entries or may skip some entries.
 
@@ -167,7 +167,7 @@ An `OffsetManagerEntry` must meet the contract:
 ```
  K key = ...
  OffsetManagerEntry entry = createOffsetManagerEntry(context);
- OffsetManagerEntry emtry2 = createOffsetManagerEntry(entry1.getProperties());
+ OffsetManagerEntry entry2 = createOffsetManagerEntry(entry1.getProperties());
  entry2.getProperties() is element for element equal to entry1.getProperties()
 ```
  also
@@ -189,7 +189,7 @@ The `correct format to return to Kafka` means that the objects in the map must b
 
 ### Object getProperty(String key);
 
-Gets the value of the named property. The value returned from a `null` key is implementation dependant but must throw a `NullPointerExcepton` if a `null` key is not supported. A `null` value may be returned if the property is not set.
+Gets the value of the named property. The value returned from a `null` key is implementation dependant but must throw a `NullPointerException` if a `null` key is not supported. A `null` value may be returned if the property is not set.
 
 ### void setProperty(String key, Object value)
 
@@ -210,7 +210,7 @@ Gets the record count from the offset manager.
     
 ## OffsetManagerEntry.OffsetManagerKey
 
-The `OffsetManagerKey` uniquely identifies the native object data in the Kafka topic, therefor the `OffsetManagerKey` must be constructable from the native key.  The simplest way to do this is to create a KeySerde to serialize the key to a string and deserialize the string back to the native key object, though other options are available.
+The `OffsetManagerKey` uniquely identifies the native object data in the Kafka topic, therefore the `OffsetManagerKey` must be constructable from the native key.  The simplest way to do this is to create a KeySerde to serialize the key to a string and deserialize the string back to the native key object, though other options are available.
 
 The `OffsetManagerKey` implementation must
  * not include the record count.
