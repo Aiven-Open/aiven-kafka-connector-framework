@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.kafka.common.config.ConfigValue;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
-import org.apache.kafka.connect.runtime.SourceConnectorConfig;
 
 /** The common definitions for source connectors. */
 public class SourceCommonConfig extends ConnectorCommonConfig {
