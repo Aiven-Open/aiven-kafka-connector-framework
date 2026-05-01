@@ -169,7 +169,7 @@ Creates an offset manager key for the native key. The OffsetManagerKey implement
  K key = ...
  OffsetManagerKey k = getOffsetManagerKey(key);
  OffsetManagerKey k2 = getOffsetManagerKey(key);
- k2.partitionMap() is element for element equal to k.partitionMap()
+ k2.getPartitionMap() is element for element equal to k.getPartitionMap()
 ```
 
 
@@ -190,7 +190,7 @@ An `OffsetManagerEntry` must meet the contract:
 ```
  OffsetManagerKey k = entry.getManagerKey()
  OffsetManagerKey k2 = entry2.getManagerKey()
- k2.partitionMap() is element for element equal to k.partitionMap()
+ k2.getPartitionMap() is element for element equal to k.getPartitionMap()
 ```
 
 #### OffsetManagerEntry fromProperties(Map<String, Object> properties)
