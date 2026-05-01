@@ -103,7 +103,7 @@ Sink module is removed until there is code
 
   <properties>
     <latestRelease>0.2.0</latestRelease>
-    <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
+    <aiven.kafka.config.version>0.2.0-SNAPSHOT</aiven.kafka.config.version>
     <aiven.util.version>0.1.0</aiven.util.version>
     <confluent.avro.data.aversion>7.9.5</confluent.avro.data.aversion>
   </properties>
