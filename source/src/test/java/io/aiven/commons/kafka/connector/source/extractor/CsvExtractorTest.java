@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -42,19 +43,31 @@ import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.json.JsonConverter;
+import org.apache.kafka.connect.runtime.ConnectorConfig;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 final class CsvExtractorTest extends IORecordExtractorTest {
 
   private CsvExtractor extractor;
 
+  @BeforeAll
+  static void setupConfig() {
+    ConnectorConfig.configDef();
+    Map<String, String> props = new HashMap<>();
+    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
+    CommonConfigFragment.Setter test = CommonConfigFragment.setter(props);
+  }
+
   @Override
   protected CsvExtractor setupExtractor(CompressionType compressionType) {
     Map<String, String> props = new HashMap<>();
     ConnectorCommonConfigFragment.setter(props).compressionType(compressionType);
     props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
+
     SourceCommonConfig sourceCommonConfig =
         new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+
     return new CsvExtractor(sourceCommonConfig);
   }
 

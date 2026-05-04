@@ -103,18 +103,19 @@ public final class SourceConfigFragment extends ConfigFragment {
                 .documentation("Max poll records")
                 .since(siBuilder.version("0.1.0").build())
                 .build())
-        .define(
-            ExtendedConfigKey.builder(ERRORS_TOLERANCE)
-                .defaultValue(ToleranceType.NONE.name())
-                .validator(
-                    ConfigDef.CaseInsensitiveValidString.in(
-                        Arrays.stream(ToleranceType.values())
-                            .map(ToleranceType::name)
-                            .toArray(String[]::new)))
-                .documentation(
-                    "Indicates to the connector what level of exceptions are allowed before the connector stops.")
-                .since(siBuilder.version("0.1.0").build())
-                .build())
+        //        .define(
+        //            ExtendedConfigKey.builder(ERRORS_TOLERANCE)
+        //                .defaultValue(ToleranceType.NONE.name())
+        //                .validator(
+        //                    ConfigDef.CaseInsensitiveValidString.in(
+        //                        Arrays.stream(ToleranceType.values())
+        //                            .map(ToleranceType::name)
+        //                            .toArray(String[]::new)))
+        //                .documentation(
+        //                    "Indicates to the connector what level of exceptions are allowed
+        // before the connector stops.")
+        //                .since(siBuilder.version("0.1.0").build())
+        //                .build())
         .define(
             ExtendedConfigKey.builder(TARGET_TOPIC)
                 .validator(new ConfigDef.NonEmptyString())
