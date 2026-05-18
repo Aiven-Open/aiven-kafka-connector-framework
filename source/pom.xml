@@ -61,7 +61,6 @@
     <dependency>
       <groupId>io.confluent</groupId>
       <artifactId>kafka-connect-avro-data</artifactId>
-      <version>${confluent.avro.data.aversion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
@@ -108,6 +107,7 @@
       <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-config</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
@@ -129,6 +129,12 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>kafka-testkit</artifactId>
+      <version>${aiven.kafka.testkit.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -147,6 +153,13 @@
             </manifestEntries>
           </archive>
         </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.sonatype.central</groupId>

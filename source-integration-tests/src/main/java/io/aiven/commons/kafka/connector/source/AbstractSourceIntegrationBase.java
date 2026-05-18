@@ -1,0 +1,530 @@
+/*
+ * Copyright 2026 Aiven Oy
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.aiven.commons.kafka.connector.source;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
+import io.aiven.commons.kafka.connector.common.NativeInfo;
+import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
+import io.aiven.commons.kafka.testkit.KafkaIntegrationTestBase;
+import io.aiven.commons.kafka.testkit.KafkaManager;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Stream;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.connect.connector.Connector;
+import org.apache.kafka.connect.json.JsonDeserializer;
+import org.assertj.core.api.Assertions;
+import org.awaitility.Awaitility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * The base abstract case for Kafka based integration tests.
+ *
+ * <p>This class handles the creation and destruction of a thread safe {@link KafkaManager}.
+ *
+ * @param <K> the native key type.
+ * @param <N> the native object type
+ */
+public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N>
+    extends KafkaIntegrationTestBase {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSourceIntegrationBase.class);
+
+  /** Constructor. */
+  protected AbstractSourceIntegrationBase() {}
+
+  /**
+   * Creates a prefix for the logging.
+   *
+   * @return the string for the log prefix.
+   */
+  protected String getLogPrefix() {
+    return String.format("%s %s: ", this.getClass().getSimpleName(), this.getConnectorName());
+  }
+
+  /**
+   * Create the SourceStorage. Should create the source storage once and then return it.
+   *
+   * @return the current SourceStorage object.
+   */
+  protected abstract SourceStorage<K, N> getSourceStorage();
+
+  /**
+   * Creates the native key.
+   *
+   * @param topic the topic for the key,
+   * @param partition the partition for the key.
+   * @return the native Key.
+   */
+  protected final K createKey(final String topic, final int partition) {
+    return getSourceStorage().createKey(topic, partition);
+  }
+
+  /**
+   * Write file to native storage with the specified key and data.
+   *
+   * @param nativeKey the key.
+   * @param testDataBytes the data.
+   * @return the WriteResult.
+   */
+  protected final SourceStorage.WriteResult writeWithKey(
+      final K nativeKey, final byte[] testDataBytes) {
+    return getSourceStorage().writeWithKey(nativeKey, testDataBytes);
+  }
+
+  /**
+   * Retrieves a list of {@link NativeInfo} implementations, one for each item in native storage.
+   *
+   * @return the list of {@link NativeInfo} implementations, one for each item in native storage.
+   */
+  protected final List<? extends NativeInfo<K, N>> getNativeInfo() {
+    return getSourceStorage().getNativeInfo();
+  }
+
+  /**
+   * The Connector class under test.
+   *
+   * @return the connector class under test.
+   */
+  protected final Class<? extends Connector> getConnectorClass() {
+    return getSourceStorage().getConnectorClass();
+  }
+
+  /**
+   * Gets the name of the current connector.
+   *
+   * @return the name of the connector.
+   */
+  protected final String getConnectorName() {
+    return getConnectorName(getConnectorClass());
+  }
+
+  /**
+   * Creates the configuration data for the connector.
+   *
+   * @return the configuration data for the Connector class under test.
+   */
+  protected final Map<String, String> createConfig() {
+    Map<String, String> props = getSourceStorage().createConnectorConfig();
+    CommonConfigFragment.setter(props).maxTasks(1);
+    ConnectorCommonConfigFragment.setter(props)
+        .connector(getSourceStorage().getConnectorClass())
+        .name(getConnectorName());
+    return props;
+  }
+
+  /**
+   * Create the configuration with the specified topic and extractor class.
+   *
+   * @param topic the topic to write the messages to.
+   * @param override A map of test specific properties.
+   * @return the configuration map.
+   */
+  protected final Map<String, String> createConfig(String topic, Map<String, String> override) {
+    Map<String, String> props = createConfig();
+    props.putAll(override);
+    return props;
+  }
+
+  /**
+   * Gets the default offset flush interval.
+   *
+   * @return the default offset flush interval.
+   */
+  protected Duration getOffsetFlushInterval() {
+    return Duration.ofSeconds(5);
+  }
+
+  /**
+   * Sets up and returns the KafkaManager. If the KafkaManager has already been set up, this method
+   * returns the existing instance.
+   *
+   * @param configOverrides A map of options to override the default configuration. May be empty but
+   *     not @{code null}
+   * @return a KafkaManager instance. This is equivalent of calling @{code setupKafka(false)}.
+   * @throws IOException on IO error.
+   */
+  protected final KafkaManager setupKafka(Map<String, String> configOverrides) throws IOException {
+    return setupKafka(false, configOverrides);
+  }
+
+  /**
+   * Sets up and returns the KafkaManager. If the KafkaManager has already been set up, this method
+   * may return an existing instance depending on the state of the @{code forceRestart} flag.
+   *
+   * @param forceRestart If true any existing KafkaManager is shutdown and a new one created.
+   * @param configOverrides A map of options to override the default configuration. May be empty but
+   *     not @{code null}
+   * @return a KafkaManager instance. This is equivalent of calling @{code setupKafka(false)}.
+   * @throws IOException on IO error.
+   */
+  protected final KafkaManager setupKafka(
+      final boolean forceRestart, Map<String, String> configOverrides) throws IOException {
+    return setupKafka(forceRestart, getConnectorClass(), configOverrides);
+  }
+
+  /** Delete the current connector from the running kafka. */
+  protected final void deleteConnector() {
+    deleteConnector(getConnectorClass());
+  }
+
+  /**
+   * Returns a BiFunction that converts OffsetManager key and data into an OffsetManagerEntry for
+   * this system.
+   *
+   * <ul>
+   *   <li>The first argument to the method is the {@link
+   *       OffsetManager.OffsetManagerEntry#getManagerKey()} value.
+   *   <li>The second argument is the {@link OffsetManager.OffsetManagerEntry#getProperties()}
+   *       value.
+   *   <li>Method should return a proper {@link OffsetManager.OffsetManagerEntry}
+   * </ul>
+   *
+   * @return A BiFunction that crates an OffsetManagerEntry.
+   */
+  protected final BiFunction<
+          Map<String, Object>, Map<String, Object>, OffsetManager.OffsetManagerEntry>
+      offsetManagerEntryFactory() {
+    return getSourceStorage().offsetManagerEntryFactory();
+  }
+
+  /**
+   * Creates a MessageConsumer for this test environment.
+   *
+   * @return a MessageConsumer instance.
+   */
+  protected final MessageConsumer messageConsumer() {
+    return new MessageConsumerImpl();
+  }
+
+  /**
+   * Creates a ConsumerPropertiesBuilder configured with the proper bootstrap server.
+   *
+   * @return a ConsumerPropertiesBuilder configured with the proper bootstrap server.
+   */
+  protected final ConsumerPropertiesBuilder consumerPropertiesBuilder() {
+    return new ConsumerPropertiesBuilder(getKafkaManager().bootstrapServers());
+  }
+
+  /**
+   * Writes to the underlying storage. Does not use a prefix. Equivalent to calling {@code
+   * write(topic, testDataBytes, partition, null)}
+   *
+   * @param topic the topic for the file.
+   * @param testDataBytes the data.
+   * @param partition the partition id fo the file.
+   * @return the WriteResult for the operation.
+   */
+  protected final SourceStorage.WriteResult write(
+      final String topic, final byte[] testDataBytes, final int partition) {
+    final K objectKey = createKey(topic, partition);
+    return writeWithKey(objectKey, testDataBytes);
+  }
+
+  /**
+   * Get the topic from the TestInfo.
+   *
+   * @return The topic extracted from the testInfo for the current test.
+   */
+  public String getTopic() {
+    return testInfo.getTestMethod().map(Method::getName).orElse("noMethod");
+  }
+
+  /**
+   * Extracts the native keys from the WriteResult
+   *
+   * @param writeResults the write result to extract keys from.
+   * @return a list of native keys in the same order as the writeResults argument.
+   */
+  public List<K> nativeKeys(final Collection<SourceStorage.WriteResult> writeResults) {
+    return writeResults.stream().map(wr -> (K) wr.nativeKey()).toList();
+  }
+
+  /**
+   * Extracts the offset manager keys from the WriteResult
+   *
+   * @param writeResults the write result to extract keys from.
+   * @return a list of offset manager keys in the same order as the writeResults argument.
+   */
+  public List<OffsetManager.OffsetManagerKey> offsetKeys(
+      final Collection<SourceStorage.WriteResult> writeResults) {
+    return writeResults.stream().map(SourceStorage.WriteResult::offsetKey).toList();
+  }
+
+  /**
+   * A consumer of the Kafka messages. The interface handels reading messages from the various Kafka
+   * topics associated with the test.
+   */
+  public interface MessageConsumer {
+    /**
+     * Read the data from the topic as byte array key and byte value. If the expected number of
+     * messages is not read in the allotted time the test fails.
+     *
+     * @param topic the topic to red.
+     * @param expectedMessageCount the expected number of messages.
+     * @param timeout the maximum time to wait for the messages to arrive.
+     * @return A list of values returned.
+     */
+    List<byte[]> consumeByteMessages(String topic, int expectedMessageCount, Duration timeout);
+
+    /**
+     * Read the data from the topic as byte array key and byte value. Each value is converted into a
+     * string and returned in the result. If the expected number of messages is not read in the
+     * allotted time the test fails.
+     *
+     * @param topic the topic to red.
+     * @param expectedMessageCount the expected number of messages.
+     * @param timeout the maximum time to wait for the messages to arrive.
+     * @return A list of values returned.
+     */
+    List<String> consumeStringMessages(String topic, int expectedMessageCount, Duration timeout);
+
+    /**
+     * Read the data from the topic as Avro data the key is read as a string. This consumer uses the
+     * {@link KafkaAvroDeserializer} to deserialize the values. The schema registry URL is the url
+     * provided by the local KafkaManager. If the expected number of messages is not read in the
+     * allotted time the test fails.
+     *
+     * @param topic the topic to red.
+     * @param expectedMessageCount the expected number of messages.
+     * @param timeout the maximum time to wait for the messages to arrive.
+     * @return A list of values returned.
+     */
+    List<GenericRecord> consumeAvroMessages(
+        String topic, int expectedMessageCount, Duration timeout);
+
+    /**
+     * Read the data from the topic as JSONL data the key is read as a string. This consumer uses
+     * the {@link JsonDeserializer} to deserialize the values. If the expected number of messages is
+     * not read in the allotted time the test fails.
+     *
+     * @param topic the topic to red.
+     * @param expectedMessageCount the expected number of messages.
+     * @param timeout the maximum time to wait for the messages to arrive.
+     * @return A list of values returned.
+     */
+    List<JsonNode> consumeJsonMessages(String topic, int expectedMessageCount, Duration timeout);
+
+    /**
+     * Read the data and key values from the topic. Teh consumer properties should be created with a
+     * call to {@link #consumerPropertiesBuilder}. If the expected number of messages is not read in
+     * the allotted time the test fails.
+     *
+     * @param topic the topic to red.
+     * @param consumerPropertiesBuilder The consumer properties builder.
+     * @param expectedMessageCount the expected number of messages.
+     * @param timeout the maximum time to wait for the messages to arrive.
+     * @param keyClass the key deserialization class.
+     * @param valueClass the value deserialization class.
+     * @param <X> The object returned from the key serializer.
+     * @param <V> The object returned from the value serializer.
+     * @return A list of values returned.
+     */
+    <X, V> Stream<ConsumerRecord<X, V>> consumeMessages(
+        String topic,
+        ConsumerPropertiesBuilder consumerPropertiesBuilder,
+        int expectedMessageCount,
+        Duration timeout,
+        Class<? extends Deserializer<X>> keyClass,
+        Class<? extends Deserializer<V>> valueClass);
+
+    /**
+     * Gets the list of consumer offset messages.
+     *
+     * @param consumer A consumer configured to return byte array keys and values.
+     * @return the list of {@link OffsetManager.OffsetManagerEntry} records created by the system
+     *     under test.
+     * @throws IOException on IO error.
+     */
+    List<OffsetManager.OffsetManagerEntry> consumeOffsetMessages(
+        KafkaConsumer<byte[], byte[]> consumer) throws IOException;
+  }
+
+  /** Handles reading messages from the local kafka. */
+  public class MessageConsumerImpl implements MessageConsumer {
+    /** constructor. use {@link AbstractSourceIntegrationBase#messageConsumer()} */
+    private MessageConsumerImpl() {}
+
+    /** A method to convert bytes to a string. */
+    public static final Function<byte[], String> byteToString =
+        b -> new String(b, StandardCharsets.UTF_8);
+
+    @Override
+    public List<byte[]> consumeByteMessages(
+        final String topic, final int expectedMessageCount, final Duration timeout) {
+      return consumeMessages(
+              topic,
+              consumerPropertiesBuilder(),
+              expectedMessageCount,
+              timeout,
+              ByteArrayDeserializer.class,
+              ByteArrayDeserializer.class)
+          .map(ConsumerRecord::value)
+          .toList();
+    }
+
+    @Override
+    public List<String> consumeStringMessages(
+        final String topic, final int expectedMessageCount, final Duration timeout) {
+      return consumeMessages(
+              topic,
+              consumerPropertiesBuilder(),
+              expectedMessageCount,
+              timeout,
+              ByteArrayDeserializer.class,
+              StringDeserializer.class)
+          .map(ConsumerRecord::value)
+          .toList();
+    }
+
+    @Override
+    public List<GenericRecord> consumeAvroMessages(
+        final String topic, final int expectedMessageCount, final Duration timeout) {
+      return consumeMessages(
+              topic,
+              consumerPropertiesBuilder().schemaRegistry(getKafkaManager().getSchemaRegistryUrl()),
+              expectedMessageCount,
+              timeout,
+              StringDeserializer.class,
+              KafkaAvroDeserializer.class)
+          .map(cr -> (GenericRecord) cr.value())
+          .toList();
+    }
+
+    @Override
+    public List<JsonNode> consumeJsonMessages(
+        final String topic, final int expectedMessageCount, final Duration timeout) {
+      return consumeMessages(
+              topic,
+              consumerPropertiesBuilder(),
+              expectedMessageCount,
+              timeout,
+              StringDeserializer.class,
+              JsonDeserializer.class)
+          .map(ConsumerRecord::value)
+          .toList();
+    }
+
+    @Override
+    public <X, V> Stream<ConsumerRecord<X, V>> consumeMessages(
+        final String topic,
+        final ConsumerPropertiesBuilder consumerPropertiesBuilder,
+        final int expectedMessageCount,
+        final Duration timeout,
+        final Class<? extends Deserializer<X>> keyClass,
+        final Class<? extends Deserializer<V>> valueClass) {
+      LOGGER.debug("{} Consuming messages from topic: {}", getLogPrefix(), topic);
+      try (KafkaConsumer<X, V> consumer =
+          new KafkaConsumer<>(
+              consumerPropertiesBuilder
+                  .keyDeserializer(keyClass)
+                  .valueDeserializer(valueClass)
+                  .build())) {
+        consumer.subscribe(Collections.singletonList(topic));
+        final List<ConsumerRecord<X, V>> recordValues = new ArrayList<>();
+        Awaitility.await()
+            .atMost(timeout)
+            .pollInterval(Duration.ofSeconds(1))
+            .untilAsserted(
+                () -> {
+                  Assertions.assertThat(consumeRecordsInProgress(consumer, recordValues))
+                      .hasSize(expectedMessageCount);
+                });
+        return recordValues.stream();
+      }
+    }
+
+    /**
+     * Consumes records in blocks and appends them to the {@code recordValues} parameter. This
+     * method polls the consumer for 1/2 second and adds the result to the record values. As long as
+     * there are at more than 10 records returned it continues to poll. Once there are fewer than 10
+     * records returned this method returns.
+     *
+     * @param consumer The consumer to read from.
+     * @param recordValues the record values to append to.
+     * @return {@code recordValues}
+     */
+    private <X, V> List<ConsumerRecord<X, V>> consumeRecordsInProgress(
+        final KafkaConsumer<X, V> consumer, final List<ConsumerRecord<X, V>> recordValues) {
+      int recordsRetrieved;
+      do {
+        final ConsumerRecords<X, V> records = consumer.poll(Duration.ofMillis(500L));
+        recordsRetrieved = records.count();
+        LOGGER.debug("{} Retrieved {}} records", getLogPrefix(), recordsRetrieved);
+        records.forEach(recordValues::add);
+        // Choosing 10 records as it allows for integration tests with a smaller max
+        // poll to be added
+        // while maintaining efficiency, a slightly larger number could be added but
+        // this is slightly more
+        // efficient
+        // than larger numbers.
+      } while (recordsRetrieved > 10);
+      return recordValues;
+    }
+
+    @Override
+    public List<OffsetManager.OffsetManagerEntry> consumeOffsetMessages(
+        final KafkaConsumer<byte[], byte[]> consumer) throws IOException {
+      // Poll messages from the topic
+      final BiFunction<Map<String, Object>, Map<String, Object>, OffsetManager.OffsetManagerEntry>
+          converter = offsetManagerEntryFactory();
+      final ObjectMapper objectMapper = new ObjectMapper();
+      final List<OffsetManager.OffsetManagerEntry> messages = new ArrayList<>();
+      final ConsumerRecords<byte[], byte[]> records = consumer.poll(Duration.ofSeconds(1));
+      // TODO there is probably a way to clean this up by using the internal data
+      // types from Kafka.
+      for (final ConsumerRecord<byte[], byte[]> record : records) {
+        final Map<String, Object> data =
+            objectMapper.readValue(
+                record.value(),
+                new TypeReference<>() { // NOPMD
+                });
+        // the key has the format
+        // key[0] = connector name
+        // key[1] = Map<String, Object> partition map.
+        final List<Object> key =
+            objectMapper.readValue(
+                record.key(),
+                new TypeReference<>() { // NOPMD
+                });
+        final Map<String, Object> managerEntryKey = (Map<String, Object>) key.get(1);
+        messages.add(converter.apply(managerEntryKey, data));
+      }
+      return messages;
+    }
+  }
+}

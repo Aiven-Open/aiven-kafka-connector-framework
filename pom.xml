@@ -6,7 +6,7 @@
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    https://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
@@ -15,7 +15,7 @@
     specific language governing permissions and limitations
     under the License.
 
-    SPDX-License-Identifier: Apache-2
+    SPDX-License-Identifier: Apache-2.0
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>aiven-commons</artifactId>
-    <version>3</version>
+    <version>4-SNAPSHOT</version>
   </parent>
 
   <artifactId>framework-for-connectors</artifactId>
@@ -78,6 +78,8 @@
     <!--
 Sink module is removed until there is code
 <module>sink</module>-->
+    <module>common-integration-tests</module>
+    <module>source-integration-tests</module>
   </modules>
 
   <scm>
@@ -104,21 +106,80 @@ Sink module is removed until there is code
   <properties>
     <latestRelease>0.2.0</latestRelease>
     <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
-    <aiven.util.version>0.1.0</aiven.util.version>
-    <confluent.avro.data.aversion>7.9.5</confluent.avro.data.aversion>
+    <aiven.util.version>0.2.0-SNAPSHOT</aiven.util.version>
+    <confluent.avro.data.version>7.9.5</confluent.avro.data.version>
+    <confluent.avro.converter.version>7.9.5</confluent.avro.converter.version>
+    <aiven.kafka.testkit.version>0.1.0-SNAPSHOT</aiven.kafka.testkit.version>
+    <testcontainers.version>2.0.5</testcontainers.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+
+      <!-- imported poms -->
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>kafka-testkit</artifactId>
+        <version>${aiven.kafka.testkit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers</artifactId>
+        <version>${testcontainers.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- dependencies -->
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons.io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-annotations</artifactId>
+        <version>${spotbugs.annotations.version}</version>
+      </dependency>
       <dependency>
         <groupId>com.github.victools</groupId>
         <artifactId>jsonschema-generator</artifactId>
         <version>4.38.0</version>
       </dependency>
+
       <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-common</artifactId>
-        <version>3.4.2</version>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>common-util</artifactId>
+        <version>${aiven.util.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>framework-common-for-connectors</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>framework-for-source-connectors</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>framework-for-connectors-common-integration-tests</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>framework-for-connectors-source-integration-tests</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
@@ -127,22 +188,59 @@ Sink module is removed until there is code
       </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
-        <artifactId>common-util</artifactId>
-        <version>${aiven.util.version}</version>
+        <artifactId>kafka-testkit</artifactId>
+        <version>${aiven.kafka.testkit.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>com.github.spotbugs</groupId>
-        <artifactId>spotbugs-annotations</artifactId>
-        <version>${spotbugs.annotations.version}</version>
+        <groupId>io.confluent</groupId>
+        <artifactId>kafka-connect-avro-converter</artifactId>
+        <version>${confluent.avro.converter.version}</version>
       </dependency>
+      <dependency>
+        <groupId>io.confluent</groupId>
+        <artifactId>kafka-connect-avro-data</artifactId>
+        <version>${confluent.avro.data.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-text</artifactId>
         <version>${commons.text.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <version>3.4.2</version>
+        <exclusions>
+          <exclusion>
+            <groupId>ch.qos.reload4j</groupId>
+            <artifactId>reload4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.re2j</groupId>
+            <artifactId>re2j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+          </exclusion>
+
+        </exclusions>
+      </dependency>
+      <dependency>
         <groupId>org.apache.kafka</groupId>
         <artifactId>connect-api</artifactId>
+        <version>${kafka.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>connect-runtime</artifactId>
         <version>${kafka.version}</version>
         <scope>provided</scope>
       </dependency>
@@ -153,20 +251,13 @@ Sink module is removed until there is code
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>${commons.io.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-params</artifactId>
-        <version>${junit.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-engine</artifactId>
-        <version>${junit.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
@@ -180,17 +271,24 @@ Sink module is removed until there is code
 
     <dependency>
       <groupId>io.aiven.commons</groupId>
+      <artifactId>kafka-testkit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-config</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -198,6 +296,12 @@ Sink module is removed until there is code
       <artifactId>slf4j-reload4j</artifactId>
       <version>${slf4j.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.reload4j</groupId>
+          <artifactId>reload4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 
