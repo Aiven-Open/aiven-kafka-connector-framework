@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -56,7 +55,6 @@ final class CsvExtractorTest extends IORecordExtractorTest {
     ConnectorConfig.configDef();
     Map<String, String> props = new HashMap<>();
     props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
-    CommonConfigFragment.Setter test = CommonConfigFragment.setter(props);
   }
 
   @Override
