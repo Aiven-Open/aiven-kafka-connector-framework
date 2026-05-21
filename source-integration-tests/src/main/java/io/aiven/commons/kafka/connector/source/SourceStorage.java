@@ -33,6 +33,15 @@ import java.util.function.BiFunction;
 public interface SourceStorage<K extends Comparable<K>, N> extends StorageBase<K, N> {
 
   /**
+   * If null data is written to storage is a null record expected.
+   *
+   * @return {@code true} if a null record is expected.
+   */
+  default boolean nullDataIsNullRecord() {
+    return true;
+  }
+
+  /**
    * Gets the list of supported transformers for the storage.
    *
    * @return A ExtractorRegistry containing the acceptable transformers.

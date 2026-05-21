@@ -36,8 +36,12 @@ public interface StorageBase<K extends Comparable<K>, N> {
    */
   Class<? extends Connector> getConnectorClass();
 
-  /** Creates the storage space */
-  void createStorage();
+  /**
+   * Creates the storage space
+   *
+   * @param topic The topic for the current test. Used by some platforms during storage creation.
+   */
+  void createStorage(String topic);
 
   /** Deletes the storage space. */
   void removeStorage();

@@ -109,7 +109,7 @@ public class TestSourceStorage implements SourceStorage<String, ByteBuffer> {
   }
 
   @Override
-  public void createStorage() {}
+  public void createStorage(String topic) {}
 
   @Override
   public void removeStorage() {

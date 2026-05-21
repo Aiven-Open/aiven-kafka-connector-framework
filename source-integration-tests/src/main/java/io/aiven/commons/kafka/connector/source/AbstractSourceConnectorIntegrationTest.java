@@ -18,6 +18,9 @@
 */
 package io.aiven.commons.kafka.connector.source;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Fail.fail;
+
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
@@ -28,15 +31,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Fail.fail;
 
 /**
  * The abstract base class for the connector integration tests.
@@ -58,7 +57,8 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
   private List<SourceStorage.TestData> firstSet;
   private List<SourceStorage.TestData> secondSet;
 
-  AbstractSourceConnectorIntegrationTest() {}
+  /** Constructor. */
+  protected AbstractSourceConnectorIntegrationTest() {}
 
   /**
    * Gets the test configuration for this execution.
@@ -69,7 +69,7 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
 
   @BeforeEach
   void createStorage() {
-    getSourceStorage().createStorage();
+    getSourceStorage().createStorage(getTopic());
     testConfig = getTestConfig();
   }
 
@@ -97,10 +97,10 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
    * @throws InterruptedException on kafka startup interruption.
    */
   private void startConnector(
-          final List<SourceStorage.WriteResult> writeResults,
-          final String topic,
-          final Map<String, String> connectorConfig)
-          throws IOException, ExecutionException, InterruptedException {
+      final List<SourceStorage.WriteResult> writeResults,
+      final String topic,
+      final Map<String, String> connectorConfig)
+      throws IOException, ExecutionException, InterruptedException {
     // Start the Connector
 
     final KafkaManager kafkaManager = setupKafka(Collections.emptyMap());
@@ -109,9 +109,9 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
 
     // verify the records were written to storage.
     waitForStorage(
-            WRITE_TIMEOUT,
-            () -> getNativeInfo().stream().map(NativeInfo::nativeKey).toList(),
-            nativeKeys(writeResults));
+        WRITE_TIMEOUT,
+        () -> getNativeInfo().stream().map(NativeInfo::nativeKey).toList(),
+        nativeKeys(writeResults));
   }
 
   private void setupData() {
@@ -119,7 +119,6 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
     firstSet = testData.subList(0, 2);
     secondSet = testData.subList(2, 4);
   }
-
 
   @Test
   void testMessagesRead() throws IOException {
@@ -131,7 +130,8 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
     KafkaManager kafkaManager = setupKafka(testConfig.workerOverrides());
     kafkaManager.createTopic(topic);
 
-    Map<String, String> config = getSourceStorage().createConnectorConfig();
+    // Map<String, String> config = getSourceStorage().createConnectorConfig();
+    Map<String, String> config = testConfig.workerOverrides();
     CommonConfigFragment.setter(config).maxTasks(1);
     SourceConfigFragment.setter(config).targetTopic(topic);
 
@@ -148,7 +148,8 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
         nativeKeys(writeResults));
 
     // Poll messages from the Kafka topic and verify the consumed data
-    testConfig.consumeMessages(messageConsumer(), topic, testData, Duration.ofSeconds(10));
+    testConfig.consumeMessages(
+        messageConsumer(), topic, testData, writeResults, Duration.ofSeconds(10));
   }
 
   /**
@@ -163,23 +164,25 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
     setupData();
 
     // Write 2 records  storage
-    final List<SourceStorage.WriteResult> writeResults = testConfig.writeTestData(topic, firstSet);
+    List<SourceStorage.WriteResult> writeResults = testConfig.writeTestData(topic, firstSet);
 
     try {
       startConnector(writeResults, topic, createConfig(topic, testConfig.initialConfig()));
 
-      testConfig.consumeMessages(messageConsumer(), topic, firstSet, Duration.ofSeconds(90));
+      testConfig.consumeMessages(
+          messageConsumer(), topic, firstSet, writeResults, Duration.ofSeconds(90));
 
       getKafkaManager().pauseConnector(getConnectorName());
 
       // write rest of data
-      testConfig.writeTestData(topic, secondSet);
+      writeResults = testConfig.writeTestData(topic, secondSet);
 
       // resume the connector.
       getKafkaManager().resumeConnector(getConnectorName());
 
       // connector should skip the records that were previously read.
-      testConfig.consumeMessages(messageConsumer(), topic, secondSet, Duration.ofSeconds(90));
+      testConfig.consumeMessages(
+          messageConsumer(), topic, secondSet, writeResults, Duration.ofSeconds(90));
 
     } catch (IOException | ExecutionException | InterruptedException e) {
       LOGGER.error("{} Error", getLogPrefix(), e);
@@ -202,13 +205,15 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
     try {
       startConnector(writeResults, topic, createConfig(topic, testConfig.initialConfig()));
 
-      testConfig.consumeMessages(messageConsumer(), topic, firstSet, Duration.ofSeconds(90));
+      testConfig.consumeMessages(
+          messageConsumer(), topic, firstSet, writeResults, Duration.ofSeconds(90));
 
       // write rest of data
-      testConfig.writeTestData(topic, secondSet);
+      writeResults = testConfig.writeTestData(topic, secondSet);
 
       // connector should skip the records that were previously read.
-      testConfig.consumeMessages(messageConsumer(), topic, secondSet, Duration.ofSeconds(90));
+      testConfig.consumeMessages(
+          messageConsumer(), topic, secondSet, writeResults, Duration.ofSeconds(90));
     } catch (IOException | ExecutionException | InterruptedException e) {
       LOGGER.error("{} Error", getLogPrefix(), e);
       fail(e);
@@ -233,15 +238,17 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
     try {
       startConnector(writeResults, topic, createConfig(topic, testConfig.initialConfig()));
 
-      testConfig.consumeMessages(messageConsumer(), topic, firstSet, Duration.ofSeconds(10));
+      testConfig.consumeMessages(
+          messageConsumer(), topic, firstSet, writeResults, Duration.ofSeconds(10));
 
       getKafkaManager().restartConnector(getConnectorName());
 
       // write new data
-      testConfig.writeTestData(topic, secondSet);
+      writeResults = testConfig.writeTestData(topic, secondSet);
 
       // verify only new records are read.
-      testConfig.consumeMessages(messageConsumer(), topic, secondSet, Duration.ofSeconds(20));
+      testConfig.consumeMessages(
+          messageConsumer(), topic, secondSet, writeResults, Duration.ofSeconds(20));
     } catch (IOException | ExecutionException | InterruptedException e) {
       LOGGER.error("{} Error", getLogPrefix(), e);
       fail(e);
@@ -257,17 +264,26 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
     List<SourceStorage.TestData> standardData = List.of(new SourceStorage.TestData(null, null));
     // Write the data to storage
     final List<SourceStorage.WriteResult> writeResults =
-            testConfig.writeTestData(topic, standardData);
+        testConfig.writeTestData(topic, standardData);
 
     try {
       startConnector(writeResults, topic, createConfig(topic, testConfig.initialConfig()));
+      if (getSourceStorage().nullDataIsNullRecord()) {
 
-      assertThatThrownBy(
-              () ->
-                      testConfig.consumeMessages(
-                              messageConsumer(), topic, standardData, Duration.ofSeconds(30)))
-              .isInstanceOf(org.awaitility.core.ConditionTimeoutException.class)
-              .hasMessageContaining("Expected size: 1 but was: 0");
+        assertThatThrownBy(
+                () ->
+                    testConfig.consumeMessages(
+                        messageConsumer(),
+                        topic,
+                        standardData,
+                        writeResults,
+                        Duration.ofSeconds(30)))
+            .isInstanceOf(org.awaitility.core.ConditionTimeoutException.class)
+            .hasMessageContaining("Expected size: 1 but was: 0");
+      } else {
+        testConfig.consumeMessages(
+            messageConsumer(), topic, standardData, writeResults, Duration.ofSeconds(20));
+      }
     } catch (IOException | ExecutionException | InterruptedException e) {
       LOGGER.error("{} Error", getLogPrefix(), e);
       fail(e);
@@ -275,5 +291,4 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
       deleteConnector();
     }
   }
-
 }

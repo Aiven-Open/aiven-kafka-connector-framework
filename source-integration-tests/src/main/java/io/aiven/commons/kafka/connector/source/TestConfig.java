@@ -1,7 +1,6 @@
 package io.aiven.commons.kafka.connector.source;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -37,9 +36,7 @@ public abstract class TestConfig {
    *
    * @return the map of property settings.
    */
-  public Map<String, String> workerOverrides() {
-    return Collections.emptyMap();
-  }
+  public abstract Map<String, String> workerOverrides();
 
   /**
    * The base configuration that is required by this test configuration, for example setting the
@@ -81,11 +78,13 @@ public abstract class TestConfig {
    *     the testing framework.
    * @param topic the topic to consume the messages from
    * @param testData the TestData records we are expecting of messages to consume.
+   * @param writeResults the Write results from the storage write.
    * @param timeout the time limit in which to consume the messages.
    */
   public abstract void consumeMessages(
       AbstractSourceIntegrationBase.MessageConsumer messageConsumer,
       String topic,
       List<SourceStorage.TestData> testData,
+      List<SourceStorage.WriteResult> writeResults,
       Duration timeout);
 }

@@ -24,15 +24,14 @@ import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ExampleSourceConnectorIntegrationTest
+public class ExampleSourceConnectorIT
     extends AbstractSourceConnectorIntegrationTest<String, ByteBuffer> {
-  private static final Logger LOGGER =
-      LoggerFactory.getLogger(ExampleSourceConnectorIntegrationTest.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ExampleSourceConnectorIT.class);
   private final TestSourceStorage sourceStorage;
 
   @TempDir static Path testDir;
 
-  ExampleSourceConnectorIntegrationTest() {
+  ExampleSourceConnectorIT() {
     sourceStorage = new TestSourceStorage(testDir);
   }
 
