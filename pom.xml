@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>aiven-commons</artifactId>
-    <version>4-SNAPSHOT</version>
+    <version>4</version>
   </parent>
 
   <artifactId>framework-for-connectors</artifactId>
@@ -105,7 +105,7 @@ Sink module is removed until there is code
 
   <properties>
     <latestRelease>0.2.0</latestRelease>
-    <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
+    <aiven.kafka.config.version>0.2.0-SNAPSHOT</aiven.kafka.config.version>
     <aiven.util.version>0.2.0-SNAPSHOT</aiven.util.version>
     <confluent.avro.data.version>7.9.5</confluent.avro.data.version>
     <confluent.avro.converter.version>7.9.5</confluent.avro.converter.version>
@@ -359,6 +359,23 @@ Sink module is removed until there is code
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <phase>integration-test</phase>
+            <configuration>
+              <includes>
+                <include>**/*IT</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
