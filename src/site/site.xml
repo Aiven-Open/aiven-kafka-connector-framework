@@ -71,6 +71,7 @@
         </menu>
 
         <menu name="Source" inherit="bottom" inheritAsRef="true">
+            <item name="Architecture" href="source/architecture.html"/>
             <item name="Howto Build a Source Connector" href="./source/howto.html"/>
             <item name="Source Configuration Contributed Options" href="./source/localConfiguration.html"/>
             <item name="Source Configuration Base Options" href="./source/configuration.html"/>

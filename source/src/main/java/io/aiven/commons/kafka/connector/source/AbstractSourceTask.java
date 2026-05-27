@@ -201,7 +201,7 @@ public abstract class AbstractSourceTask extends SourceTask {
    * @param evolvingSourceRecord the record to modify.
    * @return the modified record.
    */
-  protected EvolvingSourceRecord lastEvolution(EvolvingSourceRecord evolvingSourceRecord) {
+  protected EvolvingSourceRecord lastEvolution(final EvolvingSourceRecord evolvingSourceRecord) {
     return evolvingSourceRecord;
   }
 
