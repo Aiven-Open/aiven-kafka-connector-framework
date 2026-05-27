@@ -25,8 +25,9 @@ import java.util.Map;
  * An implementation of OffsetManagerEntry. This entry has 3 values stored in the map.
  *
  * <p>The OffsetManagerEntry must contain a representation of the NativeKey (the K in type in
- * NativeSourceData<K,N,O,T>) The record count must be included but may be set to 1 for all cases
- * where the native source may only return a single Kafka record. All other items are optional.
+ * NativeSourceData&lt;K,N,O,T&gt;) The record count must be included but may be set to 1 for all
+ * cases where the native source may only return a single Kafka record. All other items are
+ * optional.
  */
 public class ExampleOffsetManagerEntry
     implements OffsetManager.OffsetManagerEntry, Comparable<ExampleOffsetManagerEntry> {

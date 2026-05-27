@@ -7,15 +7,22 @@ import java.util.Map;
 /**
  * The definition af a test. Since the connector may support multiple data types within the native
  * object (for example JSON format and Avro format) and may support different combinations of
- * converters, the Test config defines the exact constellation of configurations to be tested.
+ * converters, the test config defines the exact constellation of configurations to be tested.
+ *
+ * <p>The test config provides the configuration for the Connector under test as well as the Kafka
+ * consumer that will read the messages from kafka to verify correctness.
+ *
+ * <p>In addition, this class also provides the validation method for the items read by the
+ * consumer.
  */
 public abstract class TestConfig {
+  /** The name of this test. */
   private final String name;
 
   /**
    * Constructor.
    *
-   * @param name the name of the test. This should be a human readable name that describes the
+   * @param name the name of the test. This should be a human-readable name that describes the
    *     constellation of configuration options under test.
    */
   protected TestConfig(final String name) {
@@ -32,11 +39,11 @@ public abstract class TestConfig {
   }
 
   /**
-   * The overrides for the kafka worker.
+   * The specific properties for the Kafka consumer that will read the results from Kafka.
    *
    * @return the map of property settings.
    */
-  public abstract Map<String, String> workerOverrides();
+  public abstract Map<String, String> consumerConfiguration();
 
   /**
    * The base configuration that is required by this test configuration, for example setting the

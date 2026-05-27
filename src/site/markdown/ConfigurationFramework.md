@@ -14,7 +14,7 @@
     specific language governing permissions and limitations
     under the License.
 
-    SPDX-License-Identifier: Apache-2
+    SPDX-License-Identifier: Apache-2.0
 -->
 # Configuration Framework
 
@@ -43,22 +43,22 @@ The configuration definition is constructed by extending the parent configuratio
 To add a `Fragment` the definition the configuration definition constructor calls the fragment `update` method passing itself as the argument.  The standard constructor will look like:
 
 ```java
-		public SomeConfigDef() {
-			super();
-			SomeConfigFragment.update(this);
-		}
+    public SomeConfigDef() {
+        super();
+        SomeConfigFragment.update(this);
+    }
 ```
 
 The configuration definition also performs the validation for the fragments by overriding the `multiValidate` method.  The default implementaiton of the  `multiValidate` method does nothing. Implementations must call the `super.multiValidate(valueMap)` method.  An example of an impelementation might look like:
 
 ```java
-		@Override
-		public Map<String, ConfigValue> multiValidate(final Map<String, ConfigValue> valueMap) {
-			final Map<String, ConfigValue> values = super.multiValidate(valueMap);
-			final FragmentDataAccess fragmentDataAccess = FragmentDataAccess.from(valueMap);
-			new SomeFragment(fragmentDataAccess).validate(values);
-			return values;
-		}
+    @Override
+    public Map<String, ConfigValue> multiValidate(final Map<String, ConfigValue> valueMap) {
+        final Map<String, ConfigValue> values = super.multiValidate(valueMap);
+        final FragmentDataAccess fragmentDataAccess = FragmentDataAccess.from(valueMap);
+        new SomeFragment(fragmentDataAccess).validate(values);
+        return values;
+    }
 ```
 
 ## Configuration

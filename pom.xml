@@ -79,7 +79,9 @@
 Sink module is removed until there is code
 <module>sink</module>-->
     <module>common-integration-tests</module>
+    <module>source-tests</module>
     <module>source-integration-tests</module>
+    <!--    <module>documentation</module>-->
   </modules>
 
   <scm>
@@ -104,13 +106,16 @@ Sink module is removed until there is code
   </distributionManagement>
 
   <properties>
-    <latestRelease>0.2.0</latestRelease>
+    <!-- please keep in sorted order -->
     <aiven.kafka.config.version>0.2.0-SNAPSHOT</aiven.kafka.config.version>
-    <aiven.util.version>0.2.0-SNAPSHOT</aiven.util.version>
-    <confluent.avro.data.version>7.9.5</confluent.avro.data.version>
-    <confluent.avro.converter.version>7.9.5</confluent.avro.converter.version>
     <aiven.kafka.testkit.version>0.1.0-SNAPSHOT</aiven.kafka.testkit.version>
-    <testcontainers.version>2.0.5</testcontainers.version>
+    <aiven.util.version>0.2.0</aiven.util.version>
+    <confluent.avro.converter.version>7.9.5</confluent.avro.converter.version>
+    <confluent.avro.data.version>7.9.5</confluent.avro.data.version>
+    <github.jsonschema.generator.version>4.38.0</github.jsonschema.generator.version>
+    <hadoop.common.version>3.4.2</hadoop.common.version>
+    <latestRelease>0.2.0</latestRelease>
+    <plugin.enforcer.version>3.6.2</plugin.enforcer.version>
   </properties>
 
   <dependencyManagement>
@@ -153,7 +158,7 @@ Sink module is removed until there is code
       <dependency>
         <groupId>com.github.victools</groupId>
         <artifactId>jsonschema-generator</artifactId>
-        <version>4.38.0</version>
+        <version>${github.jsonschema.generator.version}</version>
       </dependency>
 
       <dependency>
@@ -211,7 +216,7 @@ Sink module is removed until there is code
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-common</artifactId>
-        <version>3.4.2</version>
+        <version>${hadoop.common.version}</version>
         <exclusions>
           <exclusion>
             <groupId>ch.qos.reload4j</groupId>
@@ -229,7 +234,6 @@ Sink module is removed until there is code
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-server</artifactId>
           </exclusion>
-
         </exclusions>
       </dependency>
       <dependency>
@@ -253,11 +257,13 @@ Sink module is removed until there is code
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-params</artifactId>
+        <version>${junit.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-engine</artifactId>
+        <version>${junit.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
@@ -402,7 +408,62 @@ Sink module is removed until there is code
               <outputDirectory>${project.build.directory}/generated-site/markdown</outputDirectory>
             </configuration>
           </execution>
+
+          <execution>
+            <id>copy-processed-markdown-resources</id>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <phase>pre-site</phase>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>common/target/generated-site/processed</directory>
+                  <includes>
+                    <include>**/*.md</include>
+                  </includes>
+                </resource>
+                <resource>
+                  <directory>source/target/generated-site/processed</directory>
+                  <includes>
+                    <include>**/*.md</include>
+                  </includes>
+                </resource>
+              </resources>
+              <outputDirectory>${project.build.directory}/generated-site/markdown</outputDirectory>
+            </configuration>
+          </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <configuration>
+          <generateReports>true</generateReports>
+          <generateProjectInfo>true</generateProjectInfo>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>io.aiven.commons</groupId>
+            <artifactId>kafka-config</artifactId>
+            <version>${aiven.kafka.config.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-api</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-runtime</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
@@ -418,6 +479,9 @@ Sink module is removed until there is code
               <report>aggregate</report>
             </reports>
             <inherited>false</inherited>
+            <configuration>
+              <skippedModules>.*-integration-tests</skippedModules>
+            </configuration>
           </reportSet>
           <reportSet>
             <id>default</id>
@@ -488,7 +552,7 @@ Sink module is removed until there is code
           <plugin>
             <groupId>org.sonatype.central</groupId>
             <artifactId>central-publishing-maven-plugin</artifactId>
-            <version>0.9.0</version>
+            <version>${plugin.sonatype}</version>
             <extensions>true</extensions>
             <configuration>
               <publishingServerId>central</publishingServerId>
@@ -498,7 +562,7 @@ Sink module is removed until there is code
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
-            <version>3.6.2</version>
+            <version>${plugin.enforcer.version}</version>
             <executions>
               <execution>
                 <id>enforce-versions</id>
@@ -529,7 +593,7 @@ Sink module is removed until there is code
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
-            <version>3.6.2</version>
+            <version>${plugin.enforcer.version}</version>
             <executions>
               <execution>
                 <id>enforce-versions</id>

@@ -103,7 +103,7 @@ public interface SourceStorage<K extends Comparable<K>, N> extends StorageBase<K
    * Data to write and expected result.
    *
    * @param data the data to write.
-   * @param expected the expected resi;t/
+   * @param expected the expected result
    */
   record TestData(Object data, Object expected) {
     /**

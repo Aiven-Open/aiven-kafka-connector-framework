@@ -42,7 +42,7 @@ public class ByteTestConfig extends TestConfig {
   }
 
   @Override
-  public Map<String, String> workerOverrides() {
+  public Map<String, String> consumerConfiguration() {
     Map<String, String> workerOverrides = new HashMap<>();
     workerOverrides.put("example.dir", storage.getTestDir().toString());
     return ConnectorCommonConfigFragment.setter(workerOverrides)

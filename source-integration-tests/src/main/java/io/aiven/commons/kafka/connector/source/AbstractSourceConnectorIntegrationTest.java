@@ -40,6 +40,9 @@ import org.slf4j.LoggerFactory;
 /**
  * The abstract base class for the connector integration tests.
  *
+ * <p>Utilizes a {@link TestConfig} to configure the connector under test as well as the consumer of
+ * the messages from Kafka used to validate the data.
+ *
  * @param <K> the native key type for the connector.
  * @param <V> the native value object for the connector.
  */
@@ -127,11 +130,11 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
 
     LOGGER.info("Executing test: {}", testConfig.getName());
 
-    KafkaManager kafkaManager = setupKafka(testConfig.workerOverrides());
+    KafkaManager kafkaManager = setupKafka(testConfig.consumerConfiguration());
     kafkaManager.createTopic(topic);
 
     // Map<String, String> config = getSourceStorage().createConnectorConfig();
-    Map<String, String> config = testConfig.workerOverrides();
+    Map<String, String> config = testConfig.consumerConfiguration();
     CommonConfigFragment.setter(config).maxTasks(1);
     SourceConfigFragment.setter(config).targetTopic(topic);
 

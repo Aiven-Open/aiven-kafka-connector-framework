@@ -46,9 +46,8 @@
     </dependency>
     <dependency>
       <groupId>io.aiven.commons</groupId>
-      <artifactId>framework-for-source-connectors</artifactId>
+      <artifactId>framework-for-source-connectors-tests</artifactId>
       <version>${project.parent.version}</version>
-      <classifier>tests</classifier>
       <scope>compile</scope>
     </dependency>
     <dependency>

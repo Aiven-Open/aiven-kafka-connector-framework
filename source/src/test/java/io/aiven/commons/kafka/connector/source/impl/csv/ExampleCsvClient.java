@@ -92,5 +92,4 @@ public class ExampleCsvClient {
     String nativeItem = dataMap.get(key);
     return nativeItem == null ? null : ByteBuffer.wrap(nativeItem.getBytes(StandardCharsets.UTF_8));
   }
-  ;
 }
