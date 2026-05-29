@@ -42,20 +42,11 @@ import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.json.JsonConverter;
-import org.apache.kafka.connect.runtime.ConnectorConfig;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 final class CsvExtractorTest extends IORecordExtractorTest {
 
   private CsvExtractor extractor;
-
-  @BeforeAll
-  static void setupConfig() {
-    ConnectorConfig.configDef();
-    Map<String, String> props = new HashMap<>();
-    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
-  }
 
   @Override
   protected CsvExtractor setupExtractor(CompressionType compressionType) {
