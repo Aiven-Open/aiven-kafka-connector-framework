@@ -2,7 +2,7 @@ package io.aiven.commons.kafka.connector.source;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
+import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.extractor.ByteArrayExtractor;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
@@ -45,9 +45,9 @@ public class ByteTestConfig extends TestConfig {
   public Map<String, String> consumerConfiguration() {
     Map<String, String> workerOverrides = new HashMap<>();
     workerOverrides.put("example.dir", storage.getTestDir().toString());
-    return ConnectorCommonConfigFragment.setter(workerOverrides)
-        .keyConverter(StringConverter.class)
-        .valueConverter(ByteArrayConverter.class)
+    return CommonConfigFragment.setter(workerOverrides)
+        .keyConverter(StringConverter.class.getName())
+        .valueConverter(ByteArrayConverter.class.getName())
         .data();
   }
 
@@ -69,9 +69,9 @@ public class ByteTestConfig extends TestConfig {
     // list the temp directory to read/write.
     config.put("example.dir", storage.getTestDir().toString());
     // set the key converter as a string and the value as a byte.
-    ConnectorCommonConfigFragment.setter(config)
-        .keyConverter(StringConverter.class)
-        .valueConverter(ByteArrayConverter.class);
+    CommonConfigFragment.setter(config)
+        .valueConverter(ByteArrayConverter.class.getName())
+        .keyConverter(StringConverter.class.getName());
     // use object hash distribution and the ByteArray extractor.
     SourceConfigFragment.setter(config)
         .distributionType(DistributionType.OBJECT_HASH)

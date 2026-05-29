@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.common.NativeInfo;
-import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.testkit.KafkaIntegrationTestBase;
 import io.aiven.commons.kafka.testkit.KafkaManager;
@@ -48,6 +47,7 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.connect.connector.Connector;
 import org.apache.kafka.connect.json.JsonDeserializer;
+import org.apache.kafka.connect.runtime.SourceConnectorConfig;
 import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.slf4j.Logger;
@@ -143,9 +143,10 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N>
   protected final Map<String, String> createConfig() {
     Map<String, String> props = getSourceStorage().createConnectorConfig();
     CommonConfigFragment.setter(props).maxTasks(1);
-    ConnectorCommonConfigFragment.setter(props)
-        .connector(getSourceStorage().getConnectorClass())
-        .name(getConnectorName());
+    props.put(
+        SourceConnectorConfig.CONNECTOR_CLASS_CONFIG,
+        getSourceStorage().getConnectorClass().getName());
+    props.put(SourceConnectorConfig.NAME_CONFIG, getConnectorName());
     return props;
   }
 
