@@ -25,13 +25,13 @@
     <version>0.3.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>framework-for-source-connectors</artifactId>
+  <artifactId>framework-for-source-connectors-tests</artifactId>
   <version>0.3.0-SNAPSHOT</version>
-  <name>Aiven source framework for connectors on Apache Kafka</name>
-  <description>A framework to make development of source connectors easier</description>
+  <name>Aiven source framework for connectors on Apache Kafka Tests</name>
+  <description>A framework to make testing of source connectors easier.</description>
 
   <properties>
-    <latestRelease>0.2.0</latestRelease>
+    <latestRelease>none</latestRelease>
   </properties>
 
   <dependencies>
@@ -42,6 +42,11 @@
     <dependency>
       <groupId>io.aiven.commons</groupId>
       <artifactId>framework-common-for-connectors</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>framework-for-source-connectors</artifactId>
       <version>${project.parent.version}</version>
     </dependency>
     <dependency>
@@ -97,7 +102,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>io.aiven.commons</groupId>
@@ -109,21 +114,33 @@
     </dependency>
 
     <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <version>${awaitility.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
       <version>${commons.collection4.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>${junit.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>${mockito.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.awaitility</groupId>
-      <artifactId>awaitility</artifactId>
-      <version>${awaitility.version}</version>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -133,7 +150,7 @@
       <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-testkit</artifactId>
       <version>${aiven.kafka.testkit.version}</version>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 
@@ -160,40 +177,20 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
+        <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
-          <generateReports>true</generateReports>
-          <generateProjectInfo>false</generateProjectInfo>
-          <saveProcessedContent>true</saveProcessedContent>
+          <failOnWarnings>false</failOnWarnings>
+          <skip>true</skip>
         </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>io.aiven.commons</groupId>
-            <artifactId>kafka-config</artifactId>
-            <version>${aiven.kafka.config.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-            <version>${kafka.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>connect-api</artifactId>
-            <version>${kafka.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>connect-runtime</artifactId>
-            <version>${kafka.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>${project.artifactId}</artifactId>
-            <version>${project.version}</version>
-          </dependency>
-        </dependencies>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
       </plugin>
     </plugins>
+    <sourceDirectory>../source/src/test/java</sourceDirectory>
   </build>
 </project>

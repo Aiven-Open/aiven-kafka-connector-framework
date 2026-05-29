@@ -36,6 +36,10 @@
 
   <dependencies>
     <dependency>
+      <groupId>io.confluent</groupId>
+      <artifactId>kafka-connect-avro-converter</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-config</artifactId>
     </dependency>
@@ -89,6 +93,43 @@
         <groupId>org.sonatype.central</groupId>
         <artifactId>central-publishing-maven-plugin</artifactId>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <configuration>
+          <generateReports>true</generateReports>
+          <generateProjectInfo>false</generateProjectInfo>
+          <saveProcessedContent>true</saveProcessedContent>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>io.aiven.commons</groupId>
+            <artifactId>kafka-config</artifactId>
+            <version>${aiven.kafka.config.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-api</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-runtime</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
     </plugins>
   </build>
 </project>

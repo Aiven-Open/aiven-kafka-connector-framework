@@ -22,6 +22,7 @@ import io.aiven.commons.kafka.config.CommonConfig;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.util.io.compression.CompressionType;
 import java.util.Map;
+import org.apache.kafka.common.config.ConfigDef;
 
 /** The definition of the common connector config functions. */
 public class ConnectorCommonConfig extends CommonConfig {
@@ -110,5 +111,18 @@ public class ConnectorCommonConfig extends CommonConfig {
    */
   public final CompressionType getCompressionType() {
     return connectorConfigFragment.getCompressionType();
+  }
+
+  /**
+   * Configuration definitions that are added by this SourceCommonConfig. This class contains the
+   * options that are defined within SourceCommonConfig and is suitable for generating
+   * documentation.
+   */
+  public static class Documentation extends ConfigDef {
+    /** constructor used by site generation. */
+    public Documentation() {
+      super();
+      ConnectorCommonConfigFragment.update(this);
+    }
   }
 }

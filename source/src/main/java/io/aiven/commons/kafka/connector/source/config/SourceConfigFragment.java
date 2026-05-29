@@ -35,6 +35,7 @@ import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.common.utils.Utils;
+import org.apache.kafka.connect.runtime.ConnectorConfig;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
 /** Defines properties that are shared across all Source implementations. */
@@ -42,7 +43,6 @@ public final class SourceConfigFragment extends ConfigFragment {
 
   static final String MAX_POLL_RECORDS = "max.poll.records";
   static final String TARGET_TOPIC = "topic";
-  static final String ERRORS_TOLERANCE = "errors.tolerance";
   static final String DISTRIBUTION_TYPE = "distribution.type";
 
   /** The name of the ring buffer size property */
@@ -205,7 +205,8 @@ public final class SourceConfigFragment extends ConfigFragment {
    * @return the error tolerance.
    */
   public ToleranceType getErrorsTolerance() {
-    return ToleranceType.valueOf(getString(ERRORS_TOLERANCE).toUpperCase(Locale.ROOT));
+    return ToleranceType.valueOf(
+        getString(ConnectorConfig.ERRORS_TOLERANCE_CONFIG).toUpperCase(Locale.ROOT));
   }
 
   /**
@@ -334,7 +335,7 @@ public final class SourceConfigFragment extends ConfigFragment {
      * @return this.
      */
     public Setter errorsTolerance(final ToleranceType tolerance) {
-      return setValue(ERRORS_TOLERANCE, tolerance.name());
+      return setValue(ConnectorConfig.ERRORS_TOLERANCE_CONFIG, tolerance.name());
     }
 
     /**

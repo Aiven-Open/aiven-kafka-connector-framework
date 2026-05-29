@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package io.aiven.commons.kafka.connector.source.impl;
+package io.aiven.commons.kafka.connector.source;
 
 import com.google.common.base.Objects;
-import io.aiven.commons.kafka.connector.source.OffsetManager;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,9 +24,8 @@ import java.util.Map;
  * An implementation of OffsetManagerEntry. This entry has 3 values stored in the map.
  *
  * <p>The OffsetManagerEntry must contain a representation of the NativeKey (the K in type in
- * NativeSourceData&lt;K,N,O,T&gt;) The record count must be included but may be set to 1 for all
- * cases where the native source may only return a single Kafka record. All other items are
- * optional.
+ * NativeSourceData<K,N,O,T>) The record count must be included but may be set to 1 for all cases
+ * where the native source may only return a single Kafka record. All other items are optional.
  */
 public class ExampleOffsetManagerEntry
     implements OffsetManager.OffsetManagerEntry, Comparable<ExampleOffsetManagerEntry> {
@@ -36,19 +34,16 @@ public class ExampleOffsetManagerEntry
   private int recordCount;
 
   private static final String KEY = "key";
-  private static final String GROUPING_KEY = "groupingKey";
   private static final String RECORD_COUNT = "recordCount";
 
   /**
    * Constructor.
    *
    * @param nativeKey The native Key.
-   * @param grouping An grouping division
    */
-  public ExampleOffsetManagerEntry(final String nativeKey, final String grouping) {
+  public ExampleOffsetManagerEntry(final String nativeKey) {
     this();
     data.put(KEY, nativeKey);
-    data.put(GROUPING_KEY, grouping);
   }
 
   /** Constructor. */
@@ -95,7 +90,7 @@ public class ExampleOffsetManagerEntry
     // this is the primary key for determining if the data has been processed. At a
     // minimum the representatin of
     // the native key should be stored.
-    return () -> Map.of(KEY, data.get(KEY), GROUPING_KEY, data.get(GROUPING_KEY));
+    return () -> Map.of(KEY, data.get(KEY));
   }
 
   @Override
@@ -128,7 +123,7 @@ public class ExampleOffsetManagerEntry
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(getProperty(KEY), getProperty(GROUPING_KEY));
+    return Objects.hashCode(getProperty(KEY));
   }
 
   @Override
@@ -138,11 +133,7 @@ public class ExampleOffsetManagerEntry
     }
     int result = ((String) getProperty(KEY)).compareTo((String) other.getProperty(KEY));
     if (result == 0) {
-      result =
-          ((String) getProperty(GROUPING_KEY)).compareTo((String) other.getProperty(GROUPING_KEY));
-      if (result == 0) {
-        result = Long.compare(getRecordCount(), other.getRecordCount());
-      }
+      result = Long.compare(getRecordCount(), other.getRecordCount());
     }
     return result;
   }
