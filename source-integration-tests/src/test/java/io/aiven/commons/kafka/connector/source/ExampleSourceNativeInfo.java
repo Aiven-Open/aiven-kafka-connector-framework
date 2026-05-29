@@ -22,7 +22,14 @@ public class ExampleSourceNativeInfo extends AbstractSourceNativeInfo<String, By
     String[] parts = nativeInfo.nativeKey().split("/");
     Context result = new Context(nativeInfo.nativeKey());
     result.setTopic(parts[0]);
-    result.setPartition(Integer.parseInt(parts[1]));
+    try {
+      result.setPartition(Integer.parseInt(parts[1]));
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Partition part of native key '%s' is not a valid number: %s",
+              nativeInfo.nativeKey(), e.getMessage()));
+    }
     return result;
   }
 

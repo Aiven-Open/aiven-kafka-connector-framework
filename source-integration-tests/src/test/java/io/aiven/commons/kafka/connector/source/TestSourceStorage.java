@@ -33,6 +33,8 @@ public class TestSourceStorage implements SourceStorage<String, ByteBuffer> {
   // the root directory to write test data to.
   private final Path directory;
 
+  private String workingTopic;
+
   /**
    * Constructor.
    *
@@ -109,15 +111,25 @@ public class TestSourceStorage implements SourceStorage<String, ByteBuffer> {
   }
 
   @Override
-  public void createStorage(String topic) {}
+  public void createStorage(String topic) {
+    workingTopic = topic;
+    File topicDir = directory.resolve(topic).toFile();
+    if (!topicDir.exists()) {
+      topicDir.mkdirs();
+    }
+  }
 
   @Override
   public void removeStorage() {
-    try {
-      FileUtils.cleanDirectory(directory.toFile());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    File topicDir = directory.resolve(workingTopic).toFile();
+    if (topicDir.exists()) {
+      try {
+        FileUtils.cleanDirectory(topicDir);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
+    workingTopic = null;
   }
 
   @Override

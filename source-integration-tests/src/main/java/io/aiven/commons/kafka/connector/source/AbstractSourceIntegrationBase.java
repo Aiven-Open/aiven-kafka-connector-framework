@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
+import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.testkit.KafkaIntegrationTestBase;
 import io.aiven.commons.kafka.testkit.KafkaManager;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
@@ -38,6 +39,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -156,6 +158,7 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N>
    */
   protected final Map<String, String> createConfig(String topic, Map<String, String> override) {
     Map<String, String> props = createConfig();
+    if (StringUtils.isNotBlank(topic)) SourceConfigFragment.setter(props).targetTopic(topic);
     props.putAll(override);
     return props;
   }
@@ -165,6 +168,7 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N>
    *
    * @return the default offset flush interval.
    */
+  @Override
   protected Duration getOffsetFlushInterval() {
     return Duration.ofSeconds(5);
   }
