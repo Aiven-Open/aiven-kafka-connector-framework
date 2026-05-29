@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -38,24 +39,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.json.JsonConverter;
+import org.apache.kafka.connect.runtime.SourceConnectorConfig;
 import org.junit.jupiter.api.Test;
 
 final class CsvExtractorTest extends IORecordExtractorTest {
 
   private CsvExtractor extractor;
 
+  private SourceCommonConfig.SourceCommonConfigDef createTestingConfigDef() {
+    SourceCommonConfig.SourceCommonConfigDef result =
+        new SourceCommonConfig.SourceCommonConfigDef();
+    Map<String, ConfigDef.ConfigKey> keys = SourceConnectorConfig.configDef().configKeys();
+    result.define(keys.get(SourceConnectorConfig.VALUE_CONVERTER_CLASS_CONFIG));
+    return result;
+  }
+
   @Override
   protected CsvExtractor setupExtractor(CompressionType compressionType) {
     Map<String, String> props = new HashMap<>();
     ConnectorCommonConfigFragment.setter(props).compressionType(compressionType);
-    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
+    CommonConfigFragment.setter(props)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter");
 
-    SourceCommonConfig sourceCommonConfig =
-        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(createTestingConfigDef(), props);
 
     return new CsvExtractor(sourceCommonConfig);
   }
@@ -109,9 +120,9 @@ final class CsvExtractorTest extends IORecordExtractorTest {
   void noHeaderTest() throws Exception {
     Map<String, String> props = new HashMap<>();
     SourceConfigFragment.setter(props).csvExtractorHeadersEnabled(false);
-    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
-    SourceCommonConfig sourceCommonConfig =
-        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    CommonConfigFragment.setter(props)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter");
+    SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(createTestingConfigDef(), props);
     extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem = CsvTestDataFixture.generateCsvRecord(1, "hi");
     final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
@@ -134,9 +145,9 @@ final class CsvExtractorTest extends IORecordExtractorTest {
   void shortRowTest() {
     Map<String, String> props = new HashMap<>();
     SourceConfigFragment.setter(props).csvExtractorHeadersEnabled(false);
-    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
-    SourceCommonConfig sourceCommonConfig =
-        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    CommonConfigFragment.setter(props)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter");
+    SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(createTestingConfigDef(), props);
     extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem = CsvTestDataFixture.generateCsvRecord(1, "hi") + "\n2,bye";
     final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
@@ -168,9 +179,9 @@ final class CsvExtractorTest extends IORecordExtractorTest {
   void longRowTest() throws Exception {
     Map<String, String> props = new HashMap<>();
     SourceConfigFragment.setter(props).csvExtractorHeadersEnabled(false);
-    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
-    SourceCommonConfig sourceCommonConfig =
-        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    CommonConfigFragment.setter(props)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter");
+    SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(createTestingConfigDef(), props);
     extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
         CsvTestDataFixture.generateCsvRecord(1, "hi")
@@ -200,9 +211,9 @@ final class CsvExtractorTest extends IORecordExtractorTest {
   void longRowWithHeadersTest() throws Exception {
     Map<String, String> props = new HashMap<>();
     SourceConfigFragment.setter(props).csvExtractorHeadersEnabled(true);
-    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
-    SourceCommonConfig sourceCommonConfig =
-        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    CommonConfigFragment.setter(props)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter");
+    SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(createTestingConfigDef(), props);
     extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
         MSG_HEADER
@@ -234,10 +245,9 @@ final class CsvExtractorTest extends IORecordExtractorTest {
   void tooManyHeadersTest() throws Exception {
     Map<String, String> props = new HashMap<>();
     SourceConfigFragment.setter(props).csvExtractorHeaders("one, two, three, four");
-
-    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
-    SourceCommonConfig sourceCommonConfig =
-        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    CommonConfigFragment.setter(props)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter");
+    SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(createTestingConfigDef(), props);
     extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem = CsvTestDataFixture.generateCsvRecords(1);
     final EvolvingSourceRecord sourceRecord = createEvolvingSourceRecord(nativeItem);
@@ -263,10 +273,9 @@ final class CsvExtractorTest extends IORecordExtractorTest {
   void tooFewHeadersTest() throws Exception {
     Map<String, String> props = new HashMap<>();
     SourceConfigFragment.setter(props).csvExtractorHeaders("one, two");
-
-    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
-    SourceCommonConfig sourceCommonConfig =
-        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    CommonConfigFragment.setter(props)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter");
+    SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(createTestingConfigDef(), props);
     extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
         CsvTestDataFixture.generateCsvRecords(1)
@@ -304,10 +313,9 @@ final class CsvExtractorTest extends IORecordExtractorTest {
     SourceConfigFragment.setter(props)
         .csvExtractorHeaders("one, two, three, four")
         .csvExtractorHeadersEnabled(false);
-
-    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
-    SourceCommonConfig sourceCommonConfig =
-        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    CommonConfigFragment.setter(props)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter");
+    SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(createTestingConfigDef(), props);
     extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
         CsvTestDataFixture.generateCsvRecord(0, CsvTestDataFixture.TEST_MESSAGE);
@@ -336,10 +344,9 @@ final class CsvExtractorTest extends IORecordExtractorTest {
     SourceConfigFragment.setter(props)
         .csvExtractorHeaders("one, two")
         .csvExtractorHeadersEnabled(false);
-
-    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
-    SourceCommonConfig sourceCommonConfig =
-        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    CommonConfigFragment.setter(props)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter");
+    SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(createTestingConfigDef(), props);
     extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
         CsvTestDataFixture.generateCsvRecord(0, CsvTestDataFixture.TEST_MESSAGE)
@@ -375,9 +382,9 @@ final class CsvExtractorTest extends IORecordExtractorTest {
   @Test
   void multipleCSVFilesParsedTest() {
     Map<String, String> props = new HashMap<>();
-    props.put("value.converter", "org.apache.kafka.connect.storage.StringConverter");
-    SourceCommonConfig sourceCommonConfig =
-        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    CommonConfigFragment.setter(props)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter");
+    SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(createTestingConfigDef(), props);
     extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItemOne =
         CsvTestDataFixture.generateCsvRecords(0, 1, CsvTestDataFixture.TEST_MESSAGE, MSG_HEADER);
@@ -409,9 +416,9 @@ final class CsvExtractorTest extends IORecordExtractorTest {
   void readJsonDataFromConverter() throws IOException {
     Map<String, String> props = new HashMap<>();
     SourceConfigFragment.setter(props).csvExtractorHeadersEnabled(false);
-    props.put("value.converter", "org.apache.kafka.connect.json.JsonConverter");
-    SourceCommonConfig sourceCommonConfig =
-        new SourceCommonConfig(new SourceCommonConfig.SourceCommonConfigDef(), props);
+    CommonConfigFragment.setter(props)
+        .valueConverter("org.apache.kafka.connect.json.JsonConverter");
+    SourceCommonConfig sourceCommonConfig = new SourceCommonConfig(createTestingConfigDef(), props);
     extractor = new CsvExtractor(sourceCommonConfig);
     final String nativeItem =
         CsvTestDataFixture.generateCsvRecord(1, "hi")

@@ -18,6 +18,7 @@
 */
 package io.aiven.commons.kafka.connector.source.extractor;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import io.aiven.commons.kafka.config.ConverterType;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
@@ -38,7 +39,6 @@ import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

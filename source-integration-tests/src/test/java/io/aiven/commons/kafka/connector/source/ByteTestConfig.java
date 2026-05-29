@@ -2,7 +2,7 @@ package io.aiven.commons.kafka.connector.source;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigFragment;
+import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.extractor.ByteArrayExtractor;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
@@ -14,8 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import org.apache.kafka.connect.converters.ByteArrayConverter;
-import org.apache.kafka.connect.storage.StringConverter;
 
 /**
  * An example of a TestConfig for the example code. This particular test is sending the data as
@@ -45,9 +43,9 @@ public class ByteTestConfig extends TestConfig {
   public Map<String, String> consumerConfiguration() {
     Map<String, String> workerOverrides = new HashMap<>();
     workerOverrides.put("example.dir", storage.getTestDir().toString());
-    return ConnectorCommonConfigFragment.setter(workerOverrides)
-        .keyConverter(StringConverter.class)
-        .valueConverter(ByteArrayConverter.class)
+    return CommonConfigFragment.setter(workerOverrides)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter")
+        .keyConverter("org.apache.kafka.connect.converters.ByteArrayConverter")
         .data();
   }
 
@@ -69,9 +67,9 @@ public class ByteTestConfig extends TestConfig {
     // list the temp directory to read/write.
     config.put("example.dir", storage.getTestDir().toString());
     // set the key converter as a string and the value as a byte.
-    ConnectorCommonConfigFragment.setter(config)
-        .keyConverter(StringConverter.class)
-        .valueConverter(ByteArrayConverter.class);
+    CommonConfigFragment.setter(config)
+        .valueConverter("org.apache.kafka.connect.storage.StringConverter")
+        .keyConverter("org.apache.kafka.connect.converters.ByteArrayConverter");
     // use object hash distribution and the ByteArray extractor.
     SourceConfigFragment.setter(config)
         .distributionType(DistributionType.OBJECT_HASH)
