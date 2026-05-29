@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import org.apache.kafka.connect.converters.ByteArrayConverter;
+import org.apache.kafka.connect.storage.StringConverter;
 
 /**
  * An example of a TestConfig for the example code. This particular test is sending the data as
@@ -44,8 +46,8 @@ public class ByteTestConfig extends TestConfig {
     Map<String, String> workerOverrides = new HashMap<>();
     workerOverrides.put("example.dir", storage.getTestDir().toString());
     return CommonConfigFragment.setter(workerOverrides)
-        .valueConverter("org.apache.kafka.connect.storage.StringConverter")
-        .keyConverter("org.apache.kafka.connect.converters.ByteArrayConverter")
+        .keyConverter(StringConverter.class.getName())
+        .valueConverter(ByteArrayConverter.class.getName())
         .data();
   }
 
@@ -68,8 +70,8 @@ public class ByteTestConfig extends TestConfig {
     config.put("example.dir", storage.getTestDir().toString());
     // set the key converter as a string and the value as a byte.
     CommonConfigFragment.setter(config)
-        .valueConverter("org.apache.kafka.connect.storage.StringConverter")
-        .keyConverter("org.apache.kafka.connect.converters.ByteArrayConverter");
+        .valueConverter(ByteArrayConverter.class.getName())
+        .keyConverter(StringConverter.class.getName());
     // use object hash distribution and the ByteArray extractor.
     SourceConfigFragment.setter(config)
         .distributionType(DistributionType.OBJECT_HASH)

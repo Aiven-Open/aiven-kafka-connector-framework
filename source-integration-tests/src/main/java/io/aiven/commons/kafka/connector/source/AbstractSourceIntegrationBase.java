@@ -144,7 +144,7 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N>
     Map<String, String> props = getSourceStorage().createConnectorConfig();
     CommonConfigFragment.setter(props).maxTasks(1);
     props.put(
-        SourceConnectorConfig.VALUE_CONVERTER_CLASS_CONFIG,
+        SourceConnectorConfig.CONNECTOR_CLASS_CONFIG,
         getSourceStorage().getConnectorClass().getName());
     props.put(SourceConnectorConfig.NAME_CONFIG, getConnectorName());
     return props;
