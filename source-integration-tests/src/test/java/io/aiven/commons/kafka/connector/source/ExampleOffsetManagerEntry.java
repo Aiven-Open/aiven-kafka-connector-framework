@@ -54,7 +54,7 @@ public class ExampleOffsetManagerEntry
   /**
    * A constructor.
    *
-   * @param properties THe data map to use.
+   * @param properties The data map to use.
    */
   public ExampleOffsetManagerEntry(final Map<String, Object> properties) {
     this();

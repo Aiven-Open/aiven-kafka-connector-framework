@@ -518,9 +518,9 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N>
                 record.value(),
                 new TypeReference<>() { // NOPMD
                 });
-        // the key has the format
-        // key[0] = connector name
-        // key[1] = Map<String, Object> partition map.
+        // the key components are
+        // key[0] is the connector name
+        // key[1] is the partition map. A Map<String, Object>
         final List<Object> key =
             objectMapper.readValue(
                 record.key(),

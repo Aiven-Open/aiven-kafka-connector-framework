@@ -22,13 +22,13 @@ This document describes how to build a source connector using this framework.  T
 
 ## High level overview
 
-The source connector sits between the Kafka environment on one side and the data storage on the other.  It must deal with the potential impedance mismatch between the two. To do this the source connector creates a queue of records that are available to send to Kafka and sends them when Kafka polls. The storage layer simply provides an iterator over the currently available data keys and the framework works through the iterator to retrieve the data and create Kafka records that it will send when Kafka polls. If the backend has more data than Kafka is ready for the framework pauses until there is space in the queue again.  If the backend has no data to send it returns an empty iterator and the framework will delay and request again later.
+The source connector sits between the Kafka environment on one side and the data source on the other.  It must deal with the potential impedance mismatch between the two. To do this the source connector creates a queue of records that are available to send to Kafka and sends them when Kafka polls. The data source layer simply provides an iterator over the currently available data keys and the framework works through the iterator to retrieve the data and create Kafka records that it will send when Kafka polls. If the backend has more data than Kafka is ready for the framework pauses until there is space in the queue again.  If the backend has no data to send it returns an empty iterator and the framework will delay and request again later.
 
 In addition, Kafka records when it completed the ingestion of the records sent by the framework. The framework can then track which records have been sent and ensure that it requests records after a specific point. If the connector is stopped and restarted it will start by requesting the data after the last confirmed record.
 
 ## Thinking about the solution
 
-The connector implementation should concentrate on extracting data from the data source and creating a format for Kafka.
+The connector implementation should concentrate on two things: extracting data from the data source and creating a format for Kafka, and what data to track to establish what data have already been processed.
 
 ### Extracting data from the data source.
 
@@ -43,7 +43,7 @@ The framework expects that:
 
 The first step is to implement a `AbstractSourceNativeInfo`.  There is a Java record defined in the common module called `NativeInfo`, this record links the `native key` and `native object` together in one object while providing an implementation of comparable that delegates to the `native key`.  The `AbstractSourceNativeInfo` uses the `NativeInfo` and provides methods to convert the `native key` to a string, get the `native object` data as an InputStream and estimate the size of that input stream.  In some cases the `native object` may not have the concept of an input stream. In this case see the special case below.
 
-The second step is to design the `OffsetManagerData` and `OffsetManagerKey`, these interfaces are defined in the `OffsetManager` class.  The `OffsetManager` tracks what `native object`s the connector has already processed.  It does this by using a Kafka provides data stream.  Each `native object` will produce at least one Kafka SourceRecord, the OffsetManager will track the SourceRecord using the OffsetManagerKey.  In most cases the OffsetManagerKey can simply be the string representation of the `native key`.  The `OffsetManagerData` should contain other information necessary to retrieve the `native object`. 
+The second step is to design the `OffsetManagerData` and `OffsetManagerKey`, these interfaces are defined in the `OffsetManager` class.  The `OffsetManager` tracks what `native object`s the connector has already processed.  It does this by using a Kafka provides data stream.  Each `native object` will produce at least one Kafka SourceRecord, the OffsetManager will track the SourceRecord using the OffsetManagerKey.  In most cases the OffsetManagerKey can simply be the string representation of the `native key`.  The `OffsetManagerData` should contain other information necessary to filter data from the `native object`. 
 
  - The `OffsetManagerKey` must uniquely identify the `native key`.  It is called the `partitionMap` in the Kafka documentation.  Its data is stored in a Map with String keys and Object values.  The Objects are limited to the Objects that are natively supported by Kafka: String, Integer, Long.
  - The `OffsetManagerData` provides additional data associated with the `OffsetManagerKey`.  This can be any data that may be necessary to reset the data source to a state where the `native key` can be retrieved.
@@ -99,13 +99,18 @@ The `EvolvingSourceReocrdIterator` determines if it has data by :
 2. If the `outer iterator` does not have data then the `inner iterator` is checked.  If the `inner iterator` has data then an `EvolvingSourceRecord` is retrieved and the `outer iterator` refreshed.  The `EvolvingSourceRecordIterator` then returns the result of the `outer iterator` has next call.
 3. if the `inner iterator` does not have data then the `inner iterator` is refreshed via a call to the `NativeSourceData.getNativeItemIterator()`.  The `outer iterator` is refreshed and the result of the `outer iteator` has next call is returned.
 
+### What data to track to establish what data have already been processed
+
+As noted above the `OffsetManager` stores data about records that have been processed from the data source.  One of the requirements is that the `native key` be encoded into the `OffsetManagerKey`.  In addition, the framework tracks the number of Kafka SourceRecords that have been extracted from each `native key`.  However, in some cases, there may be a need for other data.  For example, if a data source, does not guarantee that the data will always be the same then the time of last update may need to be included in the `OffsetManagerEntry`.  This is discussed below in the Special Cases section.  However, the implementer should consider what extra data may be necessary to identify the records that have been processed and account for them in the `OffsetManagerEntry`.  The framework ensures that the `OffsetManagerEntry` always has a count of the number of Kafka SourceRecords that have been extracted from the `native object`, this is called the "record count".
+
+When Kafka accepts data from Kafka Connect it writes to a Kafka offset topic.  The keys for that topic are defined by the `OffsetManagerKey` and hte data by the `OffsetManagerEntry`. Whe the framework receives a candidate `native key` from the data source, it converts the `native key` into the `OffsetManagerKey` and queries the Kafka offset topic for a matching record.  The Kafka offset topic will return the latest update based on the key.  If there is an entry the framework uses the result to initialize the `OffsetManagerEntry`.  If there is not an entry, the entry will be initialized with a record count of zero.
 
 ### How the pieces fit together.
 
 The `AbstractSourceTask` handles requests from Kafka for data.  It uses an internal queue and an Iterator of Kafka SourceRecords to do this.
 
-The Iterator of Kafka SourceRecords is built by retrieving the EvolvingSourceIterator from the `AbstractSourceTask` and modifying it as an [ExtendedIterator]([Aiven Common Utils ExtendedIterator](https://aiven-open.github.io/common-util/apidocs/io.aiven.commons.util/io/aiven/commons/util/collections/ExtendedIterator.html) ) by:
-1. Applying the `lastEvolution()` transformation to it.  This allows the SourceTask to make any last minute modifications to or data extractions from the final record.  
+The Iterator of Kafka SourceRecords is built by retrieving the `EvolvingSourceIterator` from the `AbstractSourceTask` and modifying it as an [ExtendedIterator]([Aiven Common Utils ExtendedIterator](https://aiven-open.github.io/common-util/apidocs/io.aiven.commons.util/io/aiven/commons/util/collections/ExtendedIterator.html) ) by:
+1. Applying the `lastEvolution()` transformation to it.  This allows the SourceTask to make any last minute modifications to or data extractions from the final record.  These modification may include changes to the `OffsetManagerEntry`.  Changes to the `OffsetMangerKey` are discouraged as they will cause subsequent `OffsetManager` lookups to fail.   
 2. Mapping the `EvolvingSourceRecord` to a Kafka SourceRecord by calling `EvolvingSourceRecord.getSourceRecord()`.
 
 The queue is populated by a polling thread that continually calling iterator of Kafka SourceRecords `hasNext()` method, if there is a next record it is retrieved and added to the queue.  If not, the thread delays for awhile and checks again.  The delay periods are configurable.

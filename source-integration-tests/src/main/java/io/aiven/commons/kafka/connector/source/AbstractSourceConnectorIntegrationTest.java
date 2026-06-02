@@ -137,8 +137,6 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
     CommonConfigFragment.setter(config).maxTasks(1);
     SourceConfigFragment.setter(config).targetTopic(topic);
 
-    LOGGER.info("{}", config);
-
     kafkaManager.configureConnector(getTopic(), config);
 
     List<SourceStorage.TestData> testData = testConfig.getTestData(5);

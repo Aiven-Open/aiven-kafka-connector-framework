@@ -74,15 +74,15 @@ AbstractSourceIntegrationBase.MessageConsumer messageConsumer,
         };
 
     // read the messages via the message consumer.  In this case we are consumingByteMessages 
-    // so we just read them in other cases we might be reading String, JSON or Avro objects 
+    // so we just read them.  In other cases we might be reading String, JSON or Avro objects 
     // so we could just read those types.  If the test requires other information from the Kafka 
-    // SourceRecord then source records could be read.
+    // SourceRecord, then source records could be read.
     List<byte[]> records = messageConsumer.consumeByteMessages(topic, testData.size(), timeout);
     assertThat(records).allMatch(p);
 }
 ````
 
-The `consumeMessages()` method allows different `TestConfig` implementations to test different output based on the connector configuration. 
+The `consumeMessages()` method allows different `TestConfig` implementations to test different output based on the connector configuration.  These options allow the developer to test with different combination of key and value types with the various transformers.
 
 
 ## Tests that do not require Kafka
