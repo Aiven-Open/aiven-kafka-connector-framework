@@ -52,9 +52,10 @@ final class CsvExtractorTest extends IORecordExtractorTest {
   private CsvExtractor extractor;
 
   /**
-   * Creates a configDef that contains the necessary configuration options that are normally
-   * added during the Kafka process without including all the ones that are not necessary for testing
-   * the CveExtractor.
+   * Creates a configDef that contains the necessary configuration options that are normally added
+   * during the Kafka process without including all the ones that are not necessary for testing the
+   * CveExtractor.
+   *
    * @return A configdef with the minimal definition.
    */
   private SourceCommonConfig.SourceCommonConfigDef createTestingConfigDef() {
