@@ -24,7 +24,7 @@ This document describes how to build a source connector using this framework.  T
 
 The source connector sits between the Kafka environment on one side and the data storage on the other.  It must deal with the potential impedance mismatch between the two. To do this the source connector creates a queue of records that are available to send to Kafka and sends them when Kafka polls. The storage layer simply provides an iterator over the currently available data keys and the framework works through the iterator to retrieve the data and create Kafka records that it will send when Kafka polls. If the backend has more data than Kafka is ready for the framework pauses until there is space in the queue again.  If the backend has no data to send it returns an empty iterator and the framework will delay and request again later.
 
-In addition, Kafka records when it completed the ingestion of the records send by the framework. The framework can then track which records have been send and ensure that it requests records after a specific point. If the connector is stopped and restarted it will start by requesting the data after the last confirmed record.
+In addition, Kafka records when it completed the ingestion of the records sent by the framework. The framework can then track which records have been sent and ensure that it requests records after a specific point. If the connector is stopped and restarted it will start by requesting the data after the last confirmed record.
 
 ## Thinking about the solution
 
@@ -97,7 +97,7 @@ The net result is that the `outer iterator` returns one `EvolvingSourceRecord` f
 The `EvolvingSourceReocrdIterator` determines if it has data by :
 1. Checking the outer iterator.  If the `outer iterator` has data the `EvolvingSourceRecordIterator` has data.  
 2. If the `outer iterator` does not have data then the `inner iterator` is checked.  If the `inner iterator` has data then an `EvolvingSourceRecord` is retrieved and the `outer iterator` refreshed.  The `EvolvingSourceRecordIterator` then returns the result of the `outer iterator` has next call.
-3. if the `inner iterator` does not have data then the `inner iterator` is refreshed via a call to the `NativeSourceData.getNativeItemIterator()`.  The `outer iterator` is refreshed adn the result of the `outer iteator` has next call is returned.
+3. if the `inner iterator` does not have data then the `inner iterator` is refreshed via a call to the `NativeSourceData.getNativeItemIterator()`.  The `outer iterator` is refreshed and the result of the `outer iteator` has next call is returned.
 
 
 ### How the pieces fit together.

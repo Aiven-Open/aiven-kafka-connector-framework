@@ -133,7 +133,6 @@ public abstract class AbstractSourceConnectorIntegrationTest<K extends Comparabl
     KafkaManager kafkaManager = setupKafka(testConfig.consumerConfiguration());
     kafkaManager.createTopic(topic);
 
-    // Map<String, String> config = getSourceStorage().createConnectorConfig();
     Map<String, String> config = testConfig.consumerConfiguration();
     CommonConfigFragment.setter(config).maxTasks(1);
     SourceConfigFragment.setter(config).targetTopic(topic);
