@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ *     SPDX-License-Identifier: Apache-2.0
  */
 
 package io.aiven.commons.kafka.connector.source;
@@ -54,7 +56,12 @@ public class ExampleOffsetManagerEntry
   /**
    * A constructor.
    *
+   * This constructor is primarily used by the {@link ExampleNativeSourceData} to construct the entry when
+   * the OffsetManager determines that the native object has been seen before.
+   *
    * @param properties The data map to use.
+   * @see <a href="http://aiven-open.github.io/aiven-kafka-connector-framework/source/howto.html">Howto Build A Source Connector</a>
+   * for a discussion of OFfsetManagerEntry construction and usage.
    */
   public ExampleOffsetManagerEntry(final Map<String, Object> properties) {
     this();
