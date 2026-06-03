@@ -18,7 +18,7 @@
 -->
 # Howto Build A Source Connector
 
-This document describes how to build a source connector using this framework.  There is a complete simple example in the [source integration tests testing code](https://github.com/Aiven-Open/aiven-kafka-connector-framework/tree/main/source-integration-tests/src/test/java/io/aiven/commons/kafka/connector/source) and a [list of known implementations](../implementations.html). 
+This document describes how to build a source connector using this framework.  There is a complete simple example in the [source integration tests testing code](https://github.com/Aiven-Open/aiven-kafka-connector-framework/tree/main/source-integration-tests/src/test/java/io/aiven/commons/kafka/connector/source) and a [list of known implementations](../implementations.html).
 
 ## High level overview
 

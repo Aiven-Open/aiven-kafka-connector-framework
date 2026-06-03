@@ -22,7 +22,7 @@ The list below are connectors that use this framework.  If you have a connector 
 
 ##  Framework Example Code
 
-URL: https://github.com/Aiven-Open/aiven-kafka-connector-framework/tree/main/add-source-connector-integration-test/source-integration-tests/src/test/java/io/aiven/commons/kafka/connector/source
+URL: https://github.com/Aiven-Open/aiven-kafka-connector-framework/tree/main/source-integration-tests/src/test/java/io/aiven/commons/kafka/connector/source
 
 A dummy implementation of the Framework used to test the integration tests for the framework.
 
