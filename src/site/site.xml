@@ -57,6 +57,7 @@
         <menu name="Overview" inherit="bottom" inheritAsRef="true">
             <item name="Introduction" href="/index.html"/>
             <item name="Architecture" href="./Architecture.html"/>
+            <item name="List of known implementations" href="./source/implementaitons.html" />
             <item name="Change Log" href="./CHANGE_LOG.html" />
             <item name="Javadocs" href="./apidocs/index.html" />
         </menu>
