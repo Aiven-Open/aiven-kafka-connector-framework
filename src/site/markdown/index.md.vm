@@ -14,7 +14,7 @@
     specific language governing permissions and limitations
     under the License.
 
-    SPDX-License-Identifier: Apache-2
+    SPDX-License-Identifier: Apache-2.0
 -->
 
 ${project.name}
@@ -31,8 +31,9 @@ Versions
 Overview
 ========
 
-${project.name} is a collection of utilities and interfaces to simplify the building and homogenization
-of sink and source connector pairs thereby making the development of source and sink connectors faster.  Using the framework the developer only needs to worry about how to talk to the source or sink storage engine.  The rest of the flow is handled by the framework.  See the (architecture)[./Architecture.html] document for a detailed description of how the framework is designed.
+${project.name} is a collection of utilities and interfaces to simplify the building and homogenization of sink and source connector pairs thereby making the development of source and sink connectors faster.  Using the framework the developer only needs to worry about how to talk to the source or sink storage engine.  The rest of the flow is handled by the framework.  See the [architecture](./Architecture.html) document for a detailed description of how the framework is designed.
+
+There is an integration test framework to validata that connectors that are built with this framework function correctly.
 
 Features
 ============

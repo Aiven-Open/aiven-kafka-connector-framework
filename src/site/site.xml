@@ -20,38 +20,85 @@
 <site xmlns="http://maven.apache.org/SITE/2.0.0"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 https://maven.apache.org/xsd/site-2.0.0.xsd"
-      name="Aiven Common Utilities">
+      name="Aiven framework for connectors on Apache Kafka">
 
+    <bannerLeft name="Aiven framework for connectors on Apache Kafka" href="https://github.com/aiven-open/aiven-kafka-connector-framework" >
+        <image src="https://aiven.io/assets/img/aiven-logo.png"/>
+    </bannerLeft>
 
     <poweredBy>
         <logo name="Aiven" href="https://aiven.io/">
-            <image src="https://aiven.io/remix-assets/logo-aiven-DLhBz3IO.svg"/>
+            <image src="https://aiven.io/assets/img/aiven-logo.png"/>
+        </logo>
+        <logo name="Apache Kafka" href="https://kafka.apache.org/">
+            <image src="https://apache.org/logos/res/kafka/kafka.png"/>
         </logo>
     </poweredBy>
+
     <body>
-        <menu name="Overview">
+        <head>
+            <![CDATA[
+                <link rel="icon" type="image/x-icon" href="https://aiven.io/favicon.ico">
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        document.querySelectorAll('a.builtBy').forEach(function (link) {
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                        });
+                    });
+                </script>
+            ]]>
+        </head>
+
+        <breadcrumbs>
+            <item name="Home" href="./index.html" />
+        </breadcrumbs>
+
+        <menu name="Overview" inherit="bottom" inheritAsRef="true">
             <item name="Introduction" href="/index.html"/>
             <item name="Architecture" href="./Architecture.html"/>
-            <item name="Configuration Framework" href ="./ConfigurationFramework.html"/>
-            <item name="How to implement a Source" href="./source.html" />
+            <item name="List of known implementations" href="./source/implementaitons.html" />
+            <item name="Change Log" href="./CHANGE_LOG.html" />
+            <item name="Javadocs" href="./apidocs/index.html" />
         </menu>
 
-        <menu name="Get Involved">
+        <menu name="Common" inherit="bottom" inheritAsRef="true">
+            <item name="Configuration Framework" href ="./ConfigurationFramework.html"/>
+            <item name="Common Configuration Contributed Options" href="./common/localConfiguration.html"/>
+        </menu>
+
+        <menu name="Common Integration Testing" inherit="bottom" inheritAsRef="true">
+            <item name="Javadocs" href="./framework-for-connectors-common-integration-tests/apidocs/index.html"/>
+        </menu>
+
+        <menu name="Source" inherit="bottom" inheritAsRef="true">
+            <item name="Architecture" href="source/architecture.html"/>
+            <item name="Howto Build a Source Connector" href="./source/howto.html"/>
+            <item name="Source Configuration Contributed Options" href="./source/localConfiguration.html"/>
+            <item name="Source Configuration Base Options" href="./source/configuration.html"/>
+        </menu>
+
+        <menu name="Source Integration Testing" inherit="bottom" inheritAsRef="true">
+            <item name="Howto Implement Source Integration Tests" href="./source-integration/howto.html"/>
+            <item name="Javadocs" href="./framework-for-connectors-source-integration-tests/apidocs/index.html"/>
+        </menu>
+
+        <menu name="Getting Involved" inherit="bottom" inheritAsRef="true">
             <item name="Code of Conduct" href="./CODE_OF_CONDUCT.html" />
             <item name="Contributing" href="./contributing.html" />
-            <item name="Change log" href="./CHANGE_LOG.html" />
             <item name="Security Policy" href="./SECURITY.html" />
         </menu>
 
         <menu ref="reports"/>
 
         <links>
-            <item name="Apache" href="http://www.apache.org"/>
+            <item name="Apache Software Foundation" href="http://www.apache.org"/>
         </links>
 
-        <footer>Copyright &amp;copy Aiven Oy. Licensed under the Apache License, Version 2.0.
-            Apache Commons Collection, Apache Commons Text, Apache Kafka, and Apache Velocity are trademarks of The Apache Software Foundation.
-            All other marks mentioned may be trademarks or registered trademarks of their respective owners.</footer>
+        <footer>Copyright &amp;copy Aiven Oy. Licensed under the Apache License, Version 2.0.<![CDATA[<br/>
+            Apache Commons Collection, Apache Commons Text, Apache Kafka, and Apache Velocity are trademarks of The Apache Software Foundation.<br/>
+            All other marks mentioned may be trademarks or registered trademarks of their respective owners.]]>
+        </footer>
 
     </body>
     <skin>

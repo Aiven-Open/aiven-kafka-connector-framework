@@ -23,6 +23,7 @@ import io.aiven.commons.kafka.connector.source.extractor.Extractor;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import java.util.List;
 import java.util.Map;
+import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigValue;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
 
@@ -143,6 +144,19 @@ public class SourceCommonConfig extends ConnectorCommonConfig {
    */
   public List<String> getCsvExtractorHeader() {
     return sourceConfigFragment.getCsvExtractorHeader();
+  }
+
+  /**
+   * Configuration definitions that are added by this SourceCommonConfig. This class contains the
+   * options that are defined within SourceCommonConfig and is suitable for generating
+   * documentation.
+   */
+  public static class Documentation extends ConfigDef {
+    /** constructor used by site generation. */
+    public Documentation() {
+      super();
+      SourceConfigFragment.update(this);
+    }
   }
 
   /** The common source configuration definition. */

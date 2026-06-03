@@ -61,7 +61,6 @@
     <dependency>
       <groupId>io.confluent</groupId>
       <artifactId>kafka-connect-avro-data</artifactId>
-      <version>${confluent.avro.data.aversion}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
@@ -108,6 +107,7 @@
       <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-config</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
@@ -128,6 +128,12 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>kafka-testkit</artifactId>
+      <version>${aiven.kafka.testkit.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -151,6 +157,42 @@
       <plugin>
         <groupId>org.sonatype.central</groupId>
         <artifactId>central-publishing-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <configuration>
+          <generateReports>true</generateReports>
+          <generateProjectInfo>false</generateProjectInfo>
+          <saveProcessedContent>true</saveProcessedContent>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>io.aiven.commons</groupId>
+            <artifactId>kafka-config</artifactId>
+            <version>${aiven.kafka.config.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-api</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-runtime</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
