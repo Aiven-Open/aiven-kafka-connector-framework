@@ -57,7 +57,7 @@ The concrete implementation provides an Iterator over the data keys in the stora
 
 The source connector sits between the Kafka environment on one side and the data storage on the other.  It must deal with the potential impedance mismatch between the two.  To do this the source connector creates a queue of records that are available to send to Kafka and sends them when Kafka polls.  The storage layer simply provides an iterator over the currently available data keys and the framework works through the iterator to retrieve the data and create Kafka records that it will send when Kafka polls.  If the backend has more data than Kafka is ready for the framework pauses until there is space in the queue again.  If the backend has no data to send it returns an empty iterator and the framework will delay and request again later.
 
-In addition, Kafka records when it completed the ingestion of the records send by the framework. The framework can then track which records have been send and ensure that it requests records after a specific point. If the connector is stopped and restarted it will start by requesting the data after the last confirmed record.
+In addition, Kafka records when it completed the ingestion of the records send by the framework. The framework can then track which records have been sent and ensure that it requests records after a specific point. If the connector is stopped and restarted it will start by requesting the data after the last confirmed record.
 
 ## Sink Architecture
 
@@ -74,9 +74,9 @@ This project will use the Maven framework.  The connector framework will compris
 
 Connectors that implement the connector framework are expected to use the same structure with commons providing common code for the implementation, like connecting to the storage engine, while the sink and source provide the concrete implementations to read and write the data. 
 
-### Github actions
+### GitHub actions
 
-The connector framework and the connectors will be released to the master maven repository via GitHub builds.  When a merge is accepted into the main branch on github a github action will commence a build with a SNAPSHOT release.  In this way chagnes to frameworks become available immediately.
+The connector framework and the connectors will be released to the master maven repository via GitHub builds.  When a merge is accepted into the main branch on github a github action will commence a build with a SNAPSHOT release.  In this way, changes to frameworks become available immediately.
 
 During a version release a a github action to perform a release from a newly created tag.  This release will not be a snapshot and will be staged on the Sonatype servers until released by a developer.
 
