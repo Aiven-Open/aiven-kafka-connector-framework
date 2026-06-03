@@ -20,7 +20,7 @@
 
 The list below are connectors that use this framework.  If you have a connector that uses this framework and you would like to be added to the list, please submit a PR with your project listed.
 
-##  Example Code
+##  Framework Example Code
 
 URL: https://github.com/Aiven-Open/aiven-kafka-connector-framework/tree/main/add-source-connector-integration-test/source-integration-tests/src/test/java/io/aiven/commons/kafka/connector/source
 
