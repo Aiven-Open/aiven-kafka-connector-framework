@@ -57,14 +57,14 @@
         <menu name="Overview" inherit="bottom" inheritAsRef="true">
             <item name="Introduction" href="/index.html"/>
             <item name="Architecture" href="./Architecture.html"/>
-            <item name="List of known implementations" href="./source/implementaitons.html" />
+            <item name="List of known implementations" href="./implementations.html" />
             <item name="Change Log" href="./CHANGE_LOG.html" />
             <item name="Javadocs" href="./apidocs/index.html" />
         </menu>
 
         <menu name="Common" inherit="bottom" inheritAsRef="true">
             <item name="Configuration Framework" href ="./ConfigurationFramework.html"/>
-            <item name="Common Configuration Contributed Options" href="./common/localConfiguration.html"/>
+<!--            <item name="Common Configuration Contributed Options" href="./common/localConfiguration.html"/>-->
         </menu>
 
         <menu name="Common Integration Testing" inherit="bottom" inheritAsRef="true">
@@ -74,8 +74,8 @@
         <menu name="Source" inherit="bottom" inheritAsRef="true">
             <item name="Architecture" href="source/architecture.html"/>
             <item name="Howto Build a Source Connector" href="./source/howto.html"/>
-            <item name="Source Configuration Contributed Options" href="./source/localConfiguration.html"/>
-            <item name="Source Configuration Base Options" href="./source/configuration.html"/>
+<!--            <item name="Source Configuration Contributed Options" href="./source/localConfiguration.html"/>-->
+<!--            <item name="Source Configuration Base Options" href="./source/configuration.html"/>-->
         </menu>
 
         <menu name="Source Integration Testing" inherit="bottom" inheritAsRef="true">

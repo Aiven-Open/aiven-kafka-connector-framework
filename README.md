@@ -27,11 +27,13 @@ of sink and source connector pairs.
 Overview
 ========
 
-Features
-============
+Significant documentation is available on our [documentation site](https://aiven-open.github.io/aiven-kafka-connector-frameowrk) or in the 
+site directory trees in the code base.
 
 Setup
 ============
+
+This is a Maven based project.  Checkout the code and run `mvn install` to initialize the entire codebase.
 
 License
 ============
