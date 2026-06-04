@@ -1,3 +1,28 @@
+## v0.3.0
+### What is changed
+ 
+ - Partial fix for #70
+ - Merge pull request #68 from Aiven-Open/add-source-connector-integration-test
+ - Merge pull request #69 from Aiven-Open/aindriu-aiven/csv-extractor-schema-fix
+ - Bump kafka-config from 0.1.0 to 0.2.0
+ - Update kafka-testkit to 0.1.0
+ - Update documentation
+ - Bump aiven-commons from 3 to 4
+ - initial integration tests
+ - Merge pull request #66 from Aiven-Open/Add-source-documentation
+ - fixed misnamed method in text
+ - fixed typography issues and add Extractor and circular buffer info 
+
+ 
+### Co-authored by
+ 
+ - Aindriu Lavelle
+ - Claude Warren
+ 
+ 
+### Full Changelog
+https://github.com/Aiven-Open/aiven-kafka-connector-framework/compare/v0.2.0...v0.3.0
+ 
 ## v0.2.0
 ### What is changed
  
