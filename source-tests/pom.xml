@@ -22,16 +22,16 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>framework-for-connectors</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.3.0</version>
   </parent>
 
   <artifactId>framework-for-source-connectors-tests</artifactId>
-  <version>0.3.0-SNAPSHOT</version>
+  <version>0.3.0</version>
   <name>Aiven source framework for connectors on Apache Kafka Tests</name>
   <description>A framework to make testing of source connectors easier.</description>
 
   <properties>
-    <latestRelease>none</latestRelease>
+    <latestRelease>0.3.0</latestRelease>
   </properties>
 
   <dependencies>
