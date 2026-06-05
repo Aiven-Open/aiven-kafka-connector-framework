@@ -42,6 +42,9 @@ import org.junit.jupiter.api.Test;
  */
 public abstract class IORecordExtractorTest extends IOExtractorTest {
 
+  /** Constructor. */
+  protected IORecordExtractorTest() {}
+
   /**
    * Get the string prefix for the data messages.
    *

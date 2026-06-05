@@ -27,11 +27,15 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+/** CSV Test data fixture */
 public class CsvTestDataFixture {
-
+  /** Default message prefix for generated messages */
   public static final String MESSAGE_PREFIX = "Hello, from CSV Test Data Fixture: ";
 
+  /** Default CSV headers. */
   public static final String MSG_HEADER = CSVFormat.RFC4180.format("id", "message", "value");
+
+  /** Default test message */
   public static final String TEST_MESSAGE = "test message";
 
   private CsvTestDataFixture() {
@@ -39,7 +43,9 @@ public class CsvTestDataFixture {
   }
 
   /**
-   * Generates a byte array containing the specified number of records.
+   * Generates a byte array containing the specified number of records. Generates {@code numRecs}
+   * records with IDs in the range @{code [0..numRecs)}, with {@link #TEST_MESSAGE} as the message
+   * text.
    *
    * @param numRecs the numer of records to generate
    * @return A byte array containing the specified number of records.
@@ -49,7 +55,9 @@ public class CsvTestDataFixture {
   }
 
   /**
-   * creates and serializes the specified number of records with the specified schema.
+   * Generates a byte array containing the specified number of records. Generates {@code numRecs}
+   * records with IDs in the range @{code [messageId..messageId+numRecs)}, with {@link
+   * #TEST_MESSAGE} as the message text.
    *
    * @param messageId the messageId to start with.
    * @param numOfRecs the number of records to write.
@@ -60,41 +68,51 @@ public class CsvTestDataFixture {
   }
 
   /**
-   * Creates the specified number of JSON records encoded into a string.
+   * /** Generates and serializes the specified number of records. Generates {@code numRecs} records
+   * with IDs in the range @{code [0..numRecs)}, with {@link #TEST_MESSAGE} as the message text.
    *
-   * @param recordCount the number of records to generate.
-   * @return The specified number of JSON records encoded into a string.
+   * @param numRecs the number of records to generate.
+   * @return The specified number of CSV records encoded into a string.
    */
-  public static String generateCsvRecords(final int recordCount) {
-    return generateCsvRecords(0, recordCount, TEST_MESSAGE);
+  public static String generateCsvRecords(final int numRecs) {
+    return generateCsvRecords(0, numRecs, TEST_MESSAGE);
   }
 
   /**
-   * Generates a single JSON record
+   * Generates a single CSV record with the format {@code messageId,msg,MESSAGE_PREFIX+messageId}.
    *
    * @param messageId the id for the record
    * @param msg the message for the record
-   * @return a standard JSON test record.
+   * @return a standard CSV test record.
    */
   public static String generateCsvRecord(final int messageId, final String msg) {
     return CSVFormat.RFC4180.format(messageId, msg, MESSAGE_PREFIX + messageId);
   }
 
   /**
-   * Creates Csv test data.
+   * Generates a multiple CSV records with the format {@code
+   * messageId,msg,MESSAGE_PREFIX+messageId}. Generates {@code numRecs} records with IDs in the
+   * range @{code [messageId..messageId+numRecs)}, with Records are concatenated into a string with
+   * each record separated by {@code \n}. The initial entry comprises the headers as specified in
+   * {@link #MSG_HEADER}
    *
-   * @param recordCount the number of records to create.
+   * @param messageId the message ID for the record.
+   * @param numRecs the number of records to create.
    * @param testMessage the message for the records.
    * @return the string representing the csv records.
    */
   public static String generateCsvRecords(
-      final int messageId, final int recordCount, final String testMessage) {
-    return generateCsvRecords(messageId, recordCount, testMessage, MSG_HEADER);
+      final int messageId, final int numRecs, final String testMessage) {
+    return generateCsvRecords(messageId, numRecs, testMessage, MSG_HEADER);
   }
 
   /**
-   * Creates Csv test data.
+   * Generates a multiple CSV records with the format {@code
+   * messageId,msg,MESSAGE_PREFIX+messageId}. Generates {@code numRecs} records with IDs in the
+   * range @{code [messageId..messageId+numRecs)}, with Records are concatenated into a string with
+   * each record separated by {@code \n}. The initial entry comprises the specified headers.
    *
+   * @param messageId the message ID for the record.
    * @param recordCount the number of records to create.
    * @param testMessage the message for the records.
    * @param headers the headers for the csv columns.
@@ -113,7 +131,7 @@ public class CsvTestDataFixture {
    * Reads a CSV record from the byte array.
    *
    * @param bytes the bytes to extract the record from.
-   * @return CsvNode read from the bytes.
+   * @return CSVRecord read from the bytes.
    * @throws IOException on IO error.
    */
   public static CSVRecord readCsvRecord(final byte[] bytes) throws IOException {
@@ -124,7 +142,7 @@ public class CsvTestDataFixture {
   }
 
   /**
-   * read multiple JSON records.
+   * Reads multiple CSV records.
    *
    * @param values The Strings containing the serialized CSV records.
    * @return a list of CsvRecords extracted from the values.
@@ -142,7 +160,7 @@ public class CsvTestDataFixture {
    * Reads a list of CsvRecords from an array of bytes. Reads the bytes line by line.
    *
    * @param bytes the serialized CSV records.
-   * @return a list of CsvRecords extracted from the values.
+   * @return a list of {@code CSVRecord}s extracted from the values.
    * @throws IOException on IO error.
    */
   public static List<CSVRecord> readCsvRecords(final byte[] bytes) throws IOException {

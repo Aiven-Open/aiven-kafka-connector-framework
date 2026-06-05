@@ -39,9 +39,13 @@ public abstract class IOExtractorTest {
   /** The extractor under test. */
   protected Extractor extractor;
 
+  /** Constructor. */
+  protected IOExtractorTest() {}
+
   /**
    * Setup the extractor for testing.
    *
+   * @param compressionType The compression type for the input stream.
    * @return a configured Extractor.
    */
   protected abstract Extractor setupExtractor(CompressionType compressionType);

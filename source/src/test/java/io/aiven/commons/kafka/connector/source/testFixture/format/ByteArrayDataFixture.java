@@ -18,7 +18,11 @@ package io.aiven.commons.kafka.connector.source.testFixture.format;
 import java.util.Arrays;
 
 /** The fixture to manipulate byte array data for tests. */
-public class ByteArrayDataFixture {
+public final class ByteArrayDataFixture {
+
+  private ByteArrayDataFixture() {
+    // do not instantiate.
+  }
 
   /**
    * Generates a byte array containing the specified number of bytes.

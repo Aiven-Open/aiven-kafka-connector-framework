@@ -32,23 +32,30 @@ import java.util.stream.Collectors;
 
 /** A testing fixture to generate/read JSON data. */
 public final class JsonTestDataFixture {
+  /** Default test message */
+  public static final String TEST_MESSAGE = "test message";
 
+  /** Default message prefix */
   public static final String MESSAGE_PREFIX = "Hello, from JSON Test Data Fixture: ";
 
+  /** Default message format */
   private static final String MSG_FORMAT =
       "{\"id\" : %s, \"message\" : \"%s\", \"value\" : \"%s\"}%n";
 
+  /** Default schema string */
   public static final String SCHEMA_JSON =
       "{\n  \"type\": \"struct\", \"name\": \"TestRecord\",\n "
           + "  \"fields\": [\n {\"field\": \"message\", \"type\": \"string\"},\n"
           + "    {\"field\": \"id\", \"type\": \"int32\"}\n  ]\n}";
 
+  /** Schema with extra data elements */
   public static final String CONNECT_EXTRA_SCHEMA_JSON =
       "{\n  \"type\": \"struct\",\n  \"name\": \"TestRecord\",\n"
           + "  \"fields\": [\n    {\"name\": \"message\", \"type\": \"string\"},\n"
           + "    {\"name\": \"id\", \"type\": \"int32\"}\n  ],\n"
           + "    \"connect.version\":1, \"connect.name\": \"TestRecord\"}\n";
 
+  /** The expected evolved schema */
   public static final String EVOLVED_SCHEMA_JSON =
       "{\n  \"type\": \"struct\",\n  \"name\": \"TestRecord\",\n"
           + "  \"fields\": [\n    {\"field\": \"message\", \"type\": \"string\"},\n"
@@ -73,43 +80,45 @@ public final class JsonTestDataFixture {
   }
 
   /**
-   * Generates a byte array containing the specified number of records.
+   * Generates and serializes the specified number of records. Records have IDs in the range @{code
+   * [0..numRecs)}, with {@link #TEST_MESSAGE} as the message text.
    *
    * @param numRecs the numer of records to generate
    * @return A byte array containing the specified number of records.
-   * @throws IOException if the JSON records can not be serialized.
    */
-  public static byte[] generateJsonData(final int numRecs) throws IOException {
+  public static byte[] generateJsonData(final int numRecs) {
     return generateJsonData(0, numRecs);
   }
 
   /**
-   * creates and serializes the specified number of records with the specified schema.
+   * Generates and serializes the specified number of records. Records have IDs in the range @{code
+   * [messageId..messageId+numRecs)}, with {@link #TEST_MESSAGE} as the message text.
    *
    * @param messageId the messageId to start with.
-   * @param numOfRecs the number of records to write.
+   * @param numRecs the number of records to write.
    * @return A byte array containing the specified number of records.
-   * @throws IOException if the Avro records can not be serialized.
    */
   @SuppressWarnings("PMD.DataflowAnomalyAnalysis")
-  public static byte[] generateJsonData(final int messageId, final int numOfRecs)
-      throws IOException {
-    return generateJsonRecords(messageId, numOfRecs, "test message")
-        .getBytes(StandardCharsets.UTF_8);
+  public static byte[] generateJsonData(final int messageId, final int numRecs) {
+    return generateJsonRecords(messageId, numRecs, TEST_MESSAGE).getBytes(StandardCharsets.UTF_8);
   }
 
   /**
-   * Creates the specified number of JSON records encoded into a string.
+   * Generates and serializes the specified number of records. Records have IDs in the range @{code
+   * [0..numRecs)}, with {@link #TEST_MESSAGE} as the message text. Records have the format
+   * specified by {@link #MSG_FORMAT}, and with the value set to {@link #MESSAGE_PREFIX} + {@code
+   * messageId}.
    *
-   * @param recordCount the number of records to generate.
-   * @return The specified number of JSON records encoded into a string.
+   * @param numRecs the number of records to generate.
+   * @return the String comprising the concatenated JSON records.
    */
-  public static String generateJsonRecords(final int recordCount) {
-    return generateJsonRecords(0, recordCount, "test message");
+  public static String generateJsonRecords(final int numRecs) {
+    return generateJsonRecords(0, numRecs, TEST_MESSAGE);
   }
 
   /**
-   * Generates a single JSON record
+   * Generates a single JSON record with the format specified by {@link #MSG_FORMAT}, and with the
+   * value set to {@link #MESSAGE_PREFIX} + {@code messageId}.
    *
    * @param messageId the id for the record
    * @param msg the message for the record
@@ -120,23 +129,27 @@ public final class JsonTestDataFixture {
   }
 
   /**
-   * Creates Json test data.
+   * Generates and serializes the specified number of records. Records have IDs in the range @{code
+   * [messageId..messageId+numRecs)}, with the specified as the message text. Records have the
+   * format specified by {@link #MSG_FORMAT}, and with the value set to {@link #MESSAGE_PREFIX} +
+   * {@code messageId}.
    *
-   * @param recordCount the number of records to create.
-   * @param testMessage the message for the records.
-   * @return
+   * @param messageId the messageId to start with.
+   * @param numRecs the number of records to write.
+   * @param msg the message for the records.
+   * @return the String comprising the concatenated JSON records.
    */
   public static String generateJsonRecords(
-      final int messageId, final int recordCount, final String testMessage) {
+      final int messageId, final int numRecs, final String msg) {
     final StringBuilder jsonRecords = new StringBuilder();
-    for (int i = 0; i < recordCount; i++) {
-      jsonRecords.append(generateJsonRecord(messageId + i, testMessage));
+    for (int i = 0; i < numRecs; i++) {
+      jsonRecords.append(generateJsonRecord(messageId + i, msg));
     }
     return jsonRecords.toString();
   }
 
   /**
-   * Reads a json record from the byte array.
+   * Reads a JsonNode from the byte array.
    *
    * @param bytes the bytes to extract the record from.
    * @return JsonNode read from the bytes.
@@ -147,10 +160,10 @@ public final class JsonTestDataFixture {
   }
 
   /**
-   * read multiple JSON records.
+   * Reads multiple JSON records.
    *
    * @param values The Strings containing the serialized JSON records.
-   * @return a list of JsonRecords extracted from the values.
+   * @return a list of JsonNodes extracted from the values.
    * @throws IOException on IO error.
    */
   public static List<JsonNode> readJsonRecords(final Collection<String> values) throws IOException {
@@ -162,10 +175,10 @@ public final class JsonTestDataFixture {
   }
 
   /**
-   * Reads a list of JsonRecords from an array of bytes. Reads the bytes line by line.
+   * Reads a list of JsonNode from an array of bytes. Reads the bytes line by line.
    *
-   * @param bytes the serialized json records.
-   * @return a list of JsonRecords extracted from the values.
+   * @param bytes the serialized JSON records.
+   * @return a list of JsonNodes extracted from the values.
    * @throws IOException on IO error.
    */
   public static List<JsonNode> readJsonRecords(final byte[] bytes) throws IOException {

@@ -20,12 +20,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+/** Test for ExtractorInfo functionality. */
 public class ExtractorInfoTest {
   private static int FEATURE1 = 1;
   private static int FEATURE2 = 1 << 1;
   private static int PRIVATE_FEATURE1 = 1 << (ExtractorInfo.PRIVATE_FEATURE_SHIFT + 0);
 
   private ExtractorInfo underTest;
+
+  ExtractorInfoTest() {}
 
   @ParameterizedTest
   @CsvSource({
@@ -40,7 +43,7 @@ public class ExtractorInfoTest {
     "private + 3, 16777219, true, true, true",
     "private + 4 , 16777220, false, false, true",
   })
-  public void anyFeatures(String name, int flag, boolean f1, boolean f2, boolean f3) {
+  void anyFeatures(String name, int flag, boolean f1, boolean f2, boolean f3) {
     underTest = new ExtractorInfo(name, Extractor.class, flag, "anyFeatures test");
     assertThat(underTest.anyFeatures(FEATURE1)).as("f1").isEqualTo(f1);
     assertThat(underTest.anyFeatures(FEATURE2)).as("f2").isEqualTo(f2);
@@ -70,7 +73,7 @@ public class ExtractorInfoTest {
     "private + 3, 16777219, true, true, true",
     "private + 4 , 16777220, false, false, true",
   })
-  public void allFeatures(String name, int flag, boolean f1, boolean f2, boolean f3) {
+  void allFeatures(String name, int flag, boolean f1, boolean f2, boolean f3) {
     underTest = new ExtractorInfo(name, Extractor.class, flag, "allFeatures test");
     assertThat(underTest.allFeatures(FEATURE1)).as("f1").isEqualTo(f1);
     assertThat(underTest.allFeatures(FEATURE2)).as("f2").isEqualTo(f2);
@@ -100,7 +103,7 @@ public class ExtractorInfoTest {
     "private, 16777219",
     "private, 16777220",
   })
-  public void noFeatures(String name, int flag) {
+  void noFeatures(String name, int flag) {
     underTest = new ExtractorInfo(name, Extractor.class, flag, "noFeatures test");
     assertThat(underTest.noFeatures()).isEqualTo(flag == 0);
   }

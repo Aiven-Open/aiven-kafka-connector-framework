@@ -30,9 +30,16 @@ import java.util.Optional;
  * An actual NativeSourceData implementation would use a NativeClient to retrieve the NativeItems.
  */
 public class ExampleNativeSourceData extends NativeSourceData<String> {
+  /** The native client to use */
+  private ExampleNativeClient client;
 
-  ExampleNativeClient client;
-
+  /**
+   * Constructor.
+   *
+   * @param sourceConfig the configuration.
+   * @param offsetManager the Kafka offset manager
+   * @throws IOException on IO Error.
+   */
   public ExampleNativeSourceData(
       final SourceCommonConfig sourceConfig, final OffsetManager offsetManager) throws IOException {
     super(sourceConfig, offsetManager);
