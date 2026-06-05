@@ -116,7 +116,8 @@ jobs:
           body_path: /tmp/release_body.txt
           files: | 
             common/target/*.jar
+            common-integration-tests/target/*.jar
             sink/target/*.jar
             source/target/*.jar
-
-
+            source-integration-tests/target/*.jar
+            source-tests/target/*.jar
