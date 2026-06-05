@@ -4,12 +4,12 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>framework-for-connectors</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.3.0</version>
   </parent>
 
   <artifactId>framework-for-connectors-common-integration-tests</artifactId>
 
-  <version>0.3.0-SNAPSHOT</version>
+  <version>0.3.0</version>
   <name>Connector framework common integration tests library</name>
   <description>Test classes for the connector framework common module.  The generated jar includes dependency information for testing reuse.</description>
   <dependencies>
