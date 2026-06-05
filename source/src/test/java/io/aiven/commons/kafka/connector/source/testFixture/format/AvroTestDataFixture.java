@@ -35,6 +35,7 @@ import org.apache.avro.io.DatumWriter;
 /** A testing fixture to generate/read Avro test data. */
 public final class AvroTestDataFixture {
 
+  /** The standard message prefix for generated message text */
   public static final String MESSAGE_PREFIX = "Hello, from Avro Test Data Fixture! object: ";
 
   /** The Json string used to create the {@link #DEFAULT_SCHEMA} */
@@ -129,6 +130,7 @@ public final class AvroTestDataFixture {
    * Creates the specified number of records with the default schema.
    *
    * @param numRecs the numer of records to generate
+   * @param recordCreator a Function to convert an integer into a Generic Record.
    * @return A byte array containing the specified number of records.
    */
   public static List<GenericRecord> generateAvroRecords(
@@ -153,6 +155,7 @@ public final class AvroTestDataFixture {
    *
    * @param messageId the messageId to start with.
    * @param numOfRecs the number of records to write.
+   * @param recordCreator a Function to convert an integer into a Generic Record.
    * @return A byte array containing the specified number of records.
    */
   @SuppressWarnings("PMD.DataflowAnomalyAnalysis")

@@ -31,8 +31,10 @@ import java.util.Map;
  */
 public class ExampleOffsetManagerEntry
     implements OffsetManager.OffsetManagerEntry, Comparable<ExampleOffsetManagerEntry> {
-  public Map<String, Object> data;
+  /** The data map for the entry. */
+  private Map<String, Object> data;
 
+  /** the record count */
   private int recordCount;
 
   private static final String KEY = "key";

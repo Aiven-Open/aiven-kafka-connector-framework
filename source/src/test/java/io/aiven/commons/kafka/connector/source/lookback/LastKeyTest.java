@@ -20,8 +20,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+/** Test for LastKey Lookback implementation */
 public class LastKeyTest extends AbstractLookbackTest {
   private LastKey<String> underTest;
+
+  LastKeyTest() {}
 
   @BeforeEach
   void setup() {

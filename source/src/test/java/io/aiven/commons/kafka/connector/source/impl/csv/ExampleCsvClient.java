@@ -34,9 +34,17 @@ import java.util.Map;
  * <p>In an actual implementation this would connect to the storage and retrieve data.
  */
 public class ExampleCsvClient {
-  public final Map<String, String> dataMap;
+  /** The list of CSV data by key. */
+  private final Map<String, String> dataMap;
+
+  /** The last key sent. */
   public String dataSent;
 
+  /**
+   * Creates an example client that returns records in 3 batches of 10 records.
+   *
+   * @throws IOException if data can not be constructed.
+   */
   public ExampleCsvClient() throws IOException {
     dataMap = new LinkedHashMap<>();
     dataMap.put("first 10", CsvTestDataFixture.generateCsvRecords(10));

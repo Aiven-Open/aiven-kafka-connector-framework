@@ -22,9 +22,15 @@ import java.util.List;
 import org.apache.commons.csv.CSVRecord;
 import org.junit.jupiter.api.Test;
 
+/** Test for CsvTestDataFixture */
 public class CsvTest {
+  /**
+   * Tests round trip CSV record generation and read result.
+   *
+   * @throws IOException on IO error.
+   */
   @Test
-  public void roundTripTest() throws IOException {
+  void roundTripTest() throws IOException {
     byte[] data = CsvTestDataFixture.generateCsvData(5);
     List<CSVRecord> lst = CsvTestDataFixture.readCsvRecords(data);
     assertThat(lst.size()).isEqualTo(5);

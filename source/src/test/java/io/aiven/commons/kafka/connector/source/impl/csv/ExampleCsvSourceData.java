@@ -29,9 +29,16 @@ import java.util.Optional;
 
 /** A simple String implementation would use a NativeClient to retrieve the NativeItems. */
 public class ExampleCsvSourceData extends NativeSourceData<String> {
+  /** The client we are talking to */
+  private ExampleCsvClient client;
 
-  ExampleCsvClient client;
-
+  /**
+   * Constructor. Constructs an {@link ExampleCsvClient} that contains the data.
+   *
+   * @param sourceConfig the Source configuration file.
+   * @param offsetManager the Offset manager from Kafka.
+   * @throws IOException on error.
+   */
   public ExampleCsvSourceData(
       final SourceCommonConfig sourceConfig, final OffsetManager offsetManager) throws IOException {
     super(sourceConfig, offsetManager);

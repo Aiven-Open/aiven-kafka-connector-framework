@@ -16,7 +16,10 @@
 
 package io.aiven.commons.kafka.connector.source.impl.nativeProvided;
 
+import io.aiven.commons.kafka.connector.source.AbstractSourceNativeInfo;
+import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.impl.ExampleNativeSourceData;
+import io.aiven.commons.kafka.connector.source.impl.ExampleSourceNativeInfo;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -28,18 +31,31 @@ import java.util.TreeMap;
  * <p>In an actual implementation this would connect to the storage and retrieve data.
  */
 public class ExampleNativeClient {
-  public static Map<String, ExampleNativeItem> dataMap = new TreeMap<>();
+  private static Map<String, ExampleNativeItem> dataMap = new TreeMap<>();
 
+  /** Constructor. */
   public ExampleNativeClient() {}
 
+  /** Clear the stored data. */
   public void clear() {
     dataMap.clear();
   }
 
+  /**
+   * Write data into the stored data.
+   *
+   * @param key the key for the data.
+   * @param data the data.
+   */
   public void write(String key, byte[] data) {
     dataMap.put(key, new ExampleNativeItem(key, data));
   }
 
+  /**
+   * List the objects in the stored data.
+   *
+   * @return the collection of data objects.
+   */
   public Collection<ExampleNativeItem> listObjects() {
     return dataMap.values();
   }
@@ -49,10 +65,11 @@ public class ExampleNativeClient {
    * or may retrieve a number of objects.
    *
    * @param offset This is the key value that was last read or null if there is no last read. It is
-   *     a String because the K in the {@code NativeSourceData<K,N,O,T>} as defined in {@link
+   *     a String because the K in the {@link NativeSourceData} as defined in {@link
    *     ExampleNativeSourceData} is a String
    * @return the list of native objects. This is a collection of ExampleNativeItem because that is
-   *     the type of the N in {@code NativeSourceData<K,N,O,T>}
+   *     the type of the N in {@link AbstractSourceNativeInfo} as defined in {@link
+   *     ExampleSourceNativeInfo}.
    */
   public Collection<ExampleNativeItem> listObjects(String offset) {
     System.out.format("Listobject offset %s%n", offset);

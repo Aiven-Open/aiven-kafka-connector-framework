@@ -25,9 +25,11 @@ import java.io.IOException;
 import java.util.Map;
 import org.apache.kafka.common.config.ConfigException;
 
+/** An example implementation of the Source task. */
 public class ExampleSourceTask extends AbstractSourceTask {
   private ExampleNativeSourceData nativeSourceData;
 
+  /** Constructor. */
   public ExampleSourceTask() {}
 
   @Override

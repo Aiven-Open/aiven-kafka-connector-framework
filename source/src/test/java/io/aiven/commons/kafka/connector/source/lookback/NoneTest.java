@@ -19,9 +19,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+/** Test for None Lookback implementation. */
 public class NoneTest extends AbstractLookbackTest {
 
   private final None<String> underTest = new None<>();
+
+  NoneTest() {}
 
   @Override
   @Test

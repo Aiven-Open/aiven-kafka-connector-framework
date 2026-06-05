@@ -21,6 +21,9 @@ import java.nio.ByteBuffer;
 /**
  * A "native" object for testing. In a real implementation this would be the object returned from
  * storage.
+ *
+ * @param key the key for this object.
+ * @param data the data for this object.
  */
 public record ExampleNativeItem(String key, ByteBuffer data) {
 

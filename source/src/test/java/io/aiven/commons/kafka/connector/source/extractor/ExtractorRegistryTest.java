@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+/** Test for ExtractorRegistry functionality. */
 public class ExtractorRegistryTest {
   private static int FEATURE1 = 1;
   private static int FEATURE2 = 1 << 1;
@@ -54,6 +55,8 @@ public class ExtractorRegistryTest {
   };
 
   private ExtractorRegistry underTest = ExtractorRegistry.builder().add(infos).build();
+
+  ExtractorRegistryTest() {}
 
   @Test
   void get() {

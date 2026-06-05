@@ -20,8 +20,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+/** Test for the Buffer Lookback implementation. */
 public class BufferTest extends AbstractLookbackTest {
   private Buffer<String> underTest;
+
+  /** Test the buffer implementation of Lookback. */
+  public BufferTest() {
+    super();
+  }
 
   @BeforeEach
   void setup() {

@@ -20,8 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
-public class DistributionTypeTest {
+/** Tests the DistributionType implementations. */
+public final class DistributionTypeTest {
 
+  /** Constructor. */
+  public DistributionTypeTest() {}
+
+  /** Test that the PARTITION predicate works as expected. */
   @Test
   void partitionTest() {
     Predicate<Context> predicate = DistributionType.PARTITION.asPredicate(2, 0);
@@ -33,6 +38,7 @@ public class DistributionTypeTest {
     assertThat(predicate.test(ctxt)).isTrue();
   }
 
+  /** Test that the OBJECT_HASH predicate works as expected. */
   @Test
   void hashTest() {
     // "The Key" has a hash code of 312633840

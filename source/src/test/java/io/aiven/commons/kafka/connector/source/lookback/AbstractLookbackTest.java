@@ -15,13 +15,21 @@
  */
 package io.aiven.commons.kafka.connector.source.lookback;
 
+/** Base class for Lookback test implementations. */
 public abstract class AbstractLookbackTest {
 
+  /** Constructor. */
+  protected AbstractLookbackTest() {}
+
+  /** Test that adding a key works as expected */
   abstract void addTest();
 
+  /** Test that getting a key works as expected. */
   abstract void getTest();
 
+  /** Test that contains() returns true at the appropriate times. */
   abstract void containsTest();
 
+  /** Test that size() returns the correct value. */
   abstract void sizeTest();
 }
