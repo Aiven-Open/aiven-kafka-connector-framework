@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>aiven-commons</artifactId>
-    <version>4</version>
+    <version>5-SNAPSHOT</version>
   </parent>
 
   <artifactId>framework-for-connectors</artifactId>
@@ -115,7 +115,6 @@ Sink module is removed until there is code
     <github.jsonschema.generator.version>4.38.0</github.jsonschema.generator.version>
     <hadoop.common.version>3.4.2</hadoop.common.version>
     <latestRelease>0.3.0</latestRelease>
-    <plugin.enforcer.version>3.6.2</plugin.enforcer.version>
   </properties>
 
   <dependencyManagement>
@@ -552,7 +551,6 @@ Sink module is removed until there is code
           <plugin>
             <groupId>org.sonatype.central</groupId>
             <artifactId>central-publishing-maven-plugin</artifactId>
-            <version>${plugin.sonatype}</version>
             <extensions>true</extensions>
             <configuration>
               <publishingServerId>central</publishingServerId>
@@ -562,7 +560,6 @@ Sink module is removed until there is code
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
-            <version>${plugin.enforcer.version}</version>
             <executions>
               <execution>
                 <id>enforce-versions</id>
@@ -593,7 +590,6 @@ Sink module is removed until there is code
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
-            <version>${plugin.enforcer.version}</version>
             <executions>
               <execution>
                 <id>enforce-versions</id>
