@@ -199,7 +199,7 @@ public final class Template {
     }
   }
 
-  /** A builder for Template.Bound instances.  */
+  /** A builder for Template.Bound instances. */
   public class BoundBuilder {
     private final Map<String, Function<Parameter, String>> bindings = new HashMap<>();
     private final Set<String> variableNames;
