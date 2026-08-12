@@ -22,11 +22,11 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>framework-for-connectors</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>framework-for-sink-connectors</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.4.0-SNAPSHOT</version>
   <name>Aiven sink framework for connectors on Apache Kafka</name>
   <description>A framework to make development of source connectors easier</description>
 
@@ -34,7 +34,12 @@
     <latestRelease>none</latestRelease>
   </properties>
 
-  <dependencies/>
+  <dependencies>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>framework-common-for-connectors</artifactId>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>
