@@ -18,43 +18,35 @@ package io.aiven.commons.kafka.connector.sink.grouper;
 
 import io.aiven.commons.kafka.connector.common.templating.Template;
 import io.aiven.commons.kafka.connector.common.templating.TemplateParser;
-import io.aiven.commons.kafka.connector.common.templating.TemplateVariable;
 import io.aiven.commons.kafka.connector.common.templating.TemplateVariableRegistry;
+import io.aiven.commons.kafka.connector.common.templating.TimestampParser;
+import io.aiven.commons.kafka.connector.common.templating.VariableTemplatePart;
+import java.text.SimpleDateFormat;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 /** The base class for classes that associates {@link SinkRecord}s with groups by some criteria. */
-public abstract class RecordGrouperKey {
+public class RecordGrouperKey {
+
   /** The parsed template. */
-  private Template template;
+  protected final Template template;
 
   /**
-   * Get the template pattern. This pattern is used to generate a template using the {@link
-   * TemplateParser#parse(String, TemplateVariableRegistry)}
+   * Constructor with Standard Sink grouper registry.
    *
-   * @return the template pattern.
+   * @param templatePattern the template pattern to parse.
    */
-  protected abstract String getTemplatePattern();
-
-  /**
-   * Gets the template variable registry used during the template parsing. By default, uses the
-   * {@link TemplateVariableRegistry#STANDARD_SINK} registry.
-   *
-   * @return the template variable registry used during the template parsing.
-   */
-  protected TemplateVariableRegistry getTemplateRegistry() {
-    return TemplateVariableRegistry.STANDARD_SINK;
+  public RecordGrouperKey(String templatePattern) {
+    this(templatePattern, TemplateVariableRegistry.STANDARD_SINK);
   }
 
   /**
-   * Creates the grouper template from the template pattern and registry.
+   * Constructor with Standard Sink grouper registry.
    *
-   * @return the Template for the group key generation.
+   * @param templatePattern the template pattern to parse.
+   * @param registry the TemplateVariableRegistry to use. May be {@code null}.
    */
-  protected final synchronized Template grouperTemplate() {
-    if (template == null) {
-      template = TemplateParser.parse(getTemplatePattern(), getTemplateRegistry());
-    }
-    return template;
+  public RecordGrouperKey(String templatePattern, TemplateVariableRegistry registry) {
+    template = TemplateParser.parse(templatePattern, registry);
   }
 
   /**
@@ -64,14 +56,40 @@ public abstract class RecordGrouperKey {
    * @return the Bound template.
    */
   protected Template.Bound getBoundTemplate(SinkRecord record) {
-    return grouperTemplate()
-        .boundBuilder()
-        .bind(TemplateVariable.KEY.getName(), record.key()::toString)
-        .bind(TemplateVariable.TOPIC.getName(), record::topic)
-        .bind(TemplateVariable.PARTITION.getName(), () -> record.kafkaPartition().toString())
-        .bind(TemplateVariable.OFFSET.getName(), () -> Long.toString(record.kafkaOffset()))
-        .bind(TemplateVariable.TIMESTAMP.getName(), record.timestamp()::toString)
-        .build();
+    Template.BoundBuilder builder = template.boundBuilder();
+    for (String variableName : template.variables()) {
+      switch (variableName) {
+        case "key":
+          builder.bind(variableName, record.key()::toString);
+          break;
+        case "topic":
+          builder.bind(variableName, record::topic);
+          break;
+        case "partition":
+          builder.bind(variableName, record.kafkaPartition()::toString);
+          break;
+        case "offset":
+          builder.bind(variableName, () -> Long.toString(record.kafkaOffset()));
+          break;
+        case "timestamp":
+          VariableTemplatePart vtp = template.variable(variableName).orElse(null);
+          if (vtp == null) {
+            builder.bind(
+                variableName,
+                () -> {
+                  throw new IllegalStateException("'timestamp' was present and now it is not.");
+                });
+          } else {
+            SimpleDateFormat sdf = TimestampParser.getFormatter(vtp);
+            String result = sdf.format(new java.util.Date(record.timestamp()));
+            builder.bind(variableName, () -> result);
+          }
+          break;
+        default:
+          throw new IllegalArgumentException(variableName + " is an unsupported variable");
+      }
+    }
+    return builder.build();
   }
 
   /**
@@ -80,7 +98,7 @@ public abstract class RecordGrouperKey {
    * @param record the record to generate the key for.
    * @return the key for the record based on the template and template variable registry.
    */
-  public final String createKey(SinkRecord record) {
+  public String createKey(SinkRecord record) {
     return getBoundTemplate(record).render();
   }
 }

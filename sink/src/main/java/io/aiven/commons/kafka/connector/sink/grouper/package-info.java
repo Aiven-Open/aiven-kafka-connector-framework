@@ -15,8 +15,8 @@
  */
 
 /**
- * Utilities to group Kafka sink records based on data within the records.
- * Fields are identified using template variables and are combined into a template
- * that is used to produce the key string value.
+ * Utilities to group Kafka sink records based on data within the records. Fields are identified
+ * using template variables and are combined into a template that is used to produce the key string
+ * value.
  */
 package io.aiven.commons.kafka.connector.sink.grouper;
