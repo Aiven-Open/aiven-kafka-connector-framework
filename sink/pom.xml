@@ -38,6 +38,7 @@
     <dependency>
       <groupId>io.aiven.commons</groupId>
       <artifactId>framework-common-for-connectors</artifactId>
+      <version>${project.parent.version}</version>
     </dependency>
   </dependencies>
 
