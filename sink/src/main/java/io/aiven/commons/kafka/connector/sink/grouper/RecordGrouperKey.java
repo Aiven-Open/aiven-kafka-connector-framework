@@ -18,14 +18,70 @@ package io.aiven.commons.kafka.connector.sink.grouper;
 
 import io.aiven.commons.kafka.connector.common.templating.Template;
 import io.aiven.commons.kafka.connector.common.templating.TemplateParser;
+import io.aiven.commons.kafka.connector.common.templating.TemplateVariable;
 import io.aiven.commons.kafka.connector.common.templating.TemplateVariableRegistry;
 import io.aiven.commons.kafka.connector.common.templating.TimestampParser;
 import io.aiven.commons.kafka.connector.common.templating.VariableTemplatePart;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 /** The base class for classes that associates {@link SinkRecord}s with groups by some criteria. */
 public class RecordGrouperKey {
+
+  private static final TemplateVariableRegistry VARIABLE_REGISTRY;
+
+  /**
+   * The map of supported template variable names to a function to extract the string from the
+   * Template and SinkRecord.
+   */
+  private static final Map<String, BiFunction<Template, SinkRecord, Supplier<String>>>
+      TEMPLATE_VARIABLE_MAP;
+
+  /** Converts the timestamp based on the definition of the timestamp pattern in the template. */
+  private static final BiFunction<Template, SinkRecord, Supplier<String>>
+      TIMESTAMP_TEMPLATE_CONVERTER =
+          (template, sinkRecord) -> {
+            VariableTemplatePart vtp = template.variable(TemplateVariable.TIMESTAMP).orElse(null);
+            if (vtp == null) {
+              return () -> {
+                throw new IllegalStateException("'timestamp' was present and now it is not.");
+              };
+            } else {
+              SimpleDateFormat sdf = TimestampParser.getFormatter(vtp);
+              String result = sdf.format(new java.util.Date(sinkRecord.timestamp()));
+              return () -> result;
+            }
+          };
+
+  static {
+    VARIABLE_REGISTRY =
+        TemplateVariableRegistry.builder()
+            .add(TemplateVariableRegistry.STANDARD_SINK)
+            .remove(TemplateVariable.OFFSET)
+            .remove(TemplateVariable.ORIGINAL_OFFSET)
+            .build();
+
+    TEMPLATE_VARIABLE_MAP = new HashMap<>();
+    TEMPLATE_VARIABLE_MAP.put(
+        TemplateVariable.KEY.getName(),
+        (template, sinkRecord) -> () -> sinkRecord.key().toString());
+    TEMPLATE_VARIABLE_MAP.put(
+        TemplateVariable.TOPIC.getName(), (template, sinkRecord) -> sinkRecord::topic);
+    TEMPLATE_VARIABLE_MAP.put(
+        TemplateVariable.ORIGINAL_TOPIC.getName(),
+        (template, sinkRecord) -> sinkRecord::originalTopic);
+    TEMPLATE_VARIABLE_MAP.put(
+        TemplateVariable.PARTITION.getName(),
+        (template, sinkRecord) -> () -> sinkRecord.kafkaPartition().toString());
+    TEMPLATE_VARIABLE_MAP.put(
+        TemplateVariable.ORIGINAL_PARTITION.getName(),
+        (template, sinkRecord) -> () -> sinkRecord.originalKafkaPartition().toString());
+    TEMPLATE_VARIABLE_MAP.put(TemplateVariable.TIMESTAMP.getName(), TIMESTAMP_TEMPLATE_CONVERTER);
+  }
 
   /** The parsed template. */
   protected final Template template;
@@ -36,7 +92,7 @@ public class RecordGrouperKey {
    * @param templatePattern the template pattern to parse.
    */
   public RecordGrouperKey(String templatePattern) {
-    this(templatePattern, TemplateVariableRegistry.STANDARD_SINK);
+    this(templatePattern, VARIABLE_REGISTRY);
   }
 
   /**
@@ -58,36 +114,12 @@ public class RecordGrouperKey {
   protected Template.Bound getBoundTemplate(SinkRecord record) {
     Template.BoundBuilder builder = template.boundBuilder();
     for (String variableName : template.variables()) {
-      switch (variableName) {
-        case "key":
-          builder.bind(variableName, record.key()::toString);
-          break;
-        case "topic":
-          builder.bind(variableName, record::topic);
-          break;
-        case "partition":
-          builder.bind(variableName, record.kafkaPartition()::toString);
-          break;
-        case "offset":
-          builder.bind(variableName, () -> Long.toString(record.kafkaOffset()));
-          break;
-        case "timestamp":
-          VariableTemplatePart vtp = template.variable(variableName).orElse(null);
-          if (vtp == null) {
-            builder.bind(
-                variableName,
-                () -> {
-                  throw new IllegalStateException("'timestamp' was present and now it is not.");
-                });
-          } else {
-            SimpleDateFormat sdf = TimestampParser.getFormatter(vtp);
-            String result = sdf.format(new java.util.Date(record.timestamp()));
-            builder.bind(variableName, () -> result);
-          }
-          break;
-        default:
-          throw new IllegalArgumentException(variableName + " is an unsupported variable");
+      BiFunction<Template, SinkRecord, Supplier<String>> converter =
+          TEMPLATE_VARIABLE_MAP.get(variableName);
+      if (converter == null) {
+        throw new IllegalArgumentException(variableName + " is an unsupported variable");
       }
+      builder.bind(variableName, converter.apply(template, record));
     }
     return builder.build();
   }
