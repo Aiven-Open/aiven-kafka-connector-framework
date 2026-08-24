@@ -18,6 +18,7 @@ package io.aiven.commons.kafka.connector.sink.grouper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.aiven.commons.kafka.connector.common.templating.TimestampParser;
+import io.aiven.commons.kafka.connector.sink.TestingHeader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -25,11 +26,10 @@ import java.util.Map;
 import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
-import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.junit.jupiter.api.Test;
 
-class RecordGrouperKeyTest {
+public class RecordGrouperKeyTest {
   private static int ORIGINAL_PARTITION = 2;
   private static int PARTITION = 4;
   private static long ORIGINAL_OFFSET = 32;
@@ -78,18 +78,6 @@ class RecordGrouperKeyTest {
             "{{key}}-{{topic}}-{{partition}}-{{timestamp:unit=yyyy-MM-dd'T'HH:mm:ss.SSS}}");
     key = underTest.createKey(sinkRecord);
     assertThat(key).isEqualTo("key-topic-4-" + tsValue);
-  }
-
-  record TestingHeader(String key, Schema schema, Object value) implements Header {
-    @Override
-    public Header with(Schema schema, Object value) {
-      return new TestingHeader(key, schema, value);
-    }
-
-    @Override
-    public Header rename(String key) {
-      return new TestingHeader(key, schema, value);
-    }
   }
 
   /*

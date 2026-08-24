@@ -38,7 +38,7 @@ public class RecordGrouperKey {
    * The map of supported template variable names to a function to extract the string from the
    * Template and SinkRecord.
    */
-  private static final Map<String, BiFunction<Template, SinkRecord, Supplier<String>>>
+  public static final Map<String, BiFunction<Template, SinkRecord, Supplier<String>>>
       TEMPLATE_VARIABLE_MAP;
 
   /** Converts the timestamp based on the definition of the timestamp pattern in the template. */
@@ -56,6 +56,22 @@ public class RecordGrouperKey {
               return () -> result;
             }
           };
+
+  private static Supplier<String> numberFormatting(
+      Template template, TemplateVariable variable, String format, Number number) {
+
+    VariableTemplatePart vtp = template.variable(variable).orElse(null);
+    if (vtp == null) {
+      return () -> {
+        throw new IllegalStateException(
+            String.format("'%s' was present and now it is not.", variable.getName()));
+      };
+    } else {
+      return vtp.getParameter().asBoolean()
+          ? () -> String.format(format, number)
+          : number::toString;
+    }
+  }
 
   static {
     VARIABLE_REGISTRY =
@@ -76,10 +92,17 @@ public class RecordGrouperKey {
         (template, sinkRecord) -> sinkRecord::originalTopic);
     TEMPLATE_VARIABLE_MAP.put(
         TemplateVariable.PARTITION.getName(),
-        (template, sinkRecord) -> () -> sinkRecord.kafkaPartition().toString());
+        (template, sinkRecord) ->
+            numberFormatting(
+                template, TemplateVariable.PARTITION, "%010d", sinkRecord.kafkaPartition()));
     TEMPLATE_VARIABLE_MAP.put(
         TemplateVariable.ORIGINAL_PARTITION.getName(),
-        (template, sinkRecord) -> () -> sinkRecord.originalKafkaPartition().toString());
+        (template, sinkRecord) ->
+            numberFormatting(
+                template,
+                TemplateVariable.ORIGINAL_PARTITION,
+                "%010d",
+                sinkRecord.originalKafkaPartition()));
     TEMPLATE_VARIABLE_MAP.put(TemplateVariable.TIMESTAMP.getName(), TIMESTAMP_TEMPLATE_CONVERTER);
   }
 
@@ -96,7 +119,7 @@ public class RecordGrouperKey {
   }
 
   /**
-   * Constructor with Standard Sink grouper registry.
+   * Constructor with specified template variable registry
    *
    * @param templatePattern the template pattern to parse.
    * @param registry the TemplateVariableRegistry to use. May be {@code null}.
