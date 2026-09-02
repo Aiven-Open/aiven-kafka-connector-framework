@@ -185,8 +185,9 @@ public final class EvolvingSourceRecord {
   }
 
   /**
-   * Set the timestamp for the source record.  May be {@code null}, which is the default.  Setting to {@code null} will
-   * cause Kakfa to set the timestamp to the time it began to process the message.
+   * Set the timestamp for the source record. May be {@code null}, which is the default. Setting to
+   * {@code null} will cause Kakfa to set the timestamp to the time it began to process the message.
+   *
    * @param timestamp the timestamp.
    */
   public void setTimestamp(Long timestamp) {
@@ -195,16 +196,18 @@ public final class EvolvingSourceRecord {
 
   /**
    * Gets the current timestamp for the source record.
-   * @return the current timestamp for the source record.  May be {@code null}.
+   *
+   * @return the current timestamp for the source record. May be {@code null}.
    */
   public Long getTimestamp() {
     return timestamp;
   }
 
   /**
-   * Replaces the current headers the {@code headers} header definitions.
-   * Makes a copy of the {@code headers} parameter so that any subsequent changes to the {@code headers} parameter
-   * are not reflected in this record.
+   * Replaces the current headers the {@code headers} header definitions. Makes a copy of the {@code
+   * headers} parameter so that any subsequent changes to the {@code headers} parameter are not
+   * reflected in this record.
+   *
    * @param headers the new headers. May be {@code null}.
    */
   public void setHeaders(final Headers headers) {
@@ -212,8 +215,8 @@ public final class EvolvingSourceRecord {
   }
 
   /**
-   * Gets the current headers.
-   * Returns a copy of the headers.  Makes a defensive copy.
+   * Gets the current headers. Returns a copy of the headers. Makes a defensive copy.
+   *
    * @return the current headers
    */
   public Headers getHeaders() {
@@ -295,7 +298,9 @@ public final class EvolvingSourceRecord {
           keyData.schema(),
           keyData.value(),
           valueData.schema(),
-          valueData.value(), timestamp, headers);
+          valueData.value(),
+          timestamp,
+          headers);
     } catch (DataException e) {
       if (ToleranceType.NONE.equals(tolerance)) {
         throw new ConnectException(
