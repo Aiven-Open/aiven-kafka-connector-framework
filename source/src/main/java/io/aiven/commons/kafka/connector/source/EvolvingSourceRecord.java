@@ -23,6 +23,8 @@ import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.errors.DataException;
+import org.apache.kafka.connect.header.ConnectHeaders;
+import org.apache.kafka.connect.header.Headers;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.slf4j.Logger;
@@ -35,6 +37,12 @@ public final class EvolvingSourceRecord {
 
   /** The value for the source record. */
   private SchemaAndValue valueData;
+
+  /** The headers for this record */
+  private Headers headers;
+
+  /** The timestamp for the source record */
+  private Long timestamp;
 
   /** The offset manager entry for this record */
   private OffsetManager.OffsetManagerEntry offsetManagerEntry;
@@ -75,6 +83,8 @@ public final class EvolvingSourceRecord {
     this.keyData = sourceRecord.keyData;
     this.valueData = sourceRecord.valueData;
     this.context = sourceRecord.context;
+    this.timestamp = sourceRecord.timestamp;
+    this.headers = sourceRecord.headers == null ? null : sourceRecord.headers.duplicate();
   }
 
   /**
@@ -175,6 +185,45 @@ public final class EvolvingSourceRecord {
   }
 
   /**
+   * Set the timestamp for the source record. May be {@code null}, which is the default. Setting to
+   * {@code null} will cause Kakfa to set the timestamp to the time it began to process the message.
+   *
+   * @param timestamp the timestamp.
+   */
+  public void setTimestamp(Long timestamp) {
+    this.timestamp = timestamp;
+  }
+
+  /**
+   * Gets the current timestamp for the source record.
+   *
+   * @return the current timestamp for the source record. May be {@code null}.
+   */
+  public Long getTimestamp() {
+    return timestamp;
+  }
+
+  /**
+   * Replaces the current headers the {@code headers} header definitions. Makes a copy of the {@code
+   * headers} parameter so that any subsequent changes to the {@code headers} parameter are not
+   * reflected in this record.
+   *
+   * @param headers the new headers. May be {@code null}.
+   */
+  public void setHeaders(final Headers headers) {
+    this.headers = headers == null ? null : headers.duplicate();
+  }
+
+  /**
+   * Gets the current headers. Returns a copy of the headers. Makes a defensive copy.
+   *
+   * @return the current headers
+   */
+  public Headers getHeaders() {
+    return headers == null ? new ConnectHeaders() : headers.duplicate();
+  }
+
+  /**
    * Gets the topic for the source record.
    *
    * @return The topic for the source record or {@code null} if it is not set in the context.
@@ -249,7 +298,9 @@ public final class EvolvingSourceRecord {
           keyData.schema(),
           keyData.value(),
           valueData.schema(),
-          valueData.value());
+          valueData.value(),
+          timestamp,
+          headers);
     } catch (DataException e) {
       if (ToleranceType.NONE.equals(tolerance)) {
         throw new ConnectException(
