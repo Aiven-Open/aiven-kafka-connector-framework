@@ -27,10 +27,6 @@ public class VariableTemplatePart implements TemplatePart {
 
   private final String originalPlaceholder;
 
-  VariableTemplatePart(final String variableName, final String originalPlaceholder) {
-    this(variableName, Parameter.EMPTY, originalPlaceholder);
-  }
-
   VariableTemplatePart(
       final String variableName, final Parameter parameter, final String originalPlaceholder) {
     this.variableName = variableName;
