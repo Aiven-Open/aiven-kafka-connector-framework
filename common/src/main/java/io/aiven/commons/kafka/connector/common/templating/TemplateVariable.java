@@ -22,11 +22,26 @@ import org.apache.kafka.common.config.ConfigException;
 
 /** The template variable definition. */
 public final class TemplateVariable {
+  private static final ConfigDef.Validator BOOLEAN_VALIDATOR =
+      new ConfigDef.Validator() {
+        ConfigDef.ValidString validString = ConfigDef.ValidString.in("true", "false");
+
+        @Override
+        public void ensureValid(String name, Object value) {
+          validString.ensureValid(name, value.toString().trim());
+        }
+
+        @Override
+        public String toString() {
+          return validString.toString();
+        }
+      };
+
   // start of static standard template variables
   /** The padding descriptor used below */
   private static final ParameterDescriptor PADDING_DESCRIPTOR =
       ParameterDescriptor.builder("padding")
-          .validator(ConfigDef.ValidString.in("true", "false"))
+          .validator(BOOLEAN_VALIDATOR)
           .description("Specifies that the value should be left padded")
           .build();
 
@@ -46,8 +61,28 @@ public final class TemplateVariable {
           .build();
 
   /** the standard start offset definition */
-  public static final TemplateVariable START_OFFSET =
-      builder("start_offset").parameterDescriptor(PADDING_DESCRIPTOR).build();
+  public static final TemplateVariable OFFSET =
+      builder("offset").parameterDescriptor(PADDING_DESCRIPTOR).build();
+
+  /** the standard partition definition */
+  public static final TemplateVariable ORIGINAL_PARTITION =
+      builder("original_partition")
+          .parameterDescriptor(PADDING_DESCRIPTOR)
+          .description("The partition the message was read from before transforms")
+          .build();
+
+  /** the standard topic definition */
+  public static final TemplateVariable ORIGINAL_TOPIC =
+      builder("original_topic")
+          .description("The topic the message was read from before transforms")
+          .build();
+
+  /** the standard start offset definition */
+  public static final TemplateVariable ORIGINAL_OFFSET =
+      builder("original_offset")
+          .parameterDescriptor(PADDING_DESCRIPTOR)
+          .description("The offset the message was read from before transforms")
+          .build();
 
   /** The standard timestamp definition */
   public static final TemplateVariable TIMESTAMP =
@@ -55,7 +90,7 @@ public final class TemplateVariable {
           .parameterDescriptor(
               ParameterDescriptor.builder("unit")
                   .required(true)
-                  .validator(ConfigDef.ValidString.in("yyyy", "MM", "dd", "HH"))
+                  .validator(TimestampParser.VALIDATOR)
                   .description("Specifies the format of the timestamp."))
           .description("The timestamp from the message")
           .build();

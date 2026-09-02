@@ -41,7 +41,7 @@ public class TemplateValidatorTest {
         .isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{key}}-{{missing}}"))
         .isInstanceOf(ConfigException.class)
         .withMessage(
-            "Invalid value {{key}}-{{missing}} for configuration CONFIGURATION_NAME template variable 'missing': 'missing' is not defined in the variable registry");
+            "Invalid value {{key}}-{{missing}} for configuration CONFIGURATION_NAME: 'missing' is not defined in the variable registry");
   }
 
   @Test
@@ -70,7 +70,7 @@ public class TemplateValidatorTest {
         .isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{partition:padding=}}"))
         .isInstanceOf(ConfigException.class)
         .withMessage(
-            "Invalid value parameter `padding` value has not been set for configuration CONFIGURATION_NAME template variable 'partition': {{partition:padding=}}");
+            "Invalid value {{partition:padding=}} for configuration CONFIGURATION_NAME: Parameter 'padding' value may not be empty");
   }
 
   @Test
@@ -85,7 +85,7 @@ public class TemplateValidatorTest {
         .isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{timestamp}}"))
         .isInstanceOf(ConfigException.class)
         .withMessage(
-            "Invalid value {{timestamp}} for configuration CONFIGURATION_NAME template variable 'timestamp': parameter 'unit' must be specified and string must be one of: yyyy, MM, dd, HH");
+            "Invalid value {{timestamp}} for configuration CONFIGURATION_NAME template variable 'timestamp': parameter 'unit' must be specified and value must be a string");
   }
 
   @Test
@@ -97,5 +97,48 @@ public class TemplateValidatorTest {
 
     TemplateValidator noRegistry = new TemplateValidator(null);
     assertThat(noRegistry.toString()).isEqualTo("no restrictions");
+  }
+
+  @Test
+  void validTemplatesWithWeirdPadding() {
+    underTest.ensureValid("CONFIGURATION_NAME", "{{partition : padding=true}}");
+    underTest.ensureValid("CONFIGURATION_NAME", "{{partition:padding = true}}");
+    underTest.ensureValid(
+        "CONFIGURATION_NAME",
+        "some text then {{partition:padding = true}} more text then {{timestamp : unit = yyyy}} and text");
+  }
+
+  @Test
+  void badVariableName() {
+    assertThatException()
+        .isThrownBy(
+            () ->
+                underTest.ensureValid(
+                    "CONFIGURATION_NAME",
+                    "some text then {{ text that does not look like a template }}"))
+        .isInstanceOf(ConfigException.class)
+        .withMessageContaining(
+            "'text that does not look like a template' is not a valid variable name");
+
+    assertThatException()
+        .isThrownBy(
+            () ->
+                underTest.ensureValid(
+                    "CONFIGURATION_NAME",
+                    "some text then {{partition:padding = true}} more text then {{foo : name = value}} and text"))
+        .isInstanceOf(ConfigException.class)
+        .withMessageContaining("'foo' is not defined in the variable registry");
+  }
+
+  @Test
+  void badParameterName() {
+    assertThatException()
+        .isThrownBy(
+            () ->
+                underTest.ensureValid(
+                    "CONFIGURATION_NAME",
+                    "some text then {{ partition : text that looks = like a template }}"))
+        .isInstanceOf(ConfigException.class)
+        .withMessageContaining("'text that looks' is not a valid parameter name");
   }
 }

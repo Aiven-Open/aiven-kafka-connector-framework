@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.kafka.common.config.ConfigException;
 import org.junit.jupiter.api.Test;
@@ -125,7 +124,7 @@ final class TemplateParserTest {
     final String templateStr = "foo{{ }}bar";
     assertThatThrownBy(() -> TemplateParser.parse(templateStr, null))
         .isInstanceOf(ConfigException.class)
-        .hasMessage("Variable name hasn't been set for template: foo{{ }}bar");
+        .hasMessage("'foo{{ }}bar' has error: Variable name hasn't been set for template");
   }
 
   @Test
@@ -185,26 +184,65 @@ final class TemplateParserTest {
   }
 
   @Test
+  void parseVariableWithParameterAndSpaces() {
+    final Template template = TemplateParser.parse("{{ foo:tt=this is true }}", null);
+    final String render =
+        template
+            .boundBuilder()
+            .bind(
+                "foo",
+                parameter -> {
+                  assertThat(parameter.getName()).isEqualTo("tt");
+                  assertThat(parameter.getValue()).isEqualTo("this is true");
+                  return "PARAMETER_TESTED";
+                })
+            .build()
+            .render();
+
+    assertThat(render).isEqualTo("PARAMETER_TESTED");
+    assertThat(template).satisfies(TemplateTestUtil.withInput("FOO").extracts("foo", "FOO"));
+  }
+
+  @Test
+  void parseVariableWithParameterAndSpecialCharacters() {
+    final Template template = TemplateParser.parse("{{ foo:tt=this:is={true} }}", null);
+    final String render =
+        template
+            .boundBuilder()
+            .bind(
+                "foo",
+                parameter -> {
+                  assertThat(parameter.getName()).isEqualTo("tt");
+                  assertThat(parameter.getValue()).isEqualTo("this:is={true}");
+                  return "PARAMETER_TESTED";
+                })
+            .build()
+            .render();
+
+    assertThat(render).isEqualTo("PARAMETER_TESTED");
+    assertThat(template).satisfies(TemplateTestUtil.withInput("FOO").extracts("foo", "FOO"));
+  }
+
+  @Test
   void invalidVariableWithoutParameter() {
     assertThatThrownBy(() -> TemplateParser.parse("{{foo:}}", null))
         .isInstanceOf(ConfigException.class)
-        .hasMessage(
-            "Invalid value incomplete parameter definition for configuration template variable 'foo': {{foo:}}");
+        .hasMessage("'{{foo:}}' has error: 'foo:' may not end with a ':'");
   }
 
   @Test
   void invalidVariableWithEmptyVariableNameAndWithParameter() {
     assertThatThrownBy(() -> TemplateParser.parse("{{:foo=bar}}", null))
         .isInstanceOf(ConfigException.class)
-        .hasMessage("Variable name hasn't been set for template: {{:foo=bar}}");
+        .hasMessage(
+            "'{{:foo=bar}}' has error: Variable name has not been set, ':foo=bar' may not start with a ':'");
   }
 
   @Test
   void invalidVariableWithEmptyParameterValue() {
     assertThatThrownBy(() -> TemplateParser.parse("{{foo:tt=}}", null))
         .isInstanceOf(ConfigException.class)
-        .hasMessage(
-            "Invalid value parameter `tt` value has not been set for configuration template variable 'foo': {{foo:tt=}}");
+        .hasMessage("'{{foo:tt=}}' has error: Parameter 'tt' value may not be empty");
   }
 
   @Test
@@ -212,7 +250,7 @@ final class TemplateParserTest {
     assertThatThrownBy(() -> TemplateParser.parse("{{foo:=bar}}", null))
         .isInstanceOf(ConfigException.class)
         .hasMessage(
-            "Invalid value parameter name has not been set for configuration template variable 'foo': {{foo:=bar}}");
+            "'{{foo:=bar}}' has error: Parameter '=bar' of 'foo' may not start with an '='");
   }
 
   @Test
@@ -246,9 +284,9 @@ final class TemplateParserTest {
   @Test
   void placeholderHasCurlyBracesInside() {
     final String templateStr = "{{ { }}";
-    assertThat(TemplateParser.parse(templateStr, null))
-        .satisfies(TemplateTestUtil.withNoBindings().variableNotSet("{"))
-        .satisfies(TemplateTestUtil.withInput(templateStr).extractsEmpty());
+    assertThatThrownBy(() -> TemplateParser.parse(templateStr, null))
+        .isInstanceOf(ConfigException.class)
+        .hasMessage("'{{ { }}' has error: '{' is not a valid variable name");
   }
 
   @Test
@@ -302,7 +340,7 @@ final class TemplateParserTest {
   @Test
   void sameVariableMultipleTimes() {
     final Template template = TemplateParser.parse("{{foo}}{{foo}}{{foo}}", null);
-    final Template.Bound boundTemplate = template.boundBuilder().bind("foo", () -> "foo").build();
+    final Template.Bound boundTemplate = template.boundBuilder().bind("foo", "foo").build();
     assertThat(boundTemplate.render()).isEqualTo("foofoofoo");
     assertThat(template.extractor().extract("foofoofoo")).hasSize(1).containsEntry("foo", "foo");
   }
@@ -357,7 +395,7 @@ final class TemplateParserTest {
     final Template template =
         TemplateParser.parse("{{key}}{{topic}}", TemplateVariableRegistry.STANDARD_SINK);
     final Template.Bound boundTemplate =
-        template.boundBuilder().bind("key", () -> "key").bind("topic", () -> "topic").build();
+        template.boundBuilder().bind("key", "key").bind("topic", "topic").build();
     assertThat(boundTemplate.render()).isEqualTo("keytopic");
     // extraction does not work.
     // assertThat(template.extractor().extract("keyTopic")).hasSize(1).containsEntry("foo",
@@ -373,7 +411,7 @@ final class TemplateParserTest {
                     "{{key}}{{topic}}{{missing}}", TemplateVariableRegistry.STANDARD_SINK))
         .isInstanceOf(ConfigException.class)
         .withMessage(
-            "Invalid value {{key}}{{topic}}{{missing}} for configuration template variable 'missing': 'missing' is not defined in the variable registry");
+            "'{{key}}{{topic}}{{missing}}' has error: 'missing' is not defined in the variable registry");
   }
 
   @Test
@@ -385,67 +423,51 @@ final class TemplateParserTest {
                     "{{key}}{{topic}}{{timestamp}}", TemplateVariableRegistry.STANDARD_SINK))
         .isInstanceOf(ConfigException.class)
         .withMessage(
-            "Invalid value {{key}}{{topic}}{{timestamp}} for configuration template variable 'timestamp': parameter 'unit' must be specified and string must be one of: yyyy, MM, dd, HH");
+            "Invalid value {{key}}{{topic}}{{timestamp}} for configuration template variable 'timestamp': parameter 'unit' must be specified and value must be a string");
   }
 
   @Test
   void invalidTemplateFormat() {
-    List<String> results =
-        TemplateParser.checkMalformed("CONFIGURATION_NAME", "{{partition : padding=true}}", null);
-    assertThat(results)
-        .containsExactly(
-            "Template text '{{partition : padding=true}}' in CONFIGURATION_NAME may be a malformed template variable '{{partition:padding=true}}'");
-    results =
-        TemplateParser.checkMalformed("CONFIGURATION_NAME", "{{partition:padding = true}}", null);
-    assertThat(results)
-        .containsExactly(
-            "Template text '{{partition:padding = true}}' in CONFIGURATION_NAME may be a malformed template variable '{{partition:padding=true}}'");
 
-    results =
-        TemplateParser.checkMalformed(
-            "CONFIGURATION_NAME",
-            "some text then {{partition:padding = true}} more text then {{foo : name = value}} and text",
-            null);
-    assertThat(results)
-        .containsExactly(
-            "Template text '{{partition:padding = true}}' in CONFIGURATION_NAME may be a malformed template variable '{{partition:padding=true}}'",
-            "Template text '{{foo : name = value}}' in CONFIGURATION_NAME may be a malformed template variable '{{foo:name=value}}'");
+    // this one should work
+    TemplateParser.parse("{{partition : padding=true}}", null);
+    // this one shold work
+    TemplateParser.parse("{{partition:padding = true}}", null);
 
-    results =
-        TemplateParser.checkMalformed(
-            "CONFIGURATION_NAME",
-            "some text then {{ text that does not look like a template }} ",
-            null);
-    assertThat(results).isEmpty();
+    TemplateParser.parse(
+        "some text then {{partition:padding = true}} more text then {{foo : name = value}} and text",
+        null);
 
-    results =
-        TemplateParser.checkMalformed(
-            "CONFIGURATION_NAME",
-            "some text then {{ partition : text that looks = like a template }} ",
-            null);
-    assertThat(results)
-        .containsExactly(
-            "Template text '{{ partition : text that looks = like a template }}' in CONFIGURATION_NAME may be a malformed template variable '{{partition:textthatlooks=likeatemplate}}'");
+    assertThatThrownBy(
+            () ->
+                TemplateParser.parse(
+                    "some text then {{ text that does not look like a template }}", null))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining(
+            "'text that does not look like a template' is not a valid variable name");
 
-    // registry with partition
+    assertThatThrownBy(
+            () ->
+                TemplateParser.parse(
+                    "some text then {{ partition : text that looks = like a template }}", null))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining("'text that looks' is not a valid parameter name");
+
+    assertThatThrownBy(
+            () ->
+                TemplateParser.parse(
+                    "some text then {{ partition : text that looks = like a template }}",
+                    TemplateVariableRegistry.STANDARD_SINK))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining("'text that looks' is not a valid parameter name");
+
     TemplateVariableRegistry registry =
-        TemplateVariableRegistry.builder().add(TemplateVariable.PARTITION).build();
-    results =
-        TemplateParser.checkMalformed(
-            "CONFIGURATION_NAME",
-            "some text then {{ partition : text that looks = like a template }} ",
-            registry);
-    assertThat(results)
-        .containsExactly(
-            "Template text '{{ partition : text that looks = like a template }}' in CONFIGURATION_NAME may be a malformed template variable '{{partition:textthatlooks=likeatemplate}}'");
-
-    // registry without partition
-    registry = TemplateVariableRegistry.builder().add(TemplateVariable.TIMESTAMP).build();
-    results =
-        TemplateParser.checkMalformed(
-            "CONFIGURATION_NAME",
-            "some text then {{ partition : text that looks = like a template }} ",
-            registry);
-    assertThat(results).isEmpty();
+        TemplateVariableRegistry.builder().add(TemplateVariable.TIMESTAMP).build();
+    assertThatThrownBy(
+            () ->
+                TemplateParser.parse(
+                    "some text then {{ partition : text that looks = like a template }}", registry))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining("'partition' is not defined in the variable registry");
   }
 }

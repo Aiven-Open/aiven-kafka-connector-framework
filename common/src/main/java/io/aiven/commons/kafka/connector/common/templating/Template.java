@@ -18,12 +18,13 @@ package io.aiven.commons.kafka.connector.common.templating;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -70,7 +71,7 @@ public final class Template {
    *
    * @return the template pattern.
    */
-  public String originalTemplate() {
+  public String getTemplatePattern() {
     return templatePattern;
   }
 
@@ -83,6 +84,28 @@ public final class Template {
     return variables.stream()
         .map(VariableTemplatePart::getVariableName)
         .collect(Collectors.toList());
+  }
+
+  /**
+   * Finds the matching variable.
+   *
+   * @param name the name of the variable
+   * @return an Optional VariableTemplatePart for the variable, or an empty option if it does not
+   *     exist.
+   */
+  public Optional<VariableTemplatePart> variable(String name) {
+    return variables.stream().filter(vtp -> vtp.getVariableName().equals(name)).findFirst();
+  }
+
+  /**
+   * Finds the matching variable.
+   *
+   * @param var the template variable to find.
+   * @return an Optional VariableTemplatePart for the variable, or an empty option if it does not
+   *     exist.
+   */
+  public Optional<VariableTemplatePart> variable(TemplateVariable var) {
+    return variable(var.getName());
   }
 
   /**
@@ -214,13 +237,37 @@ public final class Template {
      * Bind the variable to the supplier of string.
      *
      * @param name the name to bind.
-     * @param binding the binding.
+     * @param value the value.
      * @throws IllegalArgumentException if the variable is not in the template.
      * @return this
      */
-    public BoundBuilder bind(final String name, final Supplier<String> binding) {
-      Function<Parameter, String> func = x -> binding.get();
-      return bind(name, func);
+    public BoundBuilder bind(final String name, String value) {
+      return bind(name, x -> value);
+    }
+
+    /**
+     * Bind the variable to the supplier of string.
+     *
+     * @param variable the name to bind.
+     * @param value the value
+     * @throws IllegalArgumentException if the variable is not in the template.
+     * @return this
+     */
+    public BoundBuilder bind(final TemplateVariable variable, String value) {
+      return bind(variable.getName(), x -> value);
+    }
+
+    /**
+     * Bind the variable to the supplier of string.
+     *
+     * @param variable the name to bind.
+     * @param binding the parameter binding.
+     * @throws IllegalArgumentException if the variable is not in the template.
+     * @return this
+     */
+    public BoundBuilder bind(
+        final TemplateVariable variable, final Function<Parameter, String> binding) {
+      return bind(variable.getName(), binding);
     }
 
     /**
@@ -258,6 +305,15 @@ public final class Template {
         }
       }
       return new Bound(this);
+    }
+
+    /**
+     * \ Gets a set of all the variable names in the bind builder.
+     *
+     * @return the set of variable names.
+     */
+    public Set<String> getVariableNames() {
+      return new HashSet<>(variableNames);
     }
   }
 

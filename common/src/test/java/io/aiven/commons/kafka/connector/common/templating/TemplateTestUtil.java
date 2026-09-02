@@ -95,7 +95,7 @@ class TemplateTestUtil {
           assertThat(varNameAndValues.length).as("Must set names and values in pairs").isEven();
           for (int i = 0; i < varNameAndValues.length; i += 2) {
             final var value = varNameAndValues[i + 1];
-            boundBuilder.bind(varNameAndValues[i], () -> value);
+            boundBuilder.bind(varNameAndValues[i], value);
           }
           assertThat(boundBuilder.build().render()).isEqualTo(rendered);
           // Failed tests are indicated by assertions, not by this return value.

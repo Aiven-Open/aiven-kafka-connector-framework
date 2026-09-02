@@ -31,8 +31,11 @@ public final class TemplateVariableRegistry {
       builder()
           .add(TemplateVariable.KEY)
           .add(TemplateVariable.TOPIC)
+          .add(TemplateVariable.ORIGINAL_TOPIC)
           .add(TemplateVariable.PARTITION)
-          .add(TemplateVariable.START_OFFSET)
+          .add(TemplateVariable.ORIGINAL_PARTITION)
+          .add(TemplateVariable.OFFSET)
+          .add(TemplateVariable.ORIGINAL_OFFSET)
           .add(TemplateVariable.TIMESTAMP)
           .build();
 
