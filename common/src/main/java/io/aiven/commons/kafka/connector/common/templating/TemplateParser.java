@@ -17,9 +17,6 @@ package io.aiven.commons.kafka.connector.common.templating;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.config.ConfigException;
@@ -31,17 +28,8 @@ public final class TemplateParser {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TemplateParser.class);
 
-  /** Matches <code>{{ var:foo=bar }}</code> */
-  private static final Pattern VARIABLE_PATTERN =
-      Pattern.compile("\\{\\{\\s*([\\w]+)?(:?)([\\w=]+)?\\s*}}");
-
-  /** Matches <code>foo=bar</code> */
-  private static final Pattern PARAMETER_PATTERN = Pattern.compile("([\\w]+)?=?([\\w]+)?");
-
   /** Matches invalid name characters */
   static final Pattern INVALID_NAME = Pattern.compile("\\W");
-
-  static final Pattern INVALID_PATTERN = Pattern.compile("[^\\w:=]");
 
   private TemplateParser() {}
 
@@ -58,60 +46,7 @@ public final class TemplateParser {
       final String templatePattern,
       final TemplateVariableRegistry registry) {
     // generating the context performs the validation.
-    Context context = new Context(configurationName, templatePattern, registry);
-    // check for potential malformed templates
-    context.templateParts.stream()
-        .map(tp -> tp instanceof TextTemplatePart txt ? txt.render(null) : "")
-        .filter(StringUtils::isNotEmpty)
-        .forEach(
-            text -> {
-              for (String logMessage : checkMalformed(configurationName, text, registry)) {
-                LOGGER.warn(logMessage);
-              }
-            });
-  }
-
-  /**
-   * Checks if a text string may contain malformed templates. If a valid template is passed it will
-   * be returned as potentially malformed.
-   *
-   * @param name the name of the template configuration option.
-   * @param text the text that may be an invalid template, should not be a valid template.
-   * @param registry The TemplateVariableRegistry to validate against. May be {@code null}.
-   * @return A list of log messages indicating the malformed templates.
-   */
-  public static List<String> checkMalformed(
-      final String name, final String text, final TemplateVariableRegistry registry) {
-    List<String> logMessages = new ArrayList<>();
-    String processing;
-    int start = 0;
-    while (start > -1) {
-      processing = text.substring(start);
-      if (processing.contains("{{")) {
-        int pos = processing.indexOf("{{");
-        int end = processing.substring(pos).indexOf("}}");
-        if (end > -1) {
-          // add the closing }}
-          end += pos + 2;
-          String candidate = processing.substring(pos, end);
-          if (candidate.contains(":") && candidate.contains("=")) {
-            String potential = String.join("", candidate.split("\\s+"));
-            String potentialName = potential.substring(2, potential.indexOf(":"));
-            if ((registry == null || registry.has(potentialName))
-                && VARIABLE_PATTERN.matcher(potential).matches()) {
-              logMessages.add(
-                  String.format(
-                      "Template text '%s' in %s may be a malformed template variable '%s'",
-                      candidate, name, potential));
-            }
-          }
-        }
-        start += end;
-      } else {
-        start = -1;
-      }
-    }
-    return logMessages;
+    new Context(configurationName, templatePattern, registry);
   }
 
   /**
@@ -125,7 +60,30 @@ public final class TemplateParser {
       final String templatePattern, final TemplateVariableRegistry registry) {
     LOGGER.debug("Parse template: {}", templatePattern);
     Context context = new Context(null, templatePattern, registry);
-    return new Template(templatePattern, context.templateParts);
+    return new Template(templatePattern, context.getTemplateParts());
+  }
+
+  /**
+   * Determines if a template or parameter name is valid. Valid names may not be empty and must
+   * consist of letters, digits, {@code _}, {@code -}, and {@code .} only.
+   *
+   * @param name the name to check
+   * @return {@code true} if name comprises letters, digits, {@code _}, {@code -}, and {@code .}
+   *     only.
+   */
+  public static boolean isValidName(String name) {
+    String validChars = "_-.";
+    if (StringUtils.isEmpty(name)) {
+      return false;
+    }
+    final int sz = name.length();
+    for (int i = 0; i < sz; i++) {
+      char c = name.charAt(i);
+      if (!(Character.isLetterOrDigit(c) || validChars.indexOf(c) != -1)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /** The context for a parsing event. */
@@ -135,7 +93,10 @@ public final class TemplateParser {
     private final String templatePattern;
     private final TemplateVariableRegistry registry;
 
-    private Context(
+    private static final String VARIABLE_START = "{{";
+    private static final String VARIABLE_END = "}}";
+
+    Context(
         final String configurationName,
         final String templatePattern,
         final TemplateVariableRegistry registry) {
@@ -143,113 +104,149 @@ public final class TemplateParser {
       this.templatePattern = templatePattern;
       this.registry = registry;
 
-      final Matcher matcher = VARIABLE_PATTERN.matcher(templatePattern);
-
-      int position = 0;
-      while (matcher.find()) {
-        // add text or marker part -- we need a marker to extract the values.
-        templateParts.add(
-            new TextTemplatePart(templatePattern.substring(position, matcher.start())));
-
-        validateVariablePattern(matcher.group());
-        final String variableName = extractVariableName(matcher);
-
-        final String errName =
-            configurationName == null
-                ? String.format("template variable '%s'", variableName)
-                : String.format("%s template variable '%s'", configurationName, variableName);
-
-        Optional<TemplateVariable> templateVariable = createTemplateVariable(errName, variableName);
-        Parameter parameter = extractParameter(errName, matcher);
-
-        templateVariable.ifPresent(tv -> tv.validate(errName, templatePattern, parameter));
-
-        templateParts.add(new VariableTemplatePart(variableName, parameter, matcher.group()));
-        position = matcher.end();
-      }
-      if (templatePattern.length() > position) {
-        templateParts.add(new TextTemplatePart(templatePattern.substring(position)));
+      int pos = 0;
+      while (pos < templatePattern.length()) {
+        pos = parseParts(pos);
       }
     }
 
-    private Parameter extractParameter(final String errName, final Matcher matcher) {
-      final String parameterDef = matcher.group(2);
-      final String parameter = matcher.group(3);
-
-      if (":".equals(parameterDef)
-          && Objects.isNull(parameter)) { // NOPMD AvoidLiteralsInIfCondition
-        throw new ConfigException(errName, "incomplete parameter definition", templatePattern);
-      }
-
-      return parseParameter(errName, parameter);
-    }
-
-    private Optional<TemplateVariable> createTemplateVariable(
-        final String errName, final String variableName) {
-      Optional<TemplateVariable> templateVariable =
-          registry != null && registry.has(variableName)
-              ? Optional.of(registry.get(variableName))
-              : Optional.empty();
-      if (registry != null && templateVariable.isEmpty()) {
-        throw new ConfigException(
-            errName,
-            templatePattern,
-            String.format("'%s' is not defined in the variable registry", variableName));
-      }
-      return templateVariable;
-    }
-
-    private String extractVariableName(Matcher matcher) {
-      final String variableName = matcher.group(1);
-      if (Objects.isNull(variableName)) {
-        if (configurationName == null) {
-          throw new ConfigException(
-              String.format("Variable name hasn't been set for template: %s", templatePattern));
-        } else {
-          throw new ConfigException(
-              configurationName, templatePattern, "Variable name hasn't been set for template");
+    /**
+     * Starting at a position in the templatePattern add the next text or variable part to the
+     * templateParts.
+     *
+     * @param startPos the position to start scanning from.
+     * @return the next start position to continue scanning.
+     * @throws ConfigException on parsing error.
+     */
+    private int parseParts(int startPos) {
+      int patternStart = templatePattern.indexOf(VARIABLE_START, startPos);
+      if (patternStart == startPos) {
+        // at start of pattern
+        int patternEnd = templatePattern.indexOf(VARIABLE_END, patternStart);
+        if (patternEnd == -1) {
+          templateParts.add(new TextTemplatePart(templatePattern.substring(startPos)));
+          return templatePattern.length();
         }
+        parseVariable(
+            templatePattern.substring(patternStart + VARIABLE_START.length(), patternEnd));
+        return patternEnd + VARIABLE_END.length();
       }
-      return variableName;
+      if (patternStart == -1) {
+        // no pattern found
+        templateParts.add(new TextTemplatePart(templatePattern.substring(startPos)));
+        return templatePattern.length();
+      }
+      // text before pattern
+      templateParts.add(new TextTemplatePart(templatePattern.substring(startPos, patternStart)));
+      return patternStart;
     }
 
-    private void validateVariablePattern(String variable) {
-      String pattern = variable.substring(2, variable.length() - 2).trim();
-      if (INVALID_PATTERN.matcher(pattern).find()) {
-        String errName =
-            configurationName == null
-                ? String.format("variable pattern '%s'", variable)
-                : String.format("%s variable pattern '%s'", configurationName, variable);
-        throw new ConfigException(
-            errName, templatePattern, "variable pattern may not contain spaces");
-      }
-    }
-
-    private Parameter parseParameter(final String errName, final String parameter) {
-      LOGGER.debug("Parse {} parameter", parameter);
-      if (Objects.nonNull(parameter)) {
-        final Matcher matcher = PARAMETER_PATTERN.matcher(parameter);
-        if (!matcher.find()) {
-          throw new ConfigException(errName, "parameter has not been set", templatePattern);
-        }
-
-        final String parameterName = matcher.group(1);
-        if (Objects.isNull(parameterName)) {
-          throw new ConfigException(errName, "parameter name has not been set", templatePattern);
-        }
-
-        final String parameterValue = matcher.group(2);
-        if (Objects.isNull(parameterValue)) {
-          throw new ConfigException(
-              errName,
-              String.format("parameter `%s` value has not been set", parameterName),
-              templatePattern);
-        }
-
-        return Parameter.of(parameterName, parameterValue);
+    /**
+     * throws a detailed configuration exception with the specified error message.
+     *
+     * @param message the error message for the exception.
+     */
+    void errMsg(final String message) {
+      if (configurationName == null) {
+        throw new ConfigException(String.format("'%s' has error: %s", templatePattern, message));
       } else {
-        return Parameter.EMPTY;
+        throw new ConfigException(configurationName, templatePattern, message);
       }
+    }
+
+    /**
+     * Parse a variable and add it to the templateParts.
+     *
+     * @param rawPattern the string from between a {@link #VARIABLE_START} and {@link #VARIABLE_END}
+     *     pair.
+     * @throws ConfigException on parsing error.
+     */
+    private void parseVariable(String rawPattern) {
+      String pattern = rawPattern.trim();
+      String templatePattern = VARIABLE_START + rawPattern + VARIABLE_END;
+      if (StringUtils.isBlank(pattern)) {
+        errMsg("Variable name hasn't been set for template");
+      }
+
+      int paramPos = pattern.indexOf(':');
+      if (paramPos == -1) {
+        if (registry != null && !registry.has(pattern)) {
+          errMsg(String.format("'%s' is not defined in the variable registry", pattern));
+        }
+        templateParts.add(createTemplatePart(pattern, Parameter.EMPTY, templatePattern));
+      } else {
+        if (paramPos == 0) {
+          errMsg(
+              String.format(
+                  "Variable name has not been set, '%s' may not start with a ':'", pattern));
+        }
+        String variableName = pattern.substring(0, paramPos++).trim();
+        if (registry != null && !registry.has(variableName)) {
+          errMsg(String.format("'%s' is not defined in the variable registry", variableName));
+        }
+        String paramText = pattern.substring(paramPos).trim();
+        if (paramText.isEmpty()) {
+          errMsg(String.format("'%s' may not end with a ':'", pattern));
+        }
+        int eqPos = paramText.indexOf('=');
+        if (eqPos == -1) {
+          errMsg(
+              String.format(
+                  "Parameter '%s' of '%s' does not contain an '='", paramText, variableName));
+        }
+        if (eqPos == 0) {
+          errMsg(
+              String.format(
+                  "Parameter '%s' of '%s' may not start with an '='", paramText, variableName));
+        }
+        String parameterName = paramText.substring(0, eqPos++);
+        String parameterValue = paramText.substring(eqPos);
+        if (StringUtils.isEmpty(parameterValue)) {
+          errMsg(String.format("Parameter '%s' value may not be empty", parameterName));
+        }
+        if (!isValidName(parameterName)) {
+          errMsg(String.format("'%s' is not a valid parameter name", variableName));
+        }
+        Parameter parameter = Parameter.of(parameterName, parameterValue);
+
+        templateParts.add(createTemplatePart(variableName, parameter, templatePattern));
+      }
+    }
+
+    /**
+     * Creates a VariableTemplatePart.
+     *
+     * @param variableName the name of the variable.
+     * @param parameter the Parameter for the variable.
+     * @param variablePattern the original variable pattern a extracted from the template.
+     * @throws ConfigException on parsing error.
+     */
+    private VariableTemplatePart createTemplatePart(
+        String variableName, Parameter parameter, String variablePattern) {
+      if (registry != null) {
+        if (!registry.has(variableName)) {
+          errMsg(String.format("'%s' is not defined in the variable registry", variableName));
+        } else {
+          final String errName =
+              configurationName == null
+                  ? String.format("template variable '%s'", variableName)
+                  : String.format("%s template variable '%s'", configurationName, variableName);
+          registry.get(variableName).validate(errName, templatePattern, parameter);
+        }
+      }
+      if (!isValidName(variableName)) {
+        errMsg(String.format("'%s' is not a valid variable name", variableName));
+      }
+      return new VariableTemplatePart(variableName, parameter, variablePattern);
+    }
+
+    /**
+     * Gets the list of template parts.
+     *
+     * @return the list of template parts.
+     */
+    public List<TemplatePart> getTemplateParts() {
+      return templateParts;
     }
   }
 }

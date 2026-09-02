@@ -28,7 +28,7 @@ public class TemplateVariableTestRegistry implements Supplier<TemplateVariableRe
         .add(TemplateVariable.KEY)
         .add(TemplateVariable.TOPIC)
         .add(TemplateVariable.PARTITION)
-        .add(TemplateVariable.START_OFFSET)
+        .add(TemplateVariable.OFFSET)
         .add(TemplateVariable.TIMESTAMP)
         .build();
   }

@@ -41,7 +41,7 @@ public class TemplateValidatorTest {
         .isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{key}}-{{missing}}"))
         .isInstanceOf(ConfigException.class)
         .withMessage(
-            "Invalid value {{key}}-{{missing}} for configuration CONFIGURATION_NAME template variable 'missing': 'missing' is not defined in the variable registry");
+            "Invalid value {{key}}-{{missing}} for configuration CONFIGURATION_NAME: 'missing' is not defined in the variable registry");
   }
 
   @Test
@@ -70,7 +70,7 @@ public class TemplateValidatorTest {
         .isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{partition:padding=}}"))
         .isInstanceOf(ConfigException.class)
         .withMessage(
-            "Invalid value parameter `padding` value has not been set for configuration CONFIGURATION_NAME template variable 'partition': {{partition:padding=}}");
+            "Invalid value {{partition:padding=}} for configuration CONFIGURATION_NAME: Parameter 'padding' value may not be empty");
   }
 
   @Test
@@ -85,7 +85,7 @@ public class TemplateValidatorTest {
         .isThrownBy(() -> underTest.ensureValid("CONFIGURATION_NAME", "{{timestamp}}"))
         .isInstanceOf(ConfigException.class)
         .withMessage(
-            "Invalid value {{timestamp}} for configuration CONFIGURATION_NAME template variable 'timestamp': parameter 'unit' must be specified and string must be one of: yyyy, MM, dd, HH");
+            "Invalid value {{timestamp}} for configuration CONFIGURATION_NAME template variable 'timestamp': parameter 'unit' must be specified and value must be a string");
   }
 
   @Test
