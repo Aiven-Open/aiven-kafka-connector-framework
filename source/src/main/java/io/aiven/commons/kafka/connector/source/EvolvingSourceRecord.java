@@ -84,7 +84,7 @@ public final class EvolvingSourceRecord {
     this.valueData = sourceRecord.valueData;
     this.context = sourceRecord.context;
     this.timestamp = sourceRecord.timestamp;
-    this.headers = sourceRecord.headers.duplicate();
+    this.headers = sourceRecord.headers == null ? null : sourceRecord.headers.duplicate();
   }
 
   /**
