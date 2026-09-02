@@ -98,4 +98,47 @@ public class TemplateValidatorTest {
     TemplateValidator noRegistry = new TemplateValidator(null);
     assertThat(noRegistry.toString()).isEqualTo("no restrictions");
   }
+
+  @Test
+  void validTemplatesWithWeirdPadding() {
+    underTest.ensureValid("CONFIGURATION_NAME", "{{partition : padding=true}}");
+    underTest.ensureValid("CONFIGURATION_NAME", "{{partition:padding = true}}");
+    underTest.ensureValid(
+        "CONFIGURATION_NAME",
+        "some text then {{partition:padding = true}} more text then {{timestamp : unit = yyyy}} and text");
+  }
+
+  @Test
+  void badVariableName() {
+    assertThatException()
+        .isThrownBy(
+            () ->
+                underTest.ensureValid(
+                    "CONFIGURATION_NAME",
+                    "some text then {{ text that does not look like a template }}"))
+        .isInstanceOf(ConfigException.class)
+        .withMessageContaining(
+            "'text that does not look like a template' is not a valid variable name");
+
+    assertThatException()
+        .isThrownBy(
+            () ->
+                underTest.ensureValid(
+                    "CONFIGURATION_NAME",
+                    "some text then {{partition:padding = true}} more text then {{foo : name = value}} and text"))
+        .isInstanceOf(ConfigException.class)
+        .withMessageContaining("'foo' is not defined in the variable registry");
+  }
+
+  @Test
+  void badParameterName() {
+    assertThatException()
+        .isThrownBy(
+            () ->
+                underTest.ensureValid(
+                    "CONFIGURATION_NAME",
+                    "some text then {{ partition : text that looks = like a template }}"))
+        .isInstanceOf(ConfigException.class)
+        .withMessageContaining("'text that looks' is not a valid parameter name");
+  }
 }

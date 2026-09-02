@@ -425,4 +425,49 @@ final class TemplateParserTest {
         .withMessage(
             "Invalid value {{key}}{{topic}}{{timestamp}} for configuration template variable 'timestamp': parameter 'unit' must be specified and value must be a string");
   }
+
+  @Test
+  void invalidTemplateFormat() {
+
+    // this one should work
+    TemplateParser.parse("{{partition : padding=true}}", null);
+    // this one shold work
+    TemplateParser.parse("{{partition:padding = true}}", null);
+
+    TemplateParser.parse(
+        "some text then {{partition:padding = true}} more text then {{foo : name = value}} and text",
+        null);
+
+    assertThatThrownBy(
+            () ->
+                TemplateParser.parse(
+                    "some text then {{ text that does not look like a template }}", null))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining(
+            "'text that does not look like a template' is not a valid variable name");
+
+    assertThatThrownBy(
+            () ->
+                TemplateParser.parse(
+                    "some text then {{ partition : text that looks = like a template }}", null))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining("'text that looks' is not a valid parameter name");
+
+    assertThatThrownBy(
+            () ->
+                TemplateParser.parse(
+                    "some text then {{ partition : text that looks = like a template }}",
+                    TemplateVariableRegistry.STANDARD_SINK))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining("'text that looks' is not a valid parameter name");
+
+    TemplateVariableRegistry registry =
+        TemplateVariableRegistry.builder().add(TemplateVariable.TIMESTAMP).build();
+    assertThatThrownBy(
+            () ->
+                TemplateParser.parse(
+                    "some text then {{ partition : text that looks = like a template }}", registry))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining("'partition' is not defined in the variable registry");
+  }
 }

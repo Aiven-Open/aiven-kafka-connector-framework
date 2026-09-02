@@ -170,9 +170,6 @@ public final class TemplateParser {
 
       int paramPos = pattern.indexOf(':');
       if (paramPos == -1) {
-        if (registry != null && !registry.has(pattern)) {
-          errMsg(String.format("'%s' is not defined in the variable registry", pattern));
-        }
         templateParts.add(createTemplatePart(pattern, Parameter.EMPTY, templatePattern));
       } else {
         if (paramPos == 0) {
@@ -181,6 +178,9 @@ public final class TemplateParser {
                   "Variable name has not been set, '%s' may not start with a ':'", pattern));
         }
         String variableName = pattern.substring(0, paramPos++).trim();
+        if (!isValidName(variableName)) {
+          errMsg(String.format("'%s' is not a valid variable name", variableName));
+        }
         if (registry != null && !registry.has(variableName)) {
           errMsg(String.format("'%s' is not defined in the variable registry", variableName));
         }
@@ -199,13 +199,13 @@ public final class TemplateParser {
               String.format(
                   "Parameter '%s' of '%s' may not start with an '='", paramText, variableName));
         }
-        String parameterName = paramText.substring(0, eqPos++);
+        String parameterName = paramText.substring(0, eqPos++).trim();
         String parameterValue = paramText.substring(eqPos);
         if (StringUtils.isEmpty(parameterValue)) {
           errMsg(String.format("Parameter '%s' value may not be empty", parameterName));
         }
         if (!isValidName(parameterName)) {
-          errMsg(String.format("'%s' is not a valid parameter name", variableName));
+          errMsg(String.format("'%s' is not a valid parameter name", parameterName));
         }
         Parameter parameter = Parameter.of(parameterName, parameterValue);
 
@@ -223,6 +223,9 @@ public final class TemplateParser {
      */
     private VariableTemplatePart createTemplatePart(
         String variableName, Parameter parameter, String variablePattern) {
+      if (!isValidName(variableName)) {
+        errMsg(String.format("'%s' is not a valid variable name", variableName));
+      }
       if (registry != null) {
         if (!registry.has(variableName)) {
           errMsg(String.format("'%s' is not defined in the variable registry", variableName));
@@ -234,9 +237,7 @@ public final class TemplateParser {
           registry.get(variableName).validate(errName, templatePattern, parameter);
         }
       }
-      if (!isValidName(variableName)) {
-        errMsg(String.format("'%s' is not a valid variable name", variableName));
-      }
+
       return new VariableTemplatePart(variableName, parameter, variablePattern);
     }
 

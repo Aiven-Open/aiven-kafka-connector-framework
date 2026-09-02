@@ -22,11 +22,26 @@ import org.apache.kafka.common.config.ConfigException;
 
 /** The template variable definition. */
 public final class TemplateVariable {
+  private static final ConfigDef.Validator BOOLEAN_VALIDATOR =
+      new ConfigDef.Validator() {
+        ConfigDef.ValidString validString = ConfigDef.ValidString.in("true", "false");
+
+        @Override
+        public void ensureValid(String name, Object value) {
+          validString.ensureValid(name, value.toString().trim());
+        }
+
+        @Override
+        public String toString() {
+          return validString.toString();
+        }
+      };
+
   // start of static standard template variables
   /** The padding descriptor used below */
   private static final ParameterDescriptor PADDING_DESCRIPTOR =
       ParameterDescriptor.builder("padding")
-          .validator(ConfigDef.ValidString.in("true", "false"))
+          .validator(BOOLEAN_VALIDATOR)
           .description("Specifies that the value should be left padded")
           .build();
 
