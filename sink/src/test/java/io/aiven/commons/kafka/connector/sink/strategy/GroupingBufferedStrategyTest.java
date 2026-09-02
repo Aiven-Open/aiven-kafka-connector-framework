@@ -1,0 +1,178 @@
+/*
+ * Copyright 2026 Aiven Oy
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.aiven.commons.kafka.connector.sink.strategy;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import io.aiven.commons.kafka.connector.sink.TestingHeader;
+import io.aiven.commons.kafka.connector.sink.grouper.RecordGrouperKey;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.apache.kafka.common.record.TimestampType;
+import org.apache.kafka.connect.data.Schema;
+import org.apache.kafka.connect.sink.SinkRecord;
+import org.junit.jupiter.api.Test;
+
+public class GroupingBufferedStrategyTest {
+
+  @Test
+  void keyPartitioning() {
+    int ORIGINAL_PARTITION = 2;
+    int PARTITION = 4;
+    long ORIGINAL_OFFSET = 32;
+    // 2026-08-14T14:13:01
+    long TIMESTAMP = 1786716781355L;
+    long OFFSET = 64;
+
+    RecordGrouperKey grouperKey =
+        new RecordGrouperKey(
+            "{{key}}-{{topic}}-{{partition}}-{{timestamp:unit=yyyy-MM-dd'T'HH:mm:ss}}");
+    List<SinkRecord> writtenRecords = new ArrayList<>();
+    GroupingBufferedStrategy underTest =
+        new GroupingBufferedStrategy(
+            grouperKey,
+            GroupingBufferedStrategy.NOT_SET,
+            GroupingBufferedStrategy.NOT_SET,
+            GroupingBufferedStrategy.NOT_SET,
+            writtenRecords::addAll);
+
+    underTest.put(
+        new SinkRecord(
+            "topic",
+            PARTITION,
+            Schema.STRING_SCHEMA,
+            "key1",
+            Schema.STRING_SCHEMA,
+            "record1",
+            OFFSET,
+            TIMESTAMP,
+            TimestampType.CREATE_TIME,
+            List.of(
+                new TestingHeader("stringHeader", Schema.STRING_SCHEMA, "stringValue"),
+                new TestingHeader("longHeader", Schema.OPTIONAL_INT64_SCHEMA, Long.valueOf(42))),
+            "originalTopic",
+            ORIGINAL_PARTITION,
+            ORIGINAL_OFFSET));
+
+    underTest.put(
+        new SinkRecord(
+            "topic",
+            PARTITION,
+            Schema.STRING_SCHEMA,
+            "key1",
+            Schema.STRING_SCHEMA,
+            "record2",
+            OFFSET,
+            TIMESTAMP,
+            TimestampType.CREATE_TIME,
+            List.of(
+                new TestingHeader("stringHeader", Schema.STRING_SCHEMA, "stringValue"),
+                new TestingHeader("longHeader", Schema.OPTIONAL_INT64_SCHEMA, Long.valueOf(42))),
+            "originalTopic",
+            ORIGINAL_PARTITION,
+            ORIGINAL_OFFSET));
+
+    underTest.put(
+        new SinkRecord(
+            "topic",
+            PARTITION,
+            Schema.STRING_SCHEMA,
+            "key1",
+            Schema.STRING_SCHEMA,
+            "record3",
+            OFFSET,
+            TIMESTAMP + 1000,
+            TimestampType.CREATE_TIME,
+            List.of(
+                new TestingHeader("stringHeader", Schema.STRING_SCHEMA, "stringValue"),
+                new TestingHeader("longHeader", Schema.OPTIONAL_INT64_SCHEMA, Long.valueOf(42))),
+            "originalTopic",
+            ORIGINAL_PARTITION,
+            ORIGINAL_OFFSET));
+
+    underTest.put(
+        new SinkRecord(
+            "topic2",
+            PARTITION,
+            Schema.STRING_SCHEMA,
+            "key1",
+            Schema.STRING_SCHEMA,
+            "record4",
+            OFFSET,
+            TIMESTAMP + 500,
+            TimestampType.CREATE_TIME,
+            List.of(
+                new TestingHeader("stringHeader", Schema.STRING_SCHEMA, "stringValue"),
+                new TestingHeader("longHeader", Schema.OPTIONAL_INT64_SCHEMA, Long.valueOf(42))),
+            "originalTopic",
+            ORIGINAL_PARTITION,
+            ORIGINAL_OFFSET));
+
+    underTest.put(
+        new SinkRecord(
+            "topic2",
+            PARTITION,
+            Schema.STRING_SCHEMA,
+            "key0",
+            Schema.STRING_SCHEMA,
+            "record4",
+            OFFSET,
+            TIMESTAMP + 1000,
+            TimestampType.CREATE_TIME,
+            List.of(
+                new TestingHeader("stringHeader", Schema.STRING_SCHEMA, "stringValue"),
+                new TestingHeader("longHeader", Schema.OPTIONAL_INT64_SCHEMA, Long.valueOf(42))),
+            "originalTopic",
+            ORIGINAL_PARTITION,
+            ORIGINAL_OFFSET));
+
+    underTest.put(
+        new SinkRecord(
+            "topic2",
+            PARTITION + 1,
+            Schema.STRING_SCHEMA,
+            "key0",
+            Schema.STRING_SCHEMA,
+            "record4",
+            OFFSET,
+            TIMESTAMP + 500,
+            TimestampType.CREATE_TIME,
+            List.of(
+                new TestingHeader("stringHeader", Schema.STRING_SCHEMA, "stringValue"),
+                new TestingHeader("longHeader", Schema.OPTIONAL_INT64_SCHEMA, Long.valueOf(42))),
+            "originalTopic",
+            ORIGINAL_PARTITION,
+            ORIGINAL_OFFSET));
+
+    GroupingBufferedStrategy.TestingInfo testingInfo = underTest.new TestingInfo();
+    assertFalse(testingInfo.isEmpty());
+    assertEquals(5, testingInfo.size());
+    for (String testKey : testingInfo.keys()) {
+      if (testKey.equals("key1-topic-4-2026-08-14T14:13:01")) {
+        assertEquals(2, testingInfo.get(testKey).size());
+      } else {
+        assertEquals(1, testingInfo.get(testKey).size());
+      }
+    }
+
+    underTest.flush(Collections.emptyMap());
+    assertTrue(testingInfo.isEmpty());
+    assertEquals(6, writtenRecords.size());
+  }
+}
