@@ -35,9 +35,9 @@ class SourceCommonConfigDefTest {
         factory.open(SourceCommonConfig.SourceCommonConfigDef.class.getName());
     for (ExtendedConfigKeyBean eckb : cdb.configKeys()) {
       if (eckb.isExtendedFlag()) {
-        assertThat(eckb.getName()).isNotIn(nonExtended).as(eckb.getName());
+        assertThat(eckb.getName()).isNotIn((Object[]) nonExtended);
       } else {
-        assertThat(eckb.getName()).isIn(nonExtended).as(eckb.getName());
+        assertThat(eckb.getName()).isIn((Object[]) nonExtended);
       }
     }
   }

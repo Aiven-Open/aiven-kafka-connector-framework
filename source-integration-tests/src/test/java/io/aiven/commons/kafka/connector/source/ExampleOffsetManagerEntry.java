@@ -98,7 +98,7 @@ public class ExampleOffsetManagerEntry
     // this is the primary key for determining if the data has been processed. At a
     // minimum the representation of
     // the native key should be stored.
-    return () -> Map.of(KEY, data.get(KEY));
+    return new OffsetManager.OffsetManagerKey(Map.of(KEY, data.get(KEY)));
   }
 
   @Override
