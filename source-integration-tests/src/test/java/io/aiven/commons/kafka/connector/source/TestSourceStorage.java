@@ -64,10 +64,9 @@ public class TestSourceStorage implements SourceStorage<String, ByteBuffer> {
   }
 
   public OffsetManager.OffsetManagerKey createKey(final String nativeKey) {
-    return () -> {
-      String[] parts = nativeKey.split("/");
-      return Map.of("topic", parts[0], "partition", parts[1], "ulid", parts[2]);
-    };
+    String[] parts = nativeKey.split("/");
+    return new OffsetManager.OffsetManagerKey(
+        Map.of("topic", parts[0], "partition", parts[1], "ulid", parts[2]));
   }
 
   @Override
