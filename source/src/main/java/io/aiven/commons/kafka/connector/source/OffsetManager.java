@@ -21,7 +21,9 @@ import static java.util.stream.Collectors.toList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -227,23 +229,40 @@ public final class OffsetManager {
     long getRecordCount();
   }
 
-  /** The OffsetManager Key. Must override hashCode() and equals(). */
-  @FunctionalInterface
-  public interface OffsetManagerKey {
+  /**
+   * The OffsetManager Key. Implements a segmented key. Key segments are presented in lexical order.
+   */
+  public static final class OffsetManagerKey {
+    TreeMap<String, Object> map;
+
     /**
-     * Gets the partition map used by Kafka to identify this Offset entry. This is analogous to the
-     * sourcePartition in the kafka {@link SourceRecord} it represents a single input
-     * sourcePartition that the record came from (e.g. a filename, table name, or topic-partition).
-     * In most cases this should be a map representation of the NativeKey.
+     * Constructs the OFfsetManagerKey from the provided map.
      *
-     * <p>Kafka stores all numbers as longs and so all keys based off integers should be created as
-     * longs in the manager key.
-     *
-     * <p>This method should make a copy of the internal data and return that to prevent any
-     * accidental updates to the internal data.
-     *
-     * @return The partition map used by Kafka to identify this Offset entry.
+     * @param map the map to copy the key/value segments from.
      */
-    Map<String, Object> getPartitionMap();
+    public OffsetManagerKey(Map<String, ?> map) {
+      this.map = new TreeMap<>(map);
+    }
+
+    @Override
+    public int hashCode() {
+      return map.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o == null || getClass() != o.getClass()) return false;
+      OffsetManagerKey that = (OffsetManagerKey) o;
+      return Objects.equals(map, that.map);
+    }
+
+    /**
+     * Retrieve the partition map for a Kafka Source record.
+     *
+     * @return he partition map for a Kafka Source record.
+     */
+    public Map<String, Object> getPartitionMap() {
+      return new TreeMap<>(map);
+    }
   }
 }
