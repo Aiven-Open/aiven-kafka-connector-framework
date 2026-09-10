@@ -66,7 +66,9 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
   private int maxDetectedClientStream;
 
   /**
-   * Constructor
+   * Constructor.
+   *
+   * <p>The evolving source record does not receive any additional initialization.
    *
    * @param sourceConfig the source configuration for the native source.
    * @param offsetManager The offset manager from the kafka task.
@@ -82,6 +84,19 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
         sourceConfig.getNativeStartKey() != null && serde.isPresent()
             ? serde.get().fromString(sourceConfig.getNativeStartKey())
             : null;
+  }
+
+  /**
+   * Provides additional initialization for the EvolvingSourceRecord immediately after it is
+   * constructed. This is effectively the first evolution.
+   *
+   * <p>Default implementation returns the EvolvingSourceRecord without change.
+   *
+   * @return A function that accepts a newly constructed EvolvingSourceRecord and transforms it in
+   *     some way.
+   */
+  protected Function<EvolvingSourceRecord, EvolvingSourceRecord> initializeRecordFunction() {
+    return Function.identity();
   }
 
   /**
@@ -176,7 +191,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
             lookback.get(),
             () -> {
               LOGGER.info(
-                  "{} set, no alternative present in buffer will begin consuming from {}",
+                  "{} set, no alternative present in buffer will begin coConverternsuming from {}",
                   SourceConfigFragment.NATIVE_START_KEY,
                   startKey);
               return startKey;
@@ -313,7 +328,9 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
                 .getEntryData(offsetManagerEntry.getManagerKey())
                 .map(NativeSourceData.this::createOffsetManagerEntry)
                 .orElse(offsetManagerEntry);
-        return Optional.of(new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context));
+        return Optional.of(
+            initializeRecordFunction()
+                .apply(new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context)));
       }
       return Optional.empty();
     }
