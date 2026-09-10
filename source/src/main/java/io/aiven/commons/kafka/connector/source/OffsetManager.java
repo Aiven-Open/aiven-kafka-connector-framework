@@ -236,7 +236,7 @@ public final class OffsetManager {
     TreeMap<String, Object> map;
 
     /**
-     * Constructs the OFfsetManagerKey from the provided map.
+     * Constructs the OffsetManagerKey from the provided map.
      *
      * @param map the map to copy the key/value segments from.
      */
