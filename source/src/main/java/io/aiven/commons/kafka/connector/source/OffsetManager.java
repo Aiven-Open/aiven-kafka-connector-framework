@@ -259,7 +259,7 @@ public final class OffsetManager {
     /**
      * Retrieve the partition map for a Kafka Source record.
      *
-     * @return he partition map for a Kafka Source record.
+     * @return The partition map for a Kafka Source record.
      */
     public Map<String, Object> getPartitionMap() {
       return new TreeMap<>(map);
