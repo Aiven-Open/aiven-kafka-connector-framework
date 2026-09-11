@@ -24,7 +24,6 @@ import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigValue;
 import org.apache.kafka.connect.runtime.errors.ToleranceType;

@@ -45,6 +45,9 @@ public class ByteTestConfig extends TestConfig {
   public Map<String, String> consumerConfiguration() {
     Map<String, String> workerOverrides = new HashMap<>();
     workerOverrides.put("example.dir", storage.getTestDir().toString());
+    SourceConfigFragment.setter(workerOverrides)
+        .distributionType(DistributionType.OBJECT_HASH)
+        .extractorClass(ByteArrayExtractor.class);
     return CommonConfigFragment.setter(workerOverrides)
         .keyConverter(StringConverter.class.getName())
         .valueConverter(ByteArrayConverter.class.getName())

@@ -71,7 +71,7 @@ public abstract class IOExtractorTest {
     return new EvolvingSourceRecord(
         nativeItem,
         new ExampleOffsetManagerEntry((String) nativeItem.nativeKey(), "group1"),
-        new Context(nativeItem.nativeKey()));
+        Context.builder(nativeItem.nativeKey()).build());
   }
 
   @BeforeEach

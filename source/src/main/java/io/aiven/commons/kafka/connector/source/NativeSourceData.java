@@ -165,7 +165,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
             context.getTopic().get(),
             targetTopic);
       }
-      context.setTopic(targetTopic);
+      return context.builder().topic(targetTopic).build();
     }
     return context;
   }

@@ -16,54 +16,103 @@
 
 package io.aiven.commons.kafka.connector.source.task;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.function.Function;
 
 /**
  * A Context which captures all the details about the source object that are required to
  * successfully send a source record onto Kafka
  */
-public class Context {
-  /** The Kafka topic for this Context. May be {@code null}. */
-  private String topic;
+public final class Context {
+  public static final String TOPIC_KEY = Context.class.getName()+"#Topic";
+  public static final String PARTITION_KEY = Context.class.getName()+"#Partition";
+  public static final String OFFSET_KEY = Context.class.getName()+"#Offset";
+  public static final String NATIVE_KEY = Context.class.getName()+"#NativeKey";
 
-  /** The Kafka partition for this Context. May be {@code null}. */
-  private Integer partition;
+  final Map<String,Object> properties;
 
-  /**
-   * The Kafka offset for this Context. When used as a Context within a larger context, this is the
-   * number of bytes into the native stream that this context starts at. May be {@code null}.
-   */
-  private Long offset;
+//  /** The Kafka topic for this Context. May be {@code null}. */
+//  private String topic;
+//
+//  /** The Kafka partition for this Context. May be {@code null}. */
+//  private Integer partition;
+//
+//  /**
+//   * The Kafka offset for this Context. When used as a Context within a larger context, this is the
+//   * number of bytes into the native stream that this context starts at. May be {@code null}.
+//   */
+//  private Long offset;
+//
+//  /** the native key that is being processed */
+//  private final Comparable<?> nativeKey;
 
-  /** the native key that is being processed */
-  private final Comparable<?> nativeKey;
+  public static Builder builder(Comparable<?> primaryKey) {
+    return new Builder(primaryKey);
+  }
+
+  public static Builder builder(Context context) {
+    return new Builder(context);
+  }
 
   /**
    * Constructor.
    *
-   * @param nativeKey The native key for the object being processed.
+   * @param properties The map of properties for this context.
    */
-  public Context(Comparable<?> nativeKey) {
-    this.nativeKey = nativeKey;
+  private Context(Map<String, Object> properties) {
+    this.properties = new TreeMap<>(properties);
   }
 
-  /**
-   * Creates a defensive copy of the Context
-   *
-   * @param anotherContext The Context which needs to be copied
-   */
-  protected Context(final Context anotherContext) {
-    this.nativeKey = anotherContext.nativeKey;
-    this.partition = anotherContext.partition;
-    this.topic = anotherContext.topic;
-    this.offset = anotherContext.offset;
+  @Override
+  public boolean equals(Object o) {
+    if (o == null || getClass() != o.getClass()) return false;
+    Context context = (Context) o;
+    return Objects.equals(properties, context.properties);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(properties);
+  }
+
+  public Builder builder() {
+    return new Builder(this);
   }
 
   @Override
   public String toString() {
     return String.format(
-        "Context{key:%s, partition:%s, topic:%s, offset:%s", nativeKey, partition, topic, offset);
+        "Context{key:%s, partition:%s, topic:%s, offset:%s", getNativeKey(), getPartition(), getTopic(), getOffset());
   }
+
+  private <T> Optional<T> getObject(String key, Function<Object, T> fn) {
+    Object o = properties.get(key);
+    return o == null ? Optional.empty() : Optional.of(fn.apply(o));
+  }
+
+  public final Optional<String> getString(String key) {
+    return getObject(key, Object::toString);
+  }
+
+  public Optional<Number> getNumber(String key) {
+    return getObject(key, Number.class::cast);
+  }
+
+  public Optional<Integer> getInteger(String key) {
+    return getObject(key,  x -> (x instanceof Integer i) ? i : ((Number) x).intValue());
+  }
+
+  public Optional<Long> getLong(String key) {
+    return getObject(key,  x -> (x instanceof Long l) ? l : ((Number) x).longValue());
+  }
+
+  public Optional<Short> getShort(String key) {
+    return getObject(key,  x -> (x instanceof Short s) ? s : ((Number) x).shortValue());
+  }
+
 
   /**
    * Gets the Kafka topic as specified by the context.
@@ -71,16 +120,7 @@ public class Context {
    * @return an Optional kafka topic.
    */
   public final Optional<String> getTopic() {
-    return Optional.ofNullable(topic);
-  }
-
-  /**
-   * Sets the Kafka topic for this context.
-   *
-   * @param topic the topic. May be {@code null}.
-   */
-  public final void setTopic(final String topic) {
-    this.topic = topic;
+    return getString(TOPIC_KEY);
   }
 
   /**
@@ -89,16 +129,7 @@ public class Context {
    * @return an Optional kafka partition.
    */
   public final Optional<Integer> getPartition() {
-    return Optional.ofNullable(partition);
-  }
-
-  /**
-   * Sets the Kafka partition for this context.
-   *
-   * @param partition the partition. May be {@code null}.
-   */
-  public final void setPartition(final Integer partition) {
-    this.partition = partition;
+    return getInteger(PARTITION_KEY);
   }
 
   /**
@@ -108,7 +139,7 @@ public class Context {
    * @return the Optional storage key for the native object this context is associated with.
    */
   public final <T extends Comparable<T>> T getNativeKey() {
-    return (T) nativeKey;
+    return (T) properties.get(NATIVE_KEY);
   }
 
   /**
@@ -118,16 +149,61 @@ public class Context {
    * @return an optional native offset for this context.
    */
   public final Optional<Long> getOffset() {
-    return Optional.ofNullable(offset);
+    return getLong(OFFSET_KEY);
   }
 
-  /**
-   * Sets the native offset for this context. When used as a Context within a larger context, this
-   * is the number of bytes into the native stream that this context starts at.
-   *
-   * @param offset the optional native offset for this context. May be {@code null}.
-   */
-  public final void setOffset(final Long offset) {
-    this.offset = offset;
+
+
+  public static class AbstractBuilder<T extends AbstractBuilder<T>> {
+    private final Map<String, Object> properties;
+
+    protected AbstractBuilder(Comparable<?> nativeKey) {
+      properties = new TreeMap<>();
+      properties.put(NATIVE_KEY, nativeKey);
+    }
+
+    protected AbstractBuilder(Context otherContext) {
+      properties = new TreeMap<>(otherContext.properties);
+    }
+
+    public final T self() {
+      return (T) this;
+    }
+
+    public final T nativeKey(Comparable<?> nativeKey) {
+      properties.put(NATIVE_KEY, nativeKey);
+      return self();
+    }
+
+    public final T topic(String topic) {
+      properties.put(TOPIC_KEY, topic);
+      return self();
+    }
+
+    public final T partition(Integer partition) {
+      properties.put(PARTITION_KEY, partition);
+      return self();
+    }
+
+    public final T offset(Long offset) {
+      properties.put(OFFSET_KEY, offset);
+      return self();
+    }
+
+    public final Context build() {
+      Objects.requireNonNull(properties.get(NATIVE_KEY), "Native key may not be null");
+      return new Context(properties);
+    }
+  }
+
+  public static class Builder extends AbstractBuilder<Builder> {
+
+    public Builder(Comparable<?> nativeKey) {
+      super(nativeKey);
+    }
+
+    public Builder(Context otherContext) {
+      super(otherContext);
+    }
   }
 }

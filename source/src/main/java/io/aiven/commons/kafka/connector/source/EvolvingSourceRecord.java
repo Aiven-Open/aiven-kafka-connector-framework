@@ -266,7 +266,7 @@ public final class EvolvingSourceRecord {
    * @return A copy of the Context for this source record.
    */
   public Context getContext() {
-    return new Context(context) {};
+    return context;
   }
 
   /**

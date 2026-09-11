@@ -120,7 +120,7 @@ final class CsvExtractorTest extends IORecordExtractorTest {
         new ExampleSourceNativeInfo(
             new ExampleNativeItem(nativeItem, nativeItem.getBytes(StandardCharsets.UTF_8)));
     return new EvolvingSourceRecord(
-        exp, new ExampleOffsetManagerEntry(nativeItem, "group1"), new Context(nativeItem));
+        exp, new ExampleOffsetManagerEntry(nativeItem, "group1"), Context.builder(nativeItem).build());
   }
 
   @Test

@@ -41,7 +41,7 @@ public class ExampleSourceNativeInfo extends AbstractSourceNativeInfo<String, By
 
   @Override
   public Context getContext() {
-    return new Context(nativeKey());
+    return Context.builder(nativeKey()).build();
     // we don't have any context data here, but in some cases the ExampleNativeItem
     // may have topic, partition or kafka offset information.
   }
