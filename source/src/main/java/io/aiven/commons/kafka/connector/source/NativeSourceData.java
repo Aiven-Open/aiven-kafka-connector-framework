@@ -54,7 +54,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
   /** The source common config */
   private final SourceCommonConfig sourceConfig;
 
-  /** The extractor to use. */
+  /** The extractor to use. May be {@code null}. */
   private final Extractor extractor;
 
   /**
@@ -78,7 +78,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
     this.sourceConfig = sourceConfig;
     this.lookback = Lookback.ofSize(sourceConfig.getRingBufferSize());
     this.offsetManager = offsetManager;
-    this.extractor = sourceConfig.getExtractor();
+    this.extractor = sourceConfig.getExtractor().orElse(null);
     Optional<KeySerde<K>> serde = getNativeKeySerde();
     this.startKey =
         sourceConfig.getNativeStartKey() != null && serde.isPresent()
@@ -247,8 +247,11 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
    * @return a stream of T created from the input stream of the native item.
    */
   final Stream<EvolvingSourceRecord> transform(final EvolvingSourceRecord sourceRecord) {
-    sourceRecord.setKeyData(extractor.generateKeyData(sourceRecord));
-    return extractor.generateRecords(sourceRecord).map(new Mapper(sourceRecord));
+    if (extractor != null) {
+      sourceRecord.setKeyData(extractor.generateKeyData(sourceRecord));
+      return extractor.generateRecords(sourceRecord).map(new Mapper(sourceRecord));
+    }
+    return Stream.of(sourceRecord);
   }
 
   /**
@@ -277,7 +280,9 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 
   @Override
   public void close() throws Exception {
-    extractor.close();
+    if (extractor != null) {
+      extractor.close();
+    }
   }
 
   /**

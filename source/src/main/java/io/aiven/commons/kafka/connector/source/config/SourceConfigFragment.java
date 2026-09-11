@@ -31,6 +31,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
+
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigException;
@@ -131,9 +133,9 @@ public final class SourceConfigFragment extends ConfigFragment {
         .define(
             ExtendedConfigKey.builder(EXTRACTOR_CLASS)
                 .type(ConfigDef.Type.CLASS)
-                .defaultValue(ByteArrayExtractor.class)
+                //.defaultValue(ByteArrayExtractor.class)
                 .validator(new ExtractorValidator())
-                .documentation("Defines the class for the Extractor")
+                .documentation("Defines the class for the Extractor.  If not set no extractor operations are performed.")
                 .internalConfig(true)
                 .since(siBuilder.version("0.1.0").build())
                 .build())
@@ -231,11 +233,14 @@ public final class SourceConfigFragment extends ConfigFragment {
    * Gets the Extractor instance for this source.
    *
    * @param config the configuration for this source.
-   * @return the Extractor instance for this source.
+   * @return the Extractor instance for this source. May be {@code null}.
    */
-  public Extractor getExtractor(SourceCommonConfig config) {
+  public Optional<Extractor> getExtractor(SourceCommonConfig config) {
     Class<? extends Extractor> clazz;
     Object klass = values().get(EXTRACTOR_CLASS);
+    if (klass == null) {
+      return Optional.empty();
+    }
     if (klass instanceof String) {
       try {
         clazz = Utils.loadClass((String) klass, Extractor.class);
@@ -251,7 +256,7 @@ public final class SourceConfigFragment extends ConfigFragment {
               + ", expected String or Class");
     }
     try {
-      return clazz.getDeclaredConstructor(SourceCommonConfig.class).newInstance(config);
+      return Optional.of(clazz.getDeclaredConstructor(SourceCommonConfig.class).newInstance(config));
     } catch (InvocationTargetException
         | InstantiationException
         | IllegalAccessException
