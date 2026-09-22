@@ -261,9 +261,9 @@ public final class EvolvingSourceRecord {
   }
 
   /**
-   * Gets the Context for this source record. Makes a defensive copy.
+   * Gets the Context for this source record.
    *
-   * @return A copy of the Context for this source record.
+   * @return the Context for this source record.
    */
   public Context getContext() {
     return context;

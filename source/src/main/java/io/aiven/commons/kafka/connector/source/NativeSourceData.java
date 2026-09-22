@@ -191,7 +191,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
             lookback.get(),
             () -> {
               LOGGER.info(
-                  "{} set, no alternative present in buffer will begin coConverternsuming from {}",
+                  "{} set, no alternative present in buffer will begin consuming from {}",
                   SourceConfigFragment.NATIVE_START_KEY,
                   startKey);
               return startKey;
