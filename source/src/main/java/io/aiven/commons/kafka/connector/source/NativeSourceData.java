@@ -54,7 +54,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
   /** The source common config */
   private final SourceCommonConfig sourceConfig;
 
-  /** The extractor to use. */
+  /** The extractor to use. May be {@code null}. */
   private final Extractor extractor;
 
   /**
@@ -66,7 +66,9 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
   private int maxDetectedClientStream;
 
   /**
-   * Constructor
+   * Constructor.
+   *
+   * <p>The evolving source record does not receive any additional initialization.
    *
    * @param sourceConfig the source configuration for the native source.
    * @param offsetManager The offset manager from the kafka task.
@@ -76,12 +78,25 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
     this.sourceConfig = sourceConfig;
     this.lookback = Lookback.ofSize(sourceConfig.getRingBufferSize());
     this.offsetManager = offsetManager;
-    this.extractor = sourceConfig.getExtractor();
+    this.extractor = sourceConfig.getExtractor().orElse(null);
     Optional<KeySerde<K>> serde = getNativeKeySerde();
     this.startKey =
         sourceConfig.getNativeStartKey() != null && serde.isPresent()
             ? serde.get().fromString(sourceConfig.getNativeStartKey())
             : null;
+  }
+
+  /**
+   * Provides additional initialization for the EvolvingSourceRecord immediately after it is
+   * constructed. This is effectively the first evolution.
+   *
+   * <p>Default implementation returns the EvolvingSourceRecord without change.
+   *
+   * @return A function that accepts a newly constructed EvolvingSourceRecord and transforms it in
+   *     some way.
+   */
+  protected Function<EvolvingSourceRecord, EvolvingSourceRecord> initializeRecordFunction() {
+    return Function.identity();
   }
 
   /**
@@ -150,7 +165,7 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
             context.getTopic().get(),
             targetTopic);
       }
-      context.setTopic(targetTopic);
+      return context.builder().topic(targetTopic).build();
     }
     return context;
   }
@@ -232,8 +247,11 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
    * @return a stream of T created from the input stream of the native item.
    */
   final Stream<EvolvingSourceRecord> transform(final EvolvingSourceRecord sourceRecord) {
-    sourceRecord.setKeyData(extractor.generateKeyData(sourceRecord));
-    return extractor.generateRecords(sourceRecord).map(new Mapper(sourceRecord));
+    if (extractor != null) {
+      sourceRecord.setKeyData(extractor.generateKeyData(sourceRecord));
+      return extractor.generateRecords(sourceRecord).map(new Mapper(sourceRecord));
+    }
+    return Stream.of(sourceRecord);
   }
 
   /**
@@ -262,7 +280,9 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
 
   @Override
   public void close() throws Exception {
-    extractor.close();
+    if (extractor != null) {
+      extractor.close();
+    }
   }
 
   /**
@@ -313,7 +333,9 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
                 .getEntryData(offsetManagerEntry.getManagerKey())
                 .map(NativeSourceData.this::createOffsetManagerEntry)
                 .orElse(offsetManagerEntry);
-        return Optional.of(new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context));
+        return Optional.of(
+            initializeRecordFunction()
+                .apply(new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context)));
       }
       return Optional.empty();
     }

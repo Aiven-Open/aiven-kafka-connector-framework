@@ -30,11 +30,11 @@ public final class DistributionTypeTest {
   @Test
   void partitionTest() {
     Predicate<Context> predicate = DistributionType.PARTITION.asPredicate(2, 0);
-    Context ctxt = new Context("The Key");
+    Context ctxt = Context.builder("The Key").build();
     assertThat(predicate.test(ctxt)).isFalse();
-    ctxt.setPartition(1);
+    ctxt = ctxt.builder().partition(1).build();
     assertThat(predicate.test(ctxt)).isFalse();
-    ctxt.setPartition(2);
+    ctxt = ctxt.builder().partition(2).build();
     assertThat(predicate.test(ctxt)).isTrue();
   }
 
@@ -44,22 +44,21 @@ public final class DistributionTypeTest {
     // "The Key" has a hash code of 312633840
     // "The Key3" has a has code of 1101714499
     Predicate<Context> predicate = DistributionType.OBJECT_HASH.asPredicate(2, 0);
-    Context ctxt = new Context("The Key");
-    System.out.println("The Key".hashCode());
+    Context ctxt = Context.builder("The Key").build();
     assertThat(predicate.test(ctxt)).isTrue();
-    ctxt = new Context("The Key3");
+    ctxt = Context.builder("The Key3").build();
     assertThat(predicate.test(ctxt)).isFalse();
 
     predicate = DistributionType.OBJECT_HASH.asPredicate(2, 1);
-    ctxt = new Context("The Key");
+    ctxt = Context.builder("The Key").build();
     assertThat(predicate.test(ctxt)).isFalse();
-    ctxt = new Context("The Key3");
+    ctxt = Context.builder("The Key3").build();
     assertThat(predicate.test(ctxt)).isTrue();
 
     predicate = DistributionType.OBJECT_HASH.asPredicate(2, 3);
-    ctxt = new Context("The Key");
+    ctxt = Context.builder("The Key").build();
     assertThat(predicate.test(ctxt)).isFalse();
-    ctxt = new Context("The Key3");
+    ctxt = Context.builder("The Key3").build();
     assertThat(predicate.test(ctxt)).isFalse();
   }
 }

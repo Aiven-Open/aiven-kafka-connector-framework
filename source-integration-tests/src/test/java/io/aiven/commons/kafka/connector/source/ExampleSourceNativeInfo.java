@@ -20,17 +20,17 @@ public class ExampleSourceNativeInfo extends AbstractSourceNativeInfo<String, By
   @Override
   public Context getContext() {
     String[] parts = nativeInfo.nativeKey().split("/");
-    Context result = new Context(nativeInfo.nativeKey());
-    result.setTopic(parts[0]);
+    Context.Builder<?> builder = Context.builder(nativeInfo.nativeKey());
+    builder.topic(parts[0]);
     try {
-      result.setPartition(Integer.parseInt(parts[1]));
+      builder.partition(Integer.parseInt(parts[1]));
     } catch (NumberFormatException e) {
       throw new IllegalArgumentException(
           String.format(
               "Partition part of native key '%s' is not a valid number: %s",
               nativeInfo.nativeKey(), e.getMessage()));
     }
-    return result;
+    return builder.build();
   }
 
   @Override

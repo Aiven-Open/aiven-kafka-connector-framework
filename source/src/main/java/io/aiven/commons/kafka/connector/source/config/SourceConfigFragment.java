@@ -22,7 +22,6 @@ import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
 import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.config.validator.ScaleValidator;
-import io.aiven.commons.kafka.connector.source.extractor.ByteArrayExtractor;
 import io.aiven.commons.kafka.connector.source.extractor.Extractor;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import io.aiven.commons.util.collections.Scale;
@@ -31,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigException;
@@ -131,9 +131,9 @@ public final class SourceConfigFragment extends ConfigFragment {
         .define(
             ExtendedConfigKey.builder(EXTRACTOR_CLASS)
                 .type(ConfigDef.Type.CLASS)
-                .defaultValue(ByteArrayExtractor.class)
                 .validator(new ExtractorValidator())
-                .documentation("Defines the class for the Extractor")
+                .documentation(
+                    "Defines the class for the Extractor.  If not set no extractor operations are performed.")
                 .internalConfig(true)
                 .since(siBuilder.version("0.1.0").build())
                 .build())
@@ -231,11 +231,14 @@ public final class SourceConfigFragment extends ConfigFragment {
    * Gets the Extractor instance for this source.
    *
    * @param config the configuration for this source.
-   * @return the Extractor instance for this source.
+   * @return the Extractor instance for this source. May be {@code null}.
    */
-  public Extractor getExtractor(SourceCommonConfig config) {
+  public Optional<Extractor> getExtractor(SourceCommonConfig config) {
     Class<? extends Extractor> clazz;
     Object klass = values().get(EXTRACTOR_CLASS);
+    if (klass == null) {
+      return Optional.empty();
+    }
     if (klass instanceof String) {
       try {
         clazz = Utils.loadClass((String) klass, Extractor.class);
@@ -251,7 +254,8 @@ public final class SourceConfigFragment extends ConfigFragment {
               + ", expected String or Class");
     }
     try {
-      return clazz.getDeclaredConstructor(SourceCommonConfig.class).newInstance(config);
+      return Optional.of(
+          clazz.getDeclaredConstructor(SourceCommonConfig.class).newInstance(config));
     } catch (InvocationTargetException
         | InstantiationException
         | IllegalAccessException
@@ -433,24 +437,25 @@ public final class SourceConfigFragment extends ConfigFragment {
 
     @Override
     public void ensureValid(String name, Object value) {
-      if (value == null) {
-        throw new ConfigException("Extractor class may not be null");
-      }
-      try {
-        Class<?> clazz =
-            value instanceof Class<?> ? (Class<?>) value : Class.forName(value.toString());
-        if (!Extractor.class.isAssignableFrom(clazz)) {
-          throw new ConfigException("Extractor class in configuration must extend Extractor");
+      if (value != null) {
+        try {
+          Class<?> clazz =
+              value instanceof Class<?> ? (Class<?>) value : Class.forName(value.toString());
+          if (!Extractor.class.isAssignableFrom(clazz)) {
+            throw new ConfigException("Extractor class in configuration must extend abstract class Extractor");
+          }
+        } catch (ClassNotFoundException e) {
+          throw new ConfigException(
+              "Extractor class specified in configuration not found: {}", e.getMessage());
         }
-      } catch (ClassNotFoundException e) {
-        throw new ConfigException(
-            "Extractor class specified in configuration not found: {}", e.getMessage());
       }
     }
 
     @Override
     public String toString() {
-      return String.format("A class that extends %s.", Extractor.class.getCanonicalName());
+      return String.format(
+          "A class that extends %s.  Configuration is optional.",
+          Extractor.class.getCanonicalName());
     }
   }
 }
