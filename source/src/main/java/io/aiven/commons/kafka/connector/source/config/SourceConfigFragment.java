@@ -131,7 +131,6 @@ public final class SourceConfigFragment extends ConfigFragment {
         .define(
             ExtendedConfigKey.builder(EXTRACTOR_CLASS)
                 .type(ConfigDef.Type.CLASS)
-                // .defaultValue(ByteArrayExtractor.class)
                 .validator(new ExtractorValidator())
                 .documentation(
                     "Defines the class for the Extractor.  If not set no extractor operations are performed.")
