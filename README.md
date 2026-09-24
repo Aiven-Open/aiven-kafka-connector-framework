@@ -35,6 +35,10 @@ Setup
 
 This is a Maven based project.  Checkout the code and run `mvn install` to initialize the entire codebase.
 
+Package Documentation
+============
+Each package includes a `package-info.java` file providing Javadoc descriptions. See the generated Javadocs for details on each package's purpose and contents.
+
 License
 ============
 Aiven Kafka Connector Framework is licensed under the Apache License, version 2.0. Full license text is available in the [LICENSE](LICENSE) file.
