@@ -190,10 +190,12 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
         ObjectUtils.getIfNull(
             lookback.get(),
             () -> {
-              LOGGER.info(
-                  "{} set, no alternative present in buffer will begin consuming from {}",
-                  SourceConfigFragment.NATIVE_START_KEY,
-                  startKey);
+              if (startKey != null) {
+                LOGGER.info(
+                        "{} set, no alternative present in buffer will begin consuming from {}",
+                        SourceConfigFragment.NATIVE_START_KEY,
+                        startKey);
+              }
               return startKey;
             });
     NativeInfoConverter converter = new NativeInfoConverter();
