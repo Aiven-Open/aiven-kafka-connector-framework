@@ -24,7 +24,22 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Function;
 
-/** The context for a source record. */
+/**
+ * The context for a source record.
+ *
+ * <p>The context contains information necessary for processing the record. By default, it contains
+ * the topic, partition, offset and native key for the `Native Object` being processed.
+ *
+ * <p>The context stores named values. Additional values may be added to the context. value names
+ * should be namespaced to avoid collisions. For example the default topic value is named
+ * "io.aiven.commons.kafka.connector.source.task.Context#Topic".
+ *
+ * <p>Contexts are intended to be immutable and constructed using the Builder pattern. New Context
+ * implementations should simply provide easy retrieval of new named values.
+ *
+ * <p>New Builder implementations should extend the Context.Builder class and add setters and
+ * validators for the new named values.
+ */
 public class Context {
   /** The key for the topic value. */
   public static final String TOPIC_KEY = Context.class.getName() + "#Topic";
@@ -71,7 +86,7 @@ public class Context {
   }
 
   /**
-   * Creates a builder for a Context.
+   * Creates a builder for a default Context.
    *
    * @param primaryKey the primary key.
    * @return a builder
@@ -81,9 +96,14 @@ public class Context {
   }
 
   /**
-   * Creates a builder from this context
+   * Creates a builder from this context. <em>Note:</em> Implementations that extend the base
+   * context should override this method to return a builder for the specific context
+   * implementation.
    *
-   * @return a builder for a Context.
+   * <p>The returned context builder should, by default and without modification, create a new
+   * context that has the same properties as this context.
+   *
+   * @return a builder for this Context.
    */
   public Context.Builder<?> builder() {
     return new DefaultBuilder(this.properties);
@@ -208,8 +228,14 @@ public class Context {
     return getLong(OFFSET_KEY);
   }
 
+  /** The default builder for a context. Used when no other builder is provided. */
   private static final class DefaultBuilder extends Builder<DefaultBuilder> {
 
+    /**
+     * This is protected because the Builder defines is as protected.
+     *
+     * @param nativeKey the native key for the Context.
+     */
     protected DefaultBuilder(Comparable<?> nativeKey) {
       super(nativeKey);
     }
@@ -243,7 +269,20 @@ public class Context {
       void test(Map<String, Object> properties) throws IllegalArgumentException;
     }
 
+    /** The validator to ensure the NATIVE_KEY is not null. */
+    private static final Validator NATIVE_KEY_VALIDATOR =
+        properties ->
+            Objects.requireNonNull(properties.get(NATIVE_KEY), "Native key may not be null");
+
+    /** A map of property name to property value. */
     private final Map<String, Object> properties;
+
+    /**
+     * A list of validators for the properties. Implementations of the build add their own
+     * validators to ensure that properties specified by the builder are set correctly. These tests
+     * can also be used to validate that extra restrictions placed on properties defined in a parent
+     * builder are also met.
+     */
     private final List<Validator> validation = new ArrayList<>();
 
     /**
@@ -254,9 +293,7 @@ public class Context {
     protected Builder(Comparable<?> nativeKey) {
       properties = new TreeMap<>();
       properties.put(NATIVE_KEY, nativeKey);
-      validation.add(
-          properties ->
-              Objects.requireNonNull(properties.get(NATIVE_KEY), "Native key may not be null"));
+      validation.add(NATIVE_KEY_VALIDATOR);
     }
 
     /**
@@ -268,9 +305,9 @@ public class Context {
     public abstract Context build();
 
     /**
-     * Constructs a builder with the native key.
+     * Constructs a builder from a context.
      *
-     * @param context the context to extract the properties from..
+     * @param context the context to extract the properties from.
      */
     protected Builder(Context context) {
       this(context.properties);
@@ -283,12 +320,11 @@ public class Context {
      */
     protected Builder(Map<String, Object> properties) {
       this.properties = new TreeMap<>(properties);
-      validation.add(
-          prop -> Objects.requireNonNull(prop.get(NATIVE_KEY), "Native key may not be null"));
+      validation.add(NATIVE_KEY_VALIDATOR);
     }
 
     /**
-     * Add a validator the the builder check.
+     * Add a validator to the builder check.
      *
      * @param validator the Validator to add.
      */
