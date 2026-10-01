@@ -224,6 +224,46 @@ final class TemplateParserTest {
   }
 
   @Test
+  void parseVariableWithParameterAndSpaces() {
+    final Template template = TemplateParser.parse("{{ foo:tt=this is true }}", null);
+    final String render =
+        template
+            .boundBuilder()
+            .bind(
+                "foo",
+                parameter -> {
+                  assertThat(parameter.getName()).isEqualTo("tt");
+                  assertThat(parameter.getValue()).isEqualTo("this is true");
+                  return "PARAMETER_TESTED";
+                })
+            .build()
+            .render();
+
+    assertThat(render).isEqualTo("PARAMETER_TESTED");
+    assertThat(template).satisfies(TemplateTestUtil.withInput("FOO").extracts("foo", "FOO"));
+  }
+
+  @Test
+  void parseVariableWithParameterAndSpecialCharacters() {
+    final Template template = TemplateParser.parse("{{ foo:tt=this:is={true} }}", null);
+    final String render =
+        template
+            .boundBuilder()
+            .bind(
+                "foo",
+                parameter -> {
+                  assertThat(parameter.getName()).isEqualTo("tt");
+                  assertThat(parameter.getValue()).isEqualTo("this:is={true}");
+                  return "PARAMETER_TESTED";
+                })
+            .build()
+            .render();
+
+    assertThat(render).isEqualTo("PARAMETER_TESTED");
+    assertThat(template).satisfies(TemplateTestUtil.withInput("FOO").extracts("foo", "FOO"));
+  }
+
+  @Test
   void invalidVariableWithoutParameter() {
     assertThatThrownBy(() -> TemplateParser.parse("{{foo:}}", null))
         .isInstanceOf(ConfigException.class)
