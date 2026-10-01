@@ -442,7 +442,8 @@ public final class SourceConfigFragment extends ConfigFragment {
           Class<?> clazz =
               value instanceof Class<?> ? (Class<?>) value : Class.forName(value.toString());
           if (!Extractor.class.isAssignableFrom(clazz)) {
-            throw new ConfigException("Extractor class in configuration must extend abstract class Extractor");
+            throw new ConfigException(
+                "Extractor class in configuration must extend abstract class Extractor");
           }
         } catch (ClassNotFoundException e) {
           throw new ConfigException(
