@@ -67,11 +67,6 @@ public final class EvolvingSourceRecordIterator implements Iterator<EvolvingSour
     this.outer = Collections.emptyIterator();
   }
 
-  /**
-   * Gets the logger for the concrete implementation.
-   *
-   * @return The logger for the concrete implementation.
-   */
   @Override
   public boolean hasNext() {
     if (!outer.hasNext()) {

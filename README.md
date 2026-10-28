@@ -27,7 +27,7 @@ of sink and source connector pairs.
 Overview
 ========
 
-Significant documentation is available on our [documentation site](https://aiven-open.github.io/aiven-kafka-connector-frameowrk) or in the 
+Significant documentation is available on our [documentation site](https://aiven-open.github.io/aiven-kafka-connector-framework/) or in the 
 site directory trees in the code base.
 
 Setup
