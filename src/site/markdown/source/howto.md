@@ -28,22 +28,24 @@ In addition, Kafka records when it completed the ingestion of the records sent b
 
 ## Thinking about the solution
 
-The connector implementation should concentrate on two things: extracting data from the data source and creating a format for Kafka, and what data to track to establish what data have already been processed.
-
+The connector implementation should concentrate on three things: 
+  1. Extracting data from the data source.
+  2. Mapping the data source data to a Kafka `SourceRecord`
+  3. Determine how to track what data has been read from the data source, and how to map that to an `OffsetManagerEntry`.
+  
 ### Extracting data from the data source.
 
 The framework expects that the data source will provide a key, called the `native key`, that will retrieve data from the source.  There are cases where this is not the case and workarounds are discussed in special cases section below.  The framework also expects that the data source will define a `native object` which is the object returned when the `native key` is requested from the data source.
 
 The framework expects that:
- * the `native key` implements Comparable.
+ * the `native key` implements `Comparable`.
  * the data source will provide a method to list `native key`s. 
  * the data source provides a method that will return a `native object` when presented with a `native key`.
  * the `native obejct` is immutable with respect to the `native key`.  This means that subsequent calls with the same `native key` will yield the same data.  Not necessarily the same `native object` but objects containing the same data.
 
-
 The first step is to implement a `AbstractSourceNativeInfo`.  There is a Java record defined in the common module called `NativeInfo`, this record links the `native key` and `native object` together in one object while providing an implementation of comparable that delegates to the `native key`.  The `AbstractSourceNativeInfo` uses the `NativeInfo` and provides methods to convert the `native key` to a string, get the `native object` data as an InputStream and estimate the size of that input stream.  In some cases the `native object` may not have the concept of an input stream. In this case see the special case below.
 
-The second step is to design the `OffsetManagerData` and `OffsetManagerKey`, these interfaces are defined in the `OffsetManager` class.  The `OffsetManager` tracks what `native object`s the connector has already processed.  It does this by using a Kafka provides data stream.  Each `native object` will produce at least one Kafka SourceRecord, the OffsetManager will track the SourceRecord using the OffsetManagerKey.  In most cases the OffsetManagerKey can simply be the string representation of the `native key`.  The `OffsetManagerData` should contain other information necessary to filter data from the `native object`. 
+The second step is to design the `OffsetManagerData` and `OffsetManagerKey`, these interfaces are defined in the `OffsetManager` class.  The `OffsetManager` tracks what `native object`s the connector has already processed.  It does this by using a Kafka provided data stream.  Each `native object` will produce at least one Kafka SourceRecord, the OffsetManager will track the SourceRecord using the OffsetManagerKey.  In most cases the OffsetManagerKey can simply be the string representation of the `native key`.  The `OffsetManagerData` should contain other information necessary to filter data from the `native object`. 
 
  - The `OffsetManagerKey` must uniquely identify the `native key`.  It is called the `partitionMap` in the Kafka documentation.  Its data is stored in a Map with String keys and Object values.  The Objects are limited to the Objects that are natively supported by Kafka: String, Integer, Long.
  - The `OffsetManagerData` provides additional data associated with the `OffsetManagerKey`.  This can be any data that may be necessary to reset the data source to a state where the `native key` can be retrieved.
@@ -56,7 +58,7 @@ The third step is to implement the `NativeSourceData` abstract class.  The `Nati
  - A getter for the NativeKey Serializer / Deserializer if available, otherwise return empty Optional.
  - A method to get the `OffsetManagerKey` from the `native key`.
 
-The forth step is to select or implement an `Extractor`.  In many cases the `native object` contains multiple Kafka records, for example, a `native object` might contain a CSV or JSONL structure that should be parsed to return one Kafka record for each entry.  The Extractor does this.  In most cases the Extractor uses the `AbstractSourceNativeInfo` to retrieve an input stream and process it into multiple records.  In some cases the `native object` value should be placed on Kafka as a byte array.  In this case the `ByteArrayExtractor` can be used.  If the `native object` does produce an input stream, see the special case listed below.
+The forth step is to select or implement an `Extractor`.  In many cases the `native object` contains multiple Kafka records, for example, a `native object` might contain a CSV or JSONL structure that should be parsed to return one Kafka record for each entry.  The Extractor does this.  In most cases the Extractor uses the `AbstractSourceNativeInfo` to retrieve an input stream and process it into multiple records.  In some cases the `native object` value should be placed on Kafka as a byte array.  In this case the `ByteArrayExtractor` can be used.  If the `native object` does not produce an input stream, see the special case listed below.
 
 Finally implement the `AbstractSourceTask` this requires:
  - Implementation of a `getIterator()` method that returns an `EvolvingSourceRecordIterator`.
@@ -67,7 +69,7 @@ and implement a Kafka SourceConnector that configures the SourceTask.
 
 ### What is the `EvolvingSourceRecord`
 
-The evolving source record is a source record that is developed as data are retrieved and processed. It eventually becomes the Kafka SourceRecord. Initially the evolving source record contains the `Context` returned from the AbstractSourceNativeInfo.  The Context contains the `native key` and may contain the topic and/or partition that the data may be written to. The EvolvingSourceRecord also contains the `AbstractSourceNativeInfo` for a singe `native object`.
+The evolving source record is a source record that is developed as data are retrieved and processed. It eventually becomes the Kafka SourceRecord. Initially the evolving source record contains the `Context` returned from the AbstractSourceNativeInfo.  The Context contains the `native key` and may contain the topic and/or partition that the data may be written to. The EvolvingSourceRecord also contains the `AbstractSourceNativeInfo` for a single `native object`.
 
 ### What is the `EvolvingSourceRecordIterator`
 
@@ -88,7 +90,7 @@ The net result is that the `inner iterator` returns EvolvingSourceRecords that w
 
 #### outer iterator
 
-The `outer iterator` handles the case where the `native object` contains multiple Kafka SourceRecords.  The outer iterator takes is constructed by passing `EvolvingSourceRecord` returned by the `inner iterator` through the specified `Extractor` which may return 0 or more new `EvolvingSourceRecords` based on the one returned by the `inner iterator`.  The new `EvolvingSourceRecords` are returned in an iterator.
+The `outer iterator` handles the case where the `native object` contains multiple Kafka SourceRecords.  The outer iterator is constructed by passing `EvolvingSourceRecord` returned by the `inner iterator` through the specified `Extractor` which may return zero or more new `EvolvingSourceRecords` based on the one returned by the `inner iterator`.  The new `EvolvingSourceRecords` are returned in an iterator.
 
 The net result is that the `outer iterator` returns one `EvolvingSourceRecord` for each Kafka SourceRecord that should be generated.  
 
@@ -103,7 +105,7 @@ The `EvolvingSourceReocrdIterator` determines if it has data by :
 
 As noted above the `OffsetManager` stores data about records that have been processed from the data source.  One of the requirements is that the `native key` be encoded into the `OffsetManagerKey`.  In addition, the framework tracks the number of Kafka SourceRecords that have been extracted from each `native key`.  However, in some cases, there may be a need for other data.  For example, if a data source, does not guarantee that the data will always be the same then the time of last update may need to be included in the `OffsetManagerEntry`.  This is discussed below in the Special Cases section.  However, the implementer should consider what extra data may be necessary to identify the records that have been processed and account for them in the `OffsetManagerEntry`.  The framework ensures that the `OffsetManagerEntry` always has a count of the number of Kafka SourceRecords that have been extracted from the `native object`, this is called the "record count".
 
-When Kafka accepts data from Kafka Connect it writes to a Kafka offset topic.  The keys for that topic are defined by the `OffsetManagerKey` and hte data by the `OffsetManagerEntry`. Whe the framework receives a candidate `native key` from the data source, it converts the `native key` into the `OffsetManagerKey` and queries the Kafka offset topic for a matching record.  The Kafka offset topic will return the latest update based on the key.  If there is an entry the framework uses the result to initialize the `OffsetManagerEntry`.  If there is not an entry, the entry will be initialized with a record count of zero.
+When Kafka accepts data from Kafka Connect it writes to a Kafka offset topic.  The keys for that topic are defined by the `OffsetManagerKey` and the data by the `OffsetManagerEntry`. Whe the framework receives a candidate `native key` from the data source, it converts the `native key` into the `OffsetManagerKey` and queries the Kafka offset topic for a matching record.  The Kafka offset topic will return the latest update based on the key.  If there is an entry the framework uses the result to initialize the `OffsetManagerEntry`.  If there is not an entry, the entry will be initialized with a record count of zero.
 
 ### How the pieces fit together.
 
@@ -113,7 +115,7 @@ The Iterator of Kafka SourceRecords is built by retrieving the `EvolvingSourceIt
 1. Applying the `lastEvolution()` transformation to it.  This allows the SourceTask to make any last minute modifications to or data extractions from the final record.  These modification may include changes to the `OffsetManagerEntry`.  Changes to the `OffsetMangerKey` are discouraged as they will cause subsequent `OffsetManager` lookups to fail.   
 2. Mapping the `EvolvingSourceRecord` to a Kafka SourceRecord by calling `EvolvingSourceRecord.getSourceRecord()`.
 
-The queue is populated by a polling thread that continually calling iterator of Kafka SourceRecords `hasNext()` method, if there is a next record it is retrieved and added to the queue.  If not, the thread delays for awhile and checks again.  The delay periods are configurable.
+The queue is populated by a polling thread.  As long as there is room in the queue, the thread will call the iterator of Kafka SourceRecords `hasNext()` method, if there is a next record it is retrieved and added to the queue.  If not, or if the queue is full, the thread delays for awhile and checks again.  The delay periods are configurable.
 
 ## Special cases
 
@@ -134,7 +136,7 @@ Kafka tracks the records that have been extracted from the data source via the `
 
 When the `OffsetManagerEntry` is retrieved from the `OffsetManager` using the `OffsetManagerKey` there must be sufficient data to determine if the `naative object` has been processed.  Many of the decisions here will determine how often duplicate data will be returned.  The `OffsetManagerEntry`, by default, keeps track of the number of Kafka SourceRecords the `native object` produced.  In the case we are concerned about having a last modified date in the entry means that we can ask for data that has been modified since the last modified date.  In the end, the `NativeSourceData` handles the filtering in the `getNativeItemIterator()`.  
 
-To assist in the processing a class extending `Context` may be implemented to track the additional data if needed.
+To assist in the processing a class extending `Context` may be implemented to track the additional data if needed.  This will involve creating a `Builder` for the new `Context` class and ensuring that the new Context class returns an instance of that Builder when requested. 
 
 It is important to document the cases where the connector will generate duplicate data.
 

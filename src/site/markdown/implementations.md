@@ -31,3 +31,9 @@ A dummy implementation of the Framework used to test the integration tests for t
 https://github.com/Aiven-Open/salesforce-connector-for-apache-kafka/tree/main/source
 
 A source connector that reads from Salesforce.
+
+## Aiven connectors for AMQP on Apache Kafka
+
+https://github.com/Aiven-Open/amqp-connector-for-apache-kafka/tree/main/source
+
+This project has source and sink connectors that can read from and write to AMQP v1.0 queues.
