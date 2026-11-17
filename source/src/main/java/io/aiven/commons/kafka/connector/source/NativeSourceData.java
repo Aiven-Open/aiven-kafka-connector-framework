@@ -192,9 +192,9 @@ public abstract class NativeSourceData<K extends Comparable<K>> implements AutoC
             () -> {
               if (startKey != null) {
                 LOGGER.info(
-                        "{} set, no alternative present in buffer will begin consuming from {}",
-                        SourceConfigFragment.NATIVE_START_KEY,
-                        startKey);
+                    "{} set, no alternative present in buffer will begin consuming from {}",
+                    SourceConfigFragment.NATIVE_START_KEY,
+                    startKey);
               }
               return startKey;
             });
