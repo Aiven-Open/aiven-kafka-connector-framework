@@ -13,9 +13,7 @@
   <name>Connector framework source integration tests library</name>
   <description>Integration tests classes for connector framework source module implementations.  The generated jar includes dependency information for testing reuse.</description>
 
-  <properties>
-    <huxhorn.sulky.version>8.3.0</huxhorn.sulky.version>
-  </properties>
+  <properties/>
 
   <dependencyManagement>
     <dependencies>
@@ -27,11 +25,11 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>de.huxhorn.sulky</groupId>
       <artifactId>de.huxhorn.sulky.ulid</artifactId>
-      <version>${huxhorn.sulky.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -53,7 +51,6 @@
     <dependency>
       <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-testkit</artifactId>
-      <version>${aiven.kafka.testkit.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -64,40 +61,34 @@
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>connect-runtime</artifactId>
-      <version>${kafka.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>connect-runtime</artifactId>
-      <version>${kafka.version}</version>
       <classifier>test</classifier>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
-      <version>${kafka.version}</version>
       <classifier>test</classifier>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_${kafka.scala.version}</artifactId>
-      <version>${kafka.version}</version>
       <classifier>test</classifier>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_${kafka.scala.version}</artifactId>
-      <version>${kafka.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-server-common</artifactId>
-      <version>${kafka.version}</version>
       <classifier>test</classifier>
       <scope>provided</scope>
     </dependency>
@@ -109,32 +100,27 @@
     <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
-      <version>${awaitility.version}</version>
       <scope>compile</scope>
     </dependency>
     <!-- Source: https://mvnrepository.com/artifact/org.glassfish.jersey.core/jersey-server -->
     <dependency>
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-server</artifactId>
-      <version>2.47</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
-      <version>${junit.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <version>${junit.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>${mockito.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
