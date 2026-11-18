@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>aiven-commons</artifactId>
-    <version>5-SNAPSHOT</version>
+    <version>5</version>
   </parent>
 
   <artifactId>framework-for-connectors</artifactId>
@@ -107,13 +107,14 @@ Sink module is removed until there is code
 
   <properties>
     <!-- please keep in sorted order -->
-    <aiven.kafka.config.version>0.2.0</aiven.kafka.config.version>
-    <aiven.kafka.testkit.version>0.1.0</aiven.kafka.testkit.version>
-    <aiven.util.version>0.2.0</aiven.util.version>
+    <aiven.kafka.config.version>0.3.0</aiven.kafka.config.version>
+    <aiven.kafka.testkit.version>0.2.0</aiven.kafka.testkit.version>
+    <aiven.util.version>0.3.0</aiven.util.version>
     <confluent.avro.converter.version>7.9.5</confluent.avro.converter.version>
     <confluent.avro.data.version>7.9.5</confluent.avro.data.version>
     <github.jsonschema.generator.version>4.38.0</github.jsonschema.generator.version>
     <hadoop.common.version>3.4.2</hadoop.common.version>
+    <huxhorn.sulky.version>8.3.0</huxhorn.sulky.version>
     <latestRelease>0.3.0</latestRelease>
   </properties>
 
@@ -145,11 +146,6 @@ Sink module is removed until there is code
 
       <!-- dependencies -->
       <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>${commons.io.version}</version>
-      </dependency>
-      <dependency>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-annotations</artifactId>
         <version>${spotbugs.annotations.version}</version>
@@ -158,6 +154,13 @@ Sink module is removed until there is code
         <groupId>com.github.victools</groupId>
         <artifactId>jsonschema-generator</artifactId>
         <version>${github.jsonschema.generator.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>de.huxhorn.sulky</groupId>
+        <artifactId>de.huxhorn.sulky.ulid</artifactId>
+        <version>${huxhorn.sulky.version}</version>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -208,11 +211,6 @@ Sink module is removed until there is code
       </dependency>
 
       <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-text</artifactId>
-        <version>${commons.text.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-common</artifactId>
         <version>${hadoop.common.version}</version>
@@ -237,6 +235,13 @@ Sink module is removed until there is code
       </dependency>
       <dependency>
         <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-clients</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
         <artifactId>connect-api</artifactId>
         <version>${kafka.version}</version>
         <scope>provided</scope>
@@ -248,10 +253,42 @@ Sink module is removed until there is code
         <scope>provided</scope>
       </dependency>
       <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>connect-runtime</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka_${kafka.scala.version}</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-server-common</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
         <version>${assertj.version}</version>
         <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>${awaitility.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.jersey.core</groupId>
+        <artifactId>jersey-server</artifactId>
+        <version>2.47</version>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
@@ -263,6 +300,12 @@ Sink module is removed until there is code
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-engine</artifactId>
         <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
@@ -287,13 +330,11 @@ Sink module is removed until there is code
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
-      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
